@@ -8,8 +8,29 @@ export function deployment(answers: Answers): string {
   return text(answers, "q17_status");
 }
 
+/** Q18 is asked only when a vendor or an outside model is involved. */
+export function procurementApplicable(answers: Answers): boolean {
+  return text(answers, "q5_builder") !== "state_built";
+}
+
 export function procurement(answers: Answers): string {
+  if (!procurementApplicable(answers)) return "";
   return text(answers, "q18_procured");
+}
+
+/** Pilot and live are the only statuses that ask for a start date and a prior assessment. */
+export function deploymentAsksUse(answers: Answers): boolean {
+  const status = deployment(answers);
+  return status === "pilot" || status === "live";
+}
+
+/**
+ * Planning and procuring are Not applicable. A saved answer stays in the file and is ignored,
+ * except when a saved start date still flags the status conflict.
+ */
+export function priorAssessment(answers: Answers): string {
+  if (deploymentAsksUse(answers) || statusConflict(answers)) return text(answers, "q19_prior");
+  return "not_applicable";
 }
 
 export function dataLevel(answers: Answers): string {
@@ -70,4 +91,62 @@ export function showStatement(id: string, answers: Answers): boolean {
 export function inUse(answers: Answers): boolean {
   const status = deployment(answers);
   return status === "pilot" || status === "live" || statusConflict(answers);
+}
+
+const GENERATIVE = new Set(["generates_text", "public_chat", "retrieves_documents"]);
+
+function capabilitiesUnclear(answers: Answers): boolean {
+  const caps = capabilities(answers);
+  return caps.length === 0 || caps.includes("unknown");
+}
+
+function methodUnclear(answers: Answers): boolean {
+  const method = text(answers, "q6_method");
+  return method === "" || method === "unknown" || method === "other" || method === "llm";
+}
+
+/**
+ * Poisoning is asked when the system may be trained or fine-tuned on agency data.
+ * A statistical or rules model whose inputs are public is treated as not that case.
+ * Anything less clear stays visible. Proposed.
+ */
+function poisoningApplies(answers: Answers): boolean {
+  if (capabilitiesUnclear(answers) || methodUnclear(answers)) return true;
+  const caps = capabilities(answers);
+  if (caps.some((id) => GENERATIVE.has(id))) return true;
+  if (text(answers, "st16a") === "allowed") return true;
+  const method = text(answers, "q6_method");
+  if (designFacts(answers).includes("public_inputs_only") && (method === "statistical" || method === "rules_plus_model")) return false;
+  return true;
+}
+
+/** Proposed fit of each Q22 threat to the Q6 answers. Unclear threats stay visible. */
+export function threatApplies(id: string, answers: Answers): boolean {
+  if (capabilitiesUnclear(answers)) return true;
+  const caps = capabilities(answers);
+  const facts = designFacts(answers);
+  if (id === "prompt_injection") return caps.some((item) => GENERATIVE.has(item)) || methodUnclear(answers);
+  if (id === "poisoned_data") return poisoningApplies(answers);
+  if (id === "model_theft") return true;
+  if (id === "output_leakage") return true;
+  if (id === "unsafe_output_handling") {
+    if (caps.includes("acts_in_other_systems")) return true;
+    if (facts.includes("outputs_not_passed")) return false;
+    return true;
+  }
+  return true;
+}
+
+/**
+ * Yes, or a blank answer on a new file, uses the Q6 hosting value.
+ * No uses q15_where. An older file that has q15_where and no yes/no answer keeps that value.
+ */
+export function processingPlace(answers: Answers): { id: string; sameAsRun: boolean } {
+  const same = text(answers, "q15_same_place");
+  const where = text(answers, "q15_where");
+  const runs = text(answers, "q6_hosting");
+  if (same === "no") return { id: where, sameAsRun: false };
+  if (same === "yes") return { id: runs, sameAsRun: true };
+  if (where) return { id: where, sameAsRun: false };
+  return { id: runs, sameAsRun: true };
 }

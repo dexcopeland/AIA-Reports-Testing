@@ -50,7 +50,7 @@ No difference on the checked items.
 
 ### S03
 
-Built by the State. No invented deadline.
+Built by the State, so Q18 is not asked and a saved procurement answer is ignored. No § 3.5-803(e) date is set. Timing follows the pilot status and the start date.
 
 No difference on the checked items.
 
@@ -86,7 +86,7 @@ No difference on the checked items.
 
 ### S09
 
-State-built. Information only with full review, so G4 stays off.
+State-built, so Q18 is not asked and no § 3.5-803(e) date is set. Timing follows the live status and the start date. Information only with full review, so G4 stays off.
 
 No difference on the checked items.
 
@@ -158,7 +158,7 @@ No difference on the checked items.
 
 ### S21
 
-State-built. Identifying people sets G3 and is also coded as rights, so the area sentence can read as both.
+State-built, so Q18 is not asked and no § 3.5-803(e) date is set. Timing follows the pilot status and the start date. Identifying people sets G3 and is also coded as rights, so the area sentence can read as both.
 
 No difference on the checked items.
 
@@ -170,7 +170,7 @@ No difference on the checked items.
 
 ### S23
 
-Built by the State, including youth records. No invented deadline.
+Built by the State, including youth records. Q18 and Q19 are not asked. No § 3.5-803(e) date is set. Timing follows Planning, and use has not started.
 
 No difference on the checked items.
 

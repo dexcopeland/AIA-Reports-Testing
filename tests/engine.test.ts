@@ -1,10 +1,12 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { MITIGATIONS } from "../src/content/rules";
+import { SECTIONS, countVisibleQuestions, visibleFields } from "../src/content/form";
 import { FORM_VERSION, RULES_VERSION, SCHEMA_VERSION, type AnswerFile } from "../src/content/types";
 import { findingTemplates } from "../src/engine/findings";
 import { STATEMENTS } from "../src/content/statements";
 import { evaluate } from "../src/engine/evaluate";
+import { priorAssessment, processingPlace, statusConflict, threatApplies } from "../src/engine/visibility";
 import { buildReport } from "../src/engine/report";
 import { buildScenario } from "../src/scenarios/build";
 import { SCENARIOS } from "../src/scenarios/catalog";
@@ -221,16 +223,136 @@ describe("evaluation engine", () => {
   });
 
   it("uses no date for a State-built system and Not applicable for RP2", () => {
-    const result = evaluate(file({ ...base, q5_builder: "state_built", q18_procured: "state_built" }));
+    const answers = file({
+      ...base,
+      q5_builder: "state_built",
+      q17_status: "live",
+      q18_procured: "before_2026_02_01",
+      q19_start: "2025-05-01",
+      q19_prior: "yes",
+    });
+    const result = evaluate(answers);
     expect(result.deadlineDate).toBeNull();
-    expect(result.deadlineLine).toContain("DoIT AI Governance will confirm it");
+    expect(result.deadlineLine).toContain("built by the State");
+    expect(result.deadlineLine).toContain("Live");
+    expect(result.deadlineLine).toContain("2025-05-01");
+    expect(result.deadlineLine.toLowerCase()).not.toContain("procurement");
+    expect(result.summaryDeadline.toLowerCase()).not.toContain("procurement");
+    expect(answers.answers.q18_procured).toBe("before_2026_02_01");
+    const report = buildReport(answers);
+    const body = report.blocks.map((block) => block.text).join("\n");
+    expect(body).not.toContain("Procurement date");
+    expect(body).not.toContain("depends on the procurement date");
+    expect(body).not.toContain("was procured");
+    expect(body).not.toContain("not yet procured");
+    expect(body).toContain("Not applicable. Built by the State with no vendor and no outside model.");
+    const status = SECTIONS.find((section) => section.id === "status");
+    expect(visibleFields(status!, answers.answers).some((field) => field.id === "q18_procured")).toBe(false);
+    expect(result.mitigations.every((item) => item.timing === "Before use" || item.timing === "Ongoing")).toBe(true);
     expect(result.rp.find((item) => item.id === "RP2")?.status).toBe("Not applicable");
   });
 
   it("does not treat an outside model as State-built for RP2", () => {
-    const result = evaluate(file({ ...base, q5_builder: "state_built_outside_model", q18_procured: "state_built" }));
+    const answers = file({ ...base, q5_builder: "state_built_outside_model", q18_procured: "state_built" });
+    const result = evaluate(answers);
     expect(result.rp.find((item) => item.id === "RP2")?.status).not.toBe("Not applicable");
     expect(result.deadlineDate).toBeNull();
+    expect(result.deadlineLine).toContain("DoIT AI Governance will confirm it");
+    const status = SECTIONS.find((section) => section.id === "status");
+    expect(visibleFields(status!, answers.answers).some((field) => field.id === "q18_procured")).toBe(true);
+  });
+
+  it("treats planning and procuring as not applicable for Q19 and still flags a saved start date", () => {
+    const saved = file({ ...base, q17_status: "planning", q19_start: "", q19_prior: "yes" });
+    const result = evaluate(saved);
+    expect(priorAssessment(saved.answers)).toBe("not_applicable");
+    expect(result.statusConflict).toBe(false);
+    expect(result.priorDeployment).toBeNull();
+    expect(saved.answers.q19_prior).toBe("yes");
+    const status = SECTIONS.find((section) => section.id === "status");
+    const shown = visibleFields(status!, saved.answers).map((field) => field.id);
+    expect(shown).not.toContain("q19_start");
+    expect(shown).not.toContain("q19_prior");
+    const report = buildReport(saved);
+    const body = report.blocks.map((block) => block.text).join("\n");
+    expect(body).toContain("Impact assessment before deployment: Not applicable. Use has not started.");
+    expect(body).toContain("Not yet deployed");
+
+    const conflicted = file({ ...base, q17_status: "procuring", q19_start: "2025-01-15", q19_prior: "unknown" });
+    const conflict = evaluate(conflicted);
+    expect(statusConflict(conflicted.answers)).toBe(true);
+    expect(conflict.statusConflict).toBe(true);
+    expect(conflict.priorDeployment).toContain("before the stated start date");
+    expect(visibleFields(status!, conflicted.answers).some((field) => field.id === "q19_start")).toBe(false);
+    expect(conflicted.answers.q19_start).toBe("2025-01-15");
+  });
+
+  it("uses Q6 for the processing place unless the agency says no, and keeps an older q15_where", () => {
+    const same = file({ ...base, q6_hosting: "agency_network", q15_same_place: "yes", q15_where: "vendor_cloud" });
+    expect(processingPlace(same.answers)).toEqual({ id: "agency_network", sameAsRun: true });
+    expect(buildReport(same).blocks.map((block) => block.text).join("\n")).toContain("Where processed: Agency network (same place it runs)");
+
+    const different = file({ ...base, q6_hosting: "state_data_center", q15_same_place: "no", q15_where: "vendor_cloud" });
+    expect(processingPlace(different.answers).id).toBe("vendor_cloud");
+    const data = SECTIONS.find((section) => section.id === "data");
+    expect(visibleFields(data!, different.answers).some((field) => field.id === "q15_where")).toBe(true);
+    expect(visibleFields(data!, same.answers).some((field) => field.id === "q15_where")).toBe(false);
+
+    const older = file({ ...base, q6_hosting: "state_data_center", q15_where: "staff_devices" });
+    expect(processingPlace(older.answers)).toEqual({ id: "staff_devices", sameAsRun: false });
+    expect(older.answers.q15_where).toBe("staff_devices");
+    const fresh = file({ ...base, q6_hosting: "state_data_center" });
+    delete fresh.answers.q15_where;
+    expect(processingPlace(fresh.answers)).toEqual({ id: "state_data_center", sameAsRun: true });
+  });
+
+  it("excludes threats that do not fit Q6 and keeps threats whose fit is unclear", () => {
+    const scenario = SCENARIOS.find((item) => item.id === "S01");
+    expect(scenario).toBeTruthy();
+    const answers = buildScenario(scenario!);
+    answers.answers.st22__prompt_injection = "none";
+    const result = evaluate(answers);
+    expect(threatApplies("prompt_injection", answers.answers)).toBe(false);
+    expect(threatApplies("poisoned_data", answers.answers)).toBe(false);
+    expect(threatApplies("model_theft", answers.answers)).toBe(true);
+    expect(threatApplies("output_leakage", answers.answers)).toBe(true);
+    expect(threatApplies("unsafe_output_handling", answers.answers)).toBe(true);
+    expect(result.items.find((item) => item.instanceId === "22__prompt_injection")?.q6Excluded).toBe(true);
+    expect(result.items.find((item) => item.instanceId === "22__prompt_injection")?.status).toBe("Not applicable");
+    expect(result.rp.find((item) => item.id === "RP5")?.status).toBe("In place");
+    const found = result.rp.find((item) => item.id === "RP5")?.found ?? "";
+    expect(found).toContain("excluded because of the Q6 answers, not because the agency selected Does not apply");
+    expect(found).not.toContain("There is no protection");
+    const risks = SECTIONS.find((section) => section.id === "risks");
+    expect(visibleFields(risks!, answers.answers).some((field) => field.id === "st22")).toBe(true);
+
+    const unclear = file({ ...base, q6_capabilities: ["unknown"], q6_method: "unknown" });
+    for (const id of ["prompt_injection", "poisoned_data", "model_theft", "output_leakage", "unsafe_output_handling"]) {
+      expect(threatApplies(id, unclear.answers)).toBe(true);
+    }
+    const empty = file({ ...base, q6_capabilities: [] });
+    expect(threatApplies("prompt_injection", empty.answers)).toBe(true);
+
+    const passed = file({ ...base, q6_capabilities: ["ranks"], q6_method: "statistical", q6_design_facts: ["outputs_not_passed"] });
+    expect(threatApplies("unsafe_output_handling", passed.answers)).toBe(false);
+    const acting = file({
+      ...base,
+      q6_capabilities: ["ranks", "acts_in_other_systems"],
+      q6_method: "statistical",
+      q6_design_facts: ["outputs_not_passed"],
+    });
+    expect(threatApplies("unsafe_output_handling", acting.answers)).toBe(true);
+
+    const generative = file({ ...base, q6_capabilities: ["generates_text", "public_chat", "retrieves_documents"], q6_method: "llm" });
+    expect(threatApplies("prompt_injection", generative.answers)).toBe(true);
+    expect(threatApplies("poisoned_data", generative.answers)).toBe(true);
+  });
+
+  it("counts fewer visible questions after the branching rules", () => {
+    const s01 = buildScenario(SCENARIOS.find((item) => item.id === "S01")!);
+    const s03 = buildScenario(SCENARIOS.find((item) => item.id === "S03")!);
+    expect(countVisibleQuestions(s01.answers)).toBe(74);
+    expect(countVisibleQuestions(s03.answers)).toBe(67);
   });
 
   it("flags a prohibited use without a go or no-go decision", () => {

@@ -19,7 +19,7 @@ export const SCENARIOS: ScenarioSpec[] = [
     q5_builder: "state_built", q6_capabilities: ["generates_text"], q8_areas: ["safety"], q8_target: "neither",
     q9_groups: ["general_public"], q9_rel__general_public: "affected_in_general", q10_role: "recommends", q12_outside: "yes",
     q13_level: "L1", q17_status: "pilot", q18_procured: "state_built", q19_start: "2026-06-01", q19_prior: "yes",
-  }, ["G2"], ["G4"], null, false, false, false, 1, 3, "Built by the State. No invented deadline."),
+  }, ["G2"], ["G4"], null, false, false, false, 1, 3, "Built by the State, so Q18 is not asked and a saved procurement answer is ignored. No § 3.5-803(e) date is set. Timing follows the pilot status and the start date."),
   spec("S04", poor, "IceSign Auto (fictional)", "Maryland Highway Weather Unit (fictional)", {
     q6_capabilities: ["predicts", "acts_in_other_systems"], q8_areas: ["safety"], q8_target: "neither",
     q9_groups: ["general_public"], q9_rel__general_public: "affected_in_general", q10_role: "decides", q12_outside: "no",
@@ -49,7 +49,7 @@ export const SCENARIOS: ScenarioSpec[] = [
     q5_builder: "state_built", q6_capabilities: ["predicts"], q8_areas: ["safety", "critical_infrastructure"], q8_target: "neither",
     q9_groups: ["general_public"], q9_rel__general_public: "affected_in_general", q10_role: "info_only", q12_outside: "yes",
     q13_level: "L2", q14_data_types: ["internal_data"], q17_status: "live", q18_procured: "state_built", q19_start: "2025-05-01", q19_prior: "yes",
-  }, ["G2"], ["G4"], null, false, false, false, 1, 3, "State-built. Information only with full review, so G4 stays off."),
+  }, ["G2"], ["G4"], null, false, false, false, 1, 3, "State-built, so Q18 is not asked and no § 3.5-803(e) date is set. Timing follows the live status and the start date. Information only with full review, so G4 stays off."),
   spec("S10", poor, "PlowCare Predictor (fictional)", "Maryland State Fleet Office (fictional)", {
     q6_capabilities: ["predicts"], q8_areas: ["safety"], q8_target: "neither", q9_groups: ["state_employees"], q9_rel__state_employees: "uses_system",
     q10_role: "recommends", q12_outside: "no", q13_level: "L2", q14_data_types: ["internal_data"],
@@ -112,7 +112,7 @@ export const SCENARIOS: ScenarioSpec[] = [
     q5_builder: "state_built", q6_capabilities: ["generates_text"], q8_areas: ["safety", "identifying_people"], q8_target: "individuals",
     q9_groups: ["general_public"], q9_rel__general_public: "affected_in_general", q10_role: "recommends", q12_outside: "yes",
     q13_level: "L4", q14_data_types: ["criminal_justice"], q14_overlays: ["CJIS"], q17_status: "pilot", q18_procured: "state_built", q19_start: "2026-07-01", q19_prior: "yes",
-  }, ["G2", "G3"], ["G4"], null, false, false, false, 1, 3, "State-built. Identifying people sets G3 and is also coded as rights, so the area sentence can read as both."),
+  }, ["G2", "G3"], ["G4"], null, false, false, false, 1, 3, "State-built, so Q18 is not asked and no § 3.5-803(e) date is set. Timing follows the pilot status and the start date. Identifying people sets G3 and is also coded as rights, so the area sentence can read as both."),
   spec("S22", poor, "AutoDispatch Locator (fictional)", "Maryland 911 Coordination Office (fictional)", {
     q6_capabilities: ["acts_in_other_systems", "classifies_scores"], q8_areas: ["safety", "policing_corrections_supervision"], q8_target: "individuals",
     q9_groups: ["general_public"], q9_rel__general_public: "acted_on_individually", q10_role: "decides", q12_outside: "no",
@@ -123,7 +123,7 @@ export const SCENARIOS: ScenarioSpec[] = [
     q9_groups: ["children"], q9_rel__children: "acted_on_individually", q10_role: "recommends", q12_outside: "no",
     q13_level: "L4", q14_data_types: ["criminal_justice", "student_records"], q14_overlays: ["CJIS", "FERPA"],
     q17_status: "planning", q18_procured: "state_built", q19_prior: "not_applicable",
-  }, ["G1", "G2", "G3"], ["G4"], null, false, false, false, 1, 3, "Built by the State, including youth records. No invented deadline."),
+  }, ["G1", "G2", "G3"], ["G4"], null, false, false, false, 1, 3, "Built by the State, including youth records. Q18 and Q19 are not asked. No § 3.5-803(e) date is set. Timing follows Planning, and use has not started."),
   spec("S24", poor, "VisitVerify Flagger (fictional)", "Maryland Home Health Program Integrity Office (fictional)", {
     q6_capabilities: ["matches_records", "classifies_scores"], q8_areas: ["health", "money_legal_rights", "safety"], q8_target: "individuals",
     q9_groups: ["older_adults"], q9_rel__older_adults: "acted_on_individually", q10_role: "recommends", st11a: "sample", q12_outside: "yes",

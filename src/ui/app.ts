@@ -1,5 +1,6 @@
 import { SECTIONS, visibleFields, type Field, type FormSection } from "../content/form";
 import { CONTRACT_TERMS, GROUPS, RELATIONS, STATEMENT_BY_ID, THREATS } from "../content/statements";
+import { threatApplies } from "../engine/visibility";
 import { FORM_VERSION, RULES_VERSION, SCHEMA_VERSION, type AnswerFile, type AnswerValue } from "../content/types";
 import type { Answers } from "../engine/answers";
 import { many, text } from "../engine/answers";
@@ -273,7 +274,7 @@ export function mount(root: Element): void {
     if (field.type === "radio" || field.type === "check") {
       const set = document.createElement("fieldset");
       const legend = document.createElement("legend");
-      legend.textContent = field.label + (field.required ? " (required)" : "");
+      legend.textContent = (field.legend?.(file.answers) ?? field.label) + (field.required ? " (required)" : "");
       set.append(legend);
       if (field.help) set.append(help(field.help, helpId));
       for (const option of field.options ?? []) {
@@ -284,12 +285,14 @@ export function mount(root: Element): void {
         input.name = field.id;
         input.id = `${field.id}-${option.id}`;
         input.value = option.id;
-        if (field.type === "radio") input.checked = text(file.answers, field.id) === option.id;
+        const current = text(file.answers, field.id);
+        const selected = field.id === "q15_same_place" && current === "" ? "yes" : current;
+        if (field.type === "radio") input.checked = selected === option.id;
         else input.checked = many(file.answers, field.id).includes(option.id);
         input.addEventListener("change", () => {
           if (field.type === "radio") setAnswer(field.id, option.id);
           else setAnswer(field.id, toggleCheck(field.id, option.id, input.checked));
-          if (field.type === "check" || field.id === "q3_is_lead" || field.id === "q5_builder" || field.id === "q12_outside" || field.id === "q13_level" || field.id === "q6_capabilities" || field.id === "q9_groups" || field.id === "q16_assurances" || field.id === "q14_overlays") {
+          if (field.type === "check" || field.id === "q3_is_lead" || field.id === "q5_builder" || field.id === "q6_method" || field.id === "q6_hosting" || field.id === "q12_outside" || field.id === "q13_level" || field.id === "q15_same_place" || field.id === "q17_status" || field.id === "q9_groups" || field.id === "q16_assurances" || field.id === "q14_overlays") {
             redraw({ restoreId: input.id });
           }
         });
@@ -460,7 +463,7 @@ export function mount(root: Element): void {
       return CONTRACT_TERMS.map((term) => ({ key: `st16b__${term.id}`, title: `${def.title}: ${term.label}` }));
     }
     if (field.repeat === "threat") {
-      return THREATS.map((threat) => ({ key: `st22__${threat.id}`, title: `${def.title}: ${threat.label}` }));
+      return THREATS.filter((threat) => threatApplies(threat.id, file.answers)).map((threat) => ({ key: `st22__${threat.id}`, title: `${def.title}: ${threat.label}` }));
     }
     return [{ key: `st${id}`, title: field.label }];
   }
@@ -559,6 +562,7 @@ function missing(section: FormSection, answers: Answers): string[] {
         }
       } else if (field.repeat === "threat") {
         for (const threat of THREATS) {
+          if (!threatApplies(threat.id, answers)) continue;
           if (!text(answers, `st22__${threat.id}`)) blanks.push(threat.label);
         }
       } else if (!text(answers, `st${field.statementId}`)) blanks.push(field.label);
@@ -576,6 +580,7 @@ function missing(section: FormSection, answers: Answers): string[] {
       if (many(answers, field.id).length === 0) blanks.push(field.label);
       continue;
     }
+    if (field.id === "q15_same_place" && !text(answers, field.id)) continue;
     if (!text(answers, field.id)) blanks.push(field.label);
   }
   return blanks;

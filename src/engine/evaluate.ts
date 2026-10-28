@@ -1,4 +1,4 @@
-import { ASSURANCES, BUILDERS, CAPABILITIES, HARM_TYPES, HOSTING, LEVELS, METHODS, PRIOR, PROCUREMENT, ROLES, TARGETS, labelOf } from "../content/catalog";
+import { ASSURANCES, BUILDERS, CAPABILITIES, DEPLOYMENT, HARM_TYPES, HOSTING, LEVELS, METHODS, PRIOR, PROCUREMENT, ROLES, TARGETS, labelOf } from "../content/catalog";
 import {
   CRITERIA_META,
   DATA_TYPES,
@@ -47,7 +47,10 @@ import {
   designFacts,
   outsideContradiction,
   outsideYes,
+  priorAssessment,
   privacyTrack,
+  procurementApplicable,
+  threatApplies,
   procurement,
   selectedGroups,
   showStatement,
@@ -101,6 +104,7 @@ interface Instance {
   context: string;
   groupId?: string;
   designFact?: string | null;
+  q6Excluded?: boolean;
 }
 
 function instancesFor(answers: Answers): Instance[] {
@@ -113,6 +117,7 @@ function instancesFor(answers: Answers): Instance[] {
       context: extra?.context ?? "",
       groupId: extra?.groupId,
       designFact: extra?.designFact,
+      q6Excluded: extra?.q6Excluded,
     });
   };
   for (const id of ["11a", "11b", "11c", "11d"]) add(id);
@@ -130,7 +135,12 @@ function instancesFor(answers: Answers): Instance[] {
   add("20a");
   for (const id of ["21a", "21b", "21c", "21d", "21e"]) add(id);
   for (const threat of THREATS) {
-    add("22", { instanceId: `22__${threat.id}`, context: threat.label, designFact: threat.designFact });
+    add("22", {
+      instanceId: `22__${threat.id}`,
+      context: threat.label,
+      designFact: threat.designFact,
+      q6Excluded: !threatApplies(threat.id, answers),
+    });
   }
   add("22f");
   for (const id of ["23a", "23b", "23c", "24a", "24b"]) add(id);
@@ -168,6 +178,20 @@ function resolveOne(def: StatementDef, instance: Instance, answers: Answers): Re
     individual: individualGroup(answers, instance.groupId) || (def.id === "12d" && individualGroup(answers, "limited_english")),
     designFact: undefined,
   };
+
+  if (instance.q6Excluded) {
+    base.choiceValue = "does_not_apply";
+    base.choiceText = "Excluded because of the Q6 answers. The agency did not select Does not apply.";
+    base.status = "Not applicable";
+    base.mitigation = null;
+    base.needsFollowup = false;
+    base.unanswered = false;
+    base.notApplicable = true;
+    base.evidence = "";
+    base.targetDate = "";
+    base.q6Excluded = true;
+    return base;
+  }
 
   if (picked?.value === "does_not_apply") {
     const fact = instance.designFact;
@@ -267,6 +291,30 @@ function narrateTo(
   return criterion(id, status, found, [...(options.lead ?? []), ...statementLines(quoted)], options.qRefs);
 }
 
+function exclusionSentence(labels: string[]): string {
+  if (labels.length === 0) return "";
+  const names = labels.length === 1 ? labels[0] : labels.length === 2 ? `${labels[0]} and ${labels[1]}` : `${labels.slice(0, -1).join(", ")}, and ${labels[labels.length - 1]}`;
+  const verb = labels.length === 1 ? "was" : "were";
+  return `${names} ${verb} excluded because of the Q6 answers, not because the agency selected Does not apply.`;
+}
+
+function narrateRp5(status: string, items: ResolvedItem[], keptIds: ReadonlySet<string>): CriterionResult {
+  const excluded = items.filter((item) => item.q6Excluded);
+  const result = narrateTo("RP5", status, ["22", "22f"].flatMap((id) => itemsOf(items, id)), {
+    qRefs: "Q22",
+    keptIds,
+    lead: excluded.map((item) => ({
+      label: item.context || item.title,
+      statement: "Excluded because of the Q6 answers. The agency did not select Does not apply.",
+      evidence: "",
+      targetDate: "",
+    })),
+  });
+  const note = exclusionSentence(excluded.map((item) => item.context || item.title));
+  if (note) result.found = `${result.found} ${note}`;
+  return result;
+}
+
 function pickTiming(profile: TimingProfile, answers: Answers, conflict: boolean): Timing {
   const status = deployment(answers);
   const live = status === "live" || conflict;
@@ -302,6 +350,19 @@ function suggestedLevel(answers: Answers): string | null {
 }
 
 function deadline(answers: Answers): { date: string | null; line: string; summary: string; followup: boolean } {
+  if (!procurementApplicable(answers)) {
+    const status = labelOf(DEPLOYMENT, deployment(answers)) || "not given";
+    const start = text(answers, "q19_start");
+    const timing = start
+      ? `Use started ${start}. Timing follows that start date and the deployment status.`
+      : `Use has not started. Timing follows the deployment status (${status}).`;
+    return {
+      date: null,
+      line: `Assessment deadline: This AI system was built by the State, with no vendor and no outside model, so no § 3.5-803(e) date is set. Deployment status is ${status}. ${timing} [S2]`,
+      summary: "No § 3.5-803(e) date is set, because this AI system was built by the State. Timing follows the deployment status and the start date.",
+      followup: false,
+    };
+  }
   const value = procurement(answers);
   const noDate = "The § 3.5-803(e) deadline depends on the procurement date; DoIT AI Governance will confirm it.";
   if (value === "before_2026_02_01") {
@@ -636,7 +697,7 @@ export function evaluate(file: AnswerFile): Evaluation {
     narrateTo("RP2", rp2, itemsOf(items, "16b"), { qRefs: "Q16", keptIds: keptMitigationIds }),
     narrateTo("RP3", rp3, ["14a", "14b", "14c"].flatMap((id) => itemsOf(items, id)), { qRefs: "Q14", keptIds: keptMitigationIds }),
     narrateTo("RP4", rp4, [...itemsOf(items, "11d"), ...itemsOf(items, "11b")], { qRefs: "Q11", keptIds: keptMitigationIds }),
-    narrateTo("RP5", rp5, ["22", "22f"].flatMap((id) => itemsOf(items, id)), { qRefs: "Q22", keptIds: keptMitigationIds }),
+    narrateRp5(rp5, items, keptMitigationIds),
     narrateTo("RP6", rp6, ["21d", "21e"].flatMap((id) => itemsOf(items, id)), { qRefs: "Q21", keptIds: keptMitigationIds }),
     narrateTo("RP7", rp7, ["23b", "23c"].flatMap((id) => itemsOf(items, id)), { qRefs: "Q23", keptIds: keptMitigationIds }),
     narrateTo("RP8", rp8, ["24a", "24b"].flatMap((id) => itemsOf(items, id)), { qRefs: "Q24", keptIds: keptMitigationIds }),
@@ -680,7 +741,7 @@ export function evaluate(file: AnswerFile): Evaluation {
   }
 
   let prior: string | null = null;
-  const priorValue = text(answers, "q19_prior");
+  const priorValue = priorAssessment(answers);
   const priorMissing = priorValue === "no" || priorValue === "unknown" || priorValue === "";
   if ((deployment(answers) === "pilot" || deployment(answers) === "live") && priorMissing) {
     prior = priorValue === "no"
