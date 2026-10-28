@@ -136,7 +136,22 @@ describe("evaluation engine", () => {
     const report = buildReport(buildScenario(scenario!));
     const body = report.blocks.map((block) => block.text).join("\n");
     expect(body).not.toContain(".;");
+    expect(body).not.toContain("..");
     expect(body).not.toContain(".\".\n");
+    expect(body).toContain("Answer relied on (Q11):");
+    expect(body).toContain("- Human review before an output takes effect: A named role reviews every output before it takes effect, following a written procedure.");
+    expect(body).toContain("Evidence: Example agency file shows the control for this fictional assessment.");
+    const answerLeads = report.blocks.filter((block) => block.text.startsWith("Answer relied on"));
+    expect(answerLeads.every((block) => block.text.endsWith("):"))).toBe(true);
+    expect(report.blocks.filter((block) => block.type === "bullet" || block.type === "sub").some((block) => /\(Q\d/.test(block.text))).toBe(false);
+    const rp2 = result.rp.find((item) => item.id === "RP2");
+    expect(rp2?.answerLines.map((line) => line.label)).toEqual([
+      "Split of responsibilities",
+      "Notice of model changes",
+      "Notice of AI security incidents",
+    ]);
+    expect(body).toContain("Answer relied on (Q16):");
+    expect(body).toContain("- Split of responsibilities: It is in the signed contract.");
   });
 
   it("treats an unknown review as a Gap and keeps the S04-like gates and deadline", () => {

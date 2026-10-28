@@ -28,15 +28,16 @@ import { has, many, text } from "./answers";
 import {
   areaLabels,
   buildDetail,
-  joinAnswer,
-  q10Answer,
-  q12OutsideAnswer,
-  q13Answer,
-  q20Answer,
-  q8Answer,
+  q10Lines,
+  q12OutsideLines,
+  q13Lines,
+  q20Lines,
+  q8Lines,
+  quoteFromLines,
   renderFinding,
-  statementAnswer,
+  statementLines,
 } from "./findings";
+import type { AnswerLine } from "./model";
 import { fingerprint } from "./fingerprint";
 import type { ConfirmFact, CriterionResult, CrossCheck, Evaluation, Followup, GateHit, LiveMitigation, ResolvedItem } from "./model";
 import {
@@ -243,16 +244,16 @@ function drivingItems(items: ResolvedItem[], reported: string): ResolvedItem[] {
   return exact.length > 0 ? exact : weakestItems;
 }
 
-function criterion(id: string, status: string, found: string, quote: string, qRefs: string): CriterionResult {
+function criterion(id: string, status: string, found: string, answerLines: AnswerLine[], qRefs: string): CriterionResult {
   const meta = CRITERIA_META.find((item) => item.id === id) ?? RP_META.find((item) => item.id === id);
-  return { id, name: meta?.name ?? id, status, found, quote, qRefs };
+  return { id, name: meta?.name ?? id, status, found, quote: quoteFromLines(answerLines), qRefs, answerLines };
 }
 
 function narrateTo(
   id: string,
   status: string,
   items: ResolvedItem[],
-  options: { phrase?: string; areas?: string; prefix?: string; lead?: string[]; qRefs: string },
+  options: { phrase?: string; areas?: string; prefix?: string; lead?: AnswerLine[]; qRefs: string },
 ): CriterionResult {
   const drivers = drivingItems(items, status);
   const open = drivers.filter((item) => item.status !== "Met" && item.status !== "In place" && item.status !== "Not applicable");
@@ -263,13 +264,7 @@ function narrateTo(
     options.phrase,
   );
   const quoted = open.length > 0 ? open : drivers;
-  return criterion(
-    id,
-    status,
-    found,
-    joinAnswer([...(options.lead ?? []), statementAnswer(quoted)]),
-    options.qRefs,
-  );
+  return criterion(id, status, found, [...(options.lead ?? []), ...statementLines(quoted)], options.qRefs);
 }
 
 function pickTiming(profile: TimingProfile, answers: Answers, conflict: boolean): Timing {
@@ -534,8 +529,8 @@ export function evaluate(file: AnswerFile): Evaluation {
   const rp7 = weakest(["23b", "23c"].flatMap((id) => itemsOf(items, id).map((item) => item.status)), "RP");
   const rp8 = weakest(["24a", "24b"].flatMap((id) => itemsOf(items, id).map((item) => item.status)), "RP");
 
-  const q8 = q8Answer(answers);
-  const outsideLead = [q12OutsideAnswer(answers)];
+  const q8 = q8Lines(answers);
+  const outsideLead = q12OutsideLines(answers);
   const c7Phrase = !outsideYes(answers) && c7 === "Met" ? "no_outside" : c7 === "Met" ? "in_place" : undefined;
   const c8Phrase = !outsideYes(answers) && c8 === "Met" ? "no_outside" : c8 === "Met" ? "in_place" : undefined;
   const c7Items = itemsOf(items, "12a");
@@ -544,22 +539,22 @@ export function evaluate(file: AnswerFile): Evaluation {
   const c10Prefix = level === "unknown" || text(answers, "q13_level") === "" ? "The data level is Unknown (not assigned)." : "";
   const c4Prefix = role === "unknown" || role === "" ? "The decision role is not determined." : role === "decides" && c4 === "Gap" ? "The output decides or acts without a person approving each one." : "";
   const criteria: CriterionResult[] = [
-    narrateTo("C1", rights ? "Impact: Yes" : "Impact: No", [], { areas: areaLabels(areas, RIGHTS_AREAS), lead: [q8], qRefs: "Q8" }),
-    narrateTo("C2", safety ? "Impact: Yes" : "Impact: No", [], { areas: areaLabels(areas, SAFETY_AREAS), lead: [q8], qRefs: "Q8" }),
-    narrateTo("C3", areas.includes("benefits_services") ? "Impact: Yes" : "Impact: No", [], { lead: [q8], qRefs: "Q8" }),
-    narrateTo("C4", c4, c4Items, { prefix: c4Prefix, lead: [q10Answer(answers)], qRefs: "Q10, Q11" }),
+    narrateTo("C1", rights ? "Impact: Yes" : "Impact: No", [], { areas: areaLabels(areas, RIGHTS_AREAS), lead: q8, qRefs: "Q8" }),
+    narrateTo("C2", safety ? "Impact: Yes" : "Impact: No", [], { areas: areaLabels(areas, SAFETY_AREAS), lead: q8, qRefs: "Q8" }),
+    narrateTo("C3", areas.includes("benefits_services") ? "Impact: Yes" : "Impact: No", [], { lead: q8, qRefs: "Q8" }),
+    narrateTo("C4", c4, c4Items, { prefix: c4Prefix, lead: q10Lines(answers), qRefs: "Q10, Q11" }),
     narrateTo("C5", c5, [...groupItems, ...langItems], { qRefs: "Q9, Q12" }),
     narrateTo("C6", c6, itemsOf(items, "21b"), { qRefs: "Q21" }),
     narrateTo("C7", c7, c7Items, { phrase: c7Phrase, prefix: outsideContradiction(answers) ? "Q12 says no one outside the agency is affected, and Q9 names another group." : "", lead: outsideLead, qRefs: "Q12" }),
     narrateTo("C8", c8, c8Items, { phrase: c8Phrase, prefix: outsideContradiction(answers) ? "Q12 says no one outside the agency is affected, and Q9 names another group." : "", lead: outsideLead, qRefs: "Q12" }),
     narrateTo("C9", c9, c9Items, { qRefs: "Q11" }),
-    narrateTo("C10", c10, c10Parts, { prefix: c10Prefix, lead: [q13Answer(answers)], qRefs: "Q13, Q15, Q16" }),
+    narrateTo("C10", c10, c10Parts, { prefix: c10Prefix, lead: q13Lines(answers), qRefs: "Q13, Q15, Q16" }),
     narrateTo("C11", c11, ["21a", "21c"].flatMap((id) => itemsOf(items, id)), { qRefs: "Q21" }),
     narrateTo("C12", c12, itemsOf(items, "23a"), { qRefs: "Q23" }),
   ];
 
   const rpResults: CriterionResult[] = [
-    narrateTo("RP1", rp1, rp1item, { prefix: rp1 === "Partly in place" && text(answers, "q20_harm") === "" ? "The description of what could go wrong is blank." : "", lead: [q20Answer(answers)], qRefs: "Q20" }),
+    narrateTo("RP1", rp1, rp1item, { prefix: rp1 === "Partly in place" && text(answers, "q20_harm") === "" ? "The description of what could go wrong is blank." : "", lead: q20Lines(answers), qRefs: "Q20" }),
     narrateTo("RP2", rp2, itemsOf(items, "16b"), { qRefs: "Q16" }),
     narrateTo("RP3", rp3, ["14a", "14b", "14c"].flatMap((id) => itemsOf(items, id)), { qRefs: "Q14" }),
     narrateTo("RP4", rp4, [...itemsOf(items, "11d"), ...itemsOf(items, "11b")], { qRefs: "Q11" }),

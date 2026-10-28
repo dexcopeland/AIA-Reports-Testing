@@ -1,7 +1,7 @@
 import findingsJson from "../../content/findings.json";
 import { LEVELS, ROLES, TARGETS, labelOf } from "../content/catalog";
 import { AREAS, MITIGATION_BY_ID } from "../content/rules";
-import type { ResolvedItem } from "./model";
+import type { AnswerLine, ResolvedItem } from "./model";
 import type { Answers } from "./answers";
 import { many, text } from "./answers";
 
@@ -90,53 +90,68 @@ export function renderFinding(id: string, status: string, slots: Record<string, 
   return fill(template, slots);
 }
 
-export function statementAnswer(items: ResolvedItem[]): string {
-  return items
+function line(label: string, statement: string, evidence = "", targetDate = ""): AnswerLine {
+  return {
+    label,
+    statement: endSentence(statement),
+    evidence: evidence.trim() ? endSentence(evidence) : "",
+    targetDate,
+  };
+}
+
+export function statementLines(items: ResolvedItem[]): AnswerLine[] {
+  return items.map((item) =>
+    line(
+      item.context || item.title,
+      item.choiceText,
+      item.evidence,
+      item.targetDate ? formatDate(item.targetDate) : "",
+    ),
+  );
+}
+
+export function quoteFromLines(lines: AnswerLine[]): string {
+  if (lines.length === 0) return "No answer provided";
+  return lines
     .map((item) => {
-      const label = itemLabel(item);
-      const evidence = item.evidence.trim() ? ` Evidence: ${endSentence(item.evidence)}` : "";
-      const dated = item.targetDate ? ` Target date: ${formatDate(item.targetDate)}.` : "";
-      return `${label}: ${endSentence(item.choiceText)}${evidence}${dated}`;
+      const evidence = item.evidence ? ` Evidence: ${item.evidence}` : "";
+      const dated = item.targetDate ? ` Target date: ${item.targetDate}.` : "";
+      return `${item.label}: ${item.statement}${evidence}${dated}`;
     })
     .join(" ");
 }
 
-export function joinAnswer(parts: string[]): string {
-  const textValue = parts.map((part) => part.trim()).filter(Boolean).join(" ");
-  return textValue || "No answer provided";
-}
-
-export function q8Answer(answers: Answers): string {
+export function q8Lines(answers: Answers): AnswerLine[] {
   const areas = many(answers, "q8_areas").map((id) => AREAS.find((area) => area.id === id)?.label ?? id);
   const target = labelOf(TARGETS, text(answers, "q8_target"));
   const how = text(answers, "q8_how");
-  return joinAnswer([
-    areas.length ? endSentence(`Areas: ${proseList(areas)}`) : "",
-    target ? endSentence(`What the output picks: ${target}`) : "",
-    how ? endSentence(`How: ${how}`) : "",
-  ]);
+  const lines: AnswerLine[] = [];
+  if (areas.length) lines.push(line("Areas", proseList(areas)));
+  if (target) lines.push(line("What the output picks", target));
+  if (how) lines.push(line("How", how));
+  return lines;
 }
 
-export function q10Answer(answers: Answers): string {
+export function q10Lines(answers: Answers): AnswerLine[] {
   const role = labelOf(ROLES, text(answers, "q10_role"));
-  return role ? endSentence(`Role in decisions: ${role}`) : "";
+  return role ? [line("Role in decisions", role)] : [];
 }
 
-export function q12OutsideAnswer(answers: Answers): string {
+export function q12OutsideLines(answers: Answers): AnswerLine[] {
   const value = text(answers, "q12_outside");
-  if (value === "yes") return "People outside the agency are affected: Yes.";
-  if (value === "no") return "People outside the agency are affected: No.";
-  return "";
+  if (value === "yes") return [line("People outside the agency are affected", "Yes")];
+  if (value === "no") return [line("People outside the agency are affected", "No")];
+  return [];
 }
 
-export function q13Answer(answers: Answers): string {
+export function q13Lines(answers: Answers): AnswerLine[] {
   const level = labelOf(LEVELS, text(answers, "q13_level"));
-  return level ? endSentence(`Highest data level: ${level}`) : "Highest data level: Unknown.";
+  return [line("Highest data level", level || "Unknown")];
 }
 
-export function q20Answer(answers: Answers): string {
+export function q20Lines(answers: Answers): AnswerLine[] {
   const harm = text(answers, "q20_harm");
-  return harm ? endSentence(`What could go wrong: ${harm}`) : "";
+  return harm ? [line("What could go wrong", harm)] : [];
 }
 
 export function areaLabels(ids: string[], allowed: string[]): string {

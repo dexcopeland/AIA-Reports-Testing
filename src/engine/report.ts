@@ -10,7 +10,7 @@ import type { Evaluation, LiveMitigation } from "./model";
 import { dataLevel, deployment, selectedGroups, vendorInvolved } from "./visibility";
 
 export interface Block {
-  type: "h1" | "h2" | "h3" | "p" | "label" | "field" | "note" | "qa" | "break";
+  type: "h1" | "h2" | "h3" | "p" | "label" | "field" | "note" | "qa" | "break" | "bullet" | "sub";
   text: string;
   source: "template" | "answer" | "slot";
 }
@@ -51,6 +51,17 @@ const QUESTIONS: { n: number; section: string; text: string; rp?: string }[] = [
 
 function block(type: Block["type"], text: string, source: Block["source"]): Block {
   return { type, text, source };
+}
+
+function answerBlocks(item: { qRefs: string; answerLines: { label: string; statement: string; evidence: string; targetDate: string }[] }): Block[] {
+  const lines: Block[] = [block("field", `Answer relied on (${item.qRefs}):`, "answer")];
+  const answers = item.answerLines.length > 0 ? item.answerLines : [{ label: "Answer", statement: "No answer provided.", evidence: "", targetDate: "" }];
+  for (const line of answers) {
+    lines.push(block("bullet", `- ${line.label}: ${line.statement}`, "answer"));
+    if (line.evidence) lines.push(block("sub", `Evidence: ${line.evidence}`, "answer"));
+    if (line.targetDate) lines.push(block("sub", `Target date: ${line.targetDate}.`, "answer"));
+  }
+  return lines;
 }
 
 function words(value: string): number {
@@ -351,7 +362,7 @@ export function buildReport(file: AnswerFile): ReportDoc {
   for (const item of result.criteria) {
     blocks.push(block("label", `${item.id} – ${item.name}: ${item.status}`, "template"));
     blocks.push(block("field", `What we found: ${item.found}`, "slot"));
-    blocks.push(block("field", `Answer relied on: ${item.quote} (${item.qRefs}).`, "answer"));
+    blocks.push(...answerBlocks(item));
   }
   blocks.push(block("h3", "Recommended practice checks (ISO/IEC 42001 and ISO/IEC 27090)", "template"));
   blocks.push(block("p", "These checks are recommendations. They are not Maryland law and not DoIT policy.", "template"));
@@ -359,7 +370,7 @@ export function buildReport(file: AnswerFile): ReportDoc {
     const aligned = RP_META.find((row) => row.id === item.id)?.aligned ?? "";
     blocks.push(block("label", `${item.id} – ${item.name}: ${item.status}`, "template"));
     blocks.push(block("field", `What we found: ${item.found}`, "slot"));
-    blocks.push(block("field", `Answer relied on: ${item.quote} (${item.qRefs}).`, "answer"));
+    blocks.push(...answerBlocks(item));
     blocks.push(block("field", `Aligned to: ${aligned}`, "template"));
   }
 

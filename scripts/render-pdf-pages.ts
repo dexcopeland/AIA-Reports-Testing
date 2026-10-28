@@ -15,19 +15,25 @@ writeFileSync(`${outDir}/s01-report.pdf`, bytes);
 const parser = new PDFParse({ data: bytes });
 const text = await parser.getText();
 const pages = text.pages ?? [];
-let rpPage = 1;
-for (const page of pages) {
+const namesForPage = new Map<number, string[]>();
+const addName = (number: number, name: string) => {
+  const names = namesForPage.get(number) ?? [];
+  if (!names.includes(name)) names.push(name);
+  namesForPage.set(number, names);
+};
+pages.forEach((page, index) => {
   const pageText = "text" in page ? String(page.text) : "";
-  if (pageText.includes("Recommended practice checks")) {
-    rpPage = "num" in page ? Number(page.num) : pages.indexOf(page) + 1;
-    break;
-  }
-}
-const shots = await parser.getScreenshot({ imageBuffer: true, scale: 1.5, partial: [1, rpPage] });
+  const number = "num" in page ? Number(page.num) : index + 1;
+  if (pageText.includes("C9 –")) addName(number, "pdf-c9.png");
+  if (pageText.includes("RP1 –")) addName(number, "pdf-rp1.png");
+  if (pageText.includes("RP2 –") || pageText.includes("RP3 –")) addName(number, `pdf-rp-page-${number}.png`);
+});
+const shots = await parser.getScreenshot({ imageBuffer: true, scale: 1.5, partial: [...namesForPage.keys()] });
 for (const page of shots.pages) {
-  const name = page.pageNumber === 1 ? "pdf-page-1.png" : "pdf-rp-page.png";
-  writeFileSync(`${outDir}/${name}`, page.data);
-  console.log(name, page.pageNumber, page.width, page.height);
+  for (const name of namesForPage.get(page.pageNumber) ?? []) {
+    writeFileSync(`${outDir}/${name}`, page.data);
+    console.log(name, page.pageNumber, page.width, page.height);
+  }
 }
 const c9 = report.blocks.filter((block) => block.text.startsWith("C9") || block.text.startsWith("What we found") || block.text.startsWith("Answer relied on"));
 console.log("--- nearby C9 ---");

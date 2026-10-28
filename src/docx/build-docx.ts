@@ -68,6 +68,24 @@ function paragraphFrom(block: Block): FileChild[] {
       }),
     ];
   }
+  if (block.type === "bullet") {
+    return [
+      new Paragraph({
+        spacing: { after: 40 },
+        indent: { left: 360, hanging: 180 },
+        children: [run(block.text, { size: 24 })],
+      }),
+    ];
+  }
+  if (block.type === "sub") {
+    return [
+      new Paragraph({
+        spacing: { after: 60 },
+        indent: { left: 720 },
+        children: [run(block.text, { size: 24 })],
+      }),
+    ];
+  }
   if (block.type === "note") {
     return [
       new Paragraph({

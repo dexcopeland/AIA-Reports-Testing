@@ -94,6 +94,12 @@ function blockContent(block: Block): PdfContent | PdfContent[] {
       margin: [0, 8, 0, 2],
     };
   }
+  if (block.type === "bullet") {
+    return { text: block.text, fontSize: REPORT_STYLE.bodyPt, margin: [14, 1, 0, 1] };
+  }
+  if (block.type === "sub") {
+    return { text: block.text, fontSize: REPORT_STYLE.bodyPt, margin: [32, 0, 0, 3] };
+  }
   if (block.type === "note") {
     return { text: block.text, fontSize: REPORT_STYLE.notePt, color: `#${REPORT_STYLE.muted}`, margin: [0, 0, 0, 4] };
   }
