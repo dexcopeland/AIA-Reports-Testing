@@ -1,18 +1,16 @@
 :root {
   color-scheme: light;
-  /* 2023 Maryland Brand Guideline Sheet. Gold is an accent fill only, never text or a thin line on white. */
-  --red: #c8122c;
-  --red-hover: #9e0e23;
-  --gold: #ffc838;
-  --ink: #231f20;
-  --muted: #4e4a4b;
-  --line: #c8c4c5;
-  --bg: #f6f4f4;
+  --ink: #1a1a1a;
+  --navy: #0a3161;
+  --muted: #3d4a57;
+  --line: #c5ced6;
+  --bg: #f3f6f8;
   --card: #ffffff;
-  --focus: #c8122c;
+  --focus: #0b57d0;
   --danger: #8a1c1c;
   --ok: #0d5c2e;
-  --shade: #f6f4f4;
+  --shade: #f4f7fb;
+  --accent: #0a3161;
   font-family: "Source Sans Pro", "Source Sans 3", "Segoe UI", sans-serif;
   font-size: 100%;
   line-height: 1.5;
@@ -30,7 +28,7 @@ body {
   position: absolute;
   left: 0.5rem;
   top: -3rem;
-  background: var(--red);
+  background: var(--navy);
   color: #fff;
   padding: 0.5rem 0.75rem;
   z-index: 5;
@@ -45,9 +43,8 @@ body {
 }
 
 header.site {
-  background: var(--red);
+  background: var(--navy);
   color: #fff;
-  border-bottom: 8px solid var(--gold);
 }
 
 header.site .wrap { padding-block: 1rem 1.25rem; }
@@ -62,58 +59,37 @@ header.site h1 {
 header.site p { margin: 0; max-width: 42rem; }
 
 .banner {
-  background: #fff;
-  border-bottom: 1px solid var(--line);
-  color: var(--ink);
+  background: #fff8e8;
+  border-bottom: 1px solid #e2c98a;
+  color: #3d2e08;
 }
 
 .banner .wrap { padding-block: 0.6rem; }
 
-a { color: var(--red); }
-a:hover { color: var(--red-hover); }
+a { color: var(--navy); }
 
 :focus-visible {
   outline: 3px solid var(--focus);
   outline-offset: 2px;
 }
 
-header.site :focus-visible,
-.skip:focus-visible {
-  outline-color: var(--gold);
-}
-
-main h2, main h3 { color: var(--red); }
-
 button, .button {
   font: inherit;
   min-height: 48px;
   padding: 0.55rem 0.9rem;
   border-radius: 4px;
-  border: 2px solid var(--red);
-  background: var(--red);
+  border: 2px solid var(--navy);
+  background: var(--navy);
   color: #fff;
   cursor: pointer;
 }
 
-button:hover { background: var(--red-hover); border-color: var(--red-hover); }
-
 button.secondary, .button.secondary {
   background: #fff;
-  color: var(--red);
+  color: var(--navy);
 }
 
-button.secondary:hover, .button.secondary:hover {
-  background: #f8e8eb;
-  color: var(--red);
-  border-color: var(--red);
-}
-
-button:disabled, button:disabled:hover {
-  background: #e7e4e4;
-  color: #5c5859;
-  border-color: #8a8687;
-  cursor: not-allowed;
-}
+button:disabled { opacity: 0.55; cursor: not-allowed; }
 
 .row { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
 
@@ -137,30 +113,20 @@ button:disabled, button:disabled:hover {
 .steps button {
   min-height: 44px;
   background: #fff;
-  color: var(--red);
+  color: var(--navy);
   padding: 0.35rem 0.6rem;
   font-size: 0.95rem;
 }
 
-.steps button:hover {
-  background: #f8e8eb;
-  color: var(--red);
-  border-color: var(--red);
+.steps button[aria-current="step"] {
+  background: var(--navy);
+  color: #fff;
 }
-
-.steps button[aria-current="step"],
-.steps button[aria-current="step"]:hover {
-  background: var(--gold);
-  color: var(--ink);
-  border-color: var(--red);
-}
-
-.steps button[aria-current="step"]:hover { background: #e6b01a; }
 
 progress, .bar {
   width: 100%;
   height: 0.6rem;
-  accent-color: var(--red);
+  accent-color: var(--accent);
 }
 
 .field { margin-block: 0 1.25rem; }
@@ -178,7 +144,7 @@ input[type="text"], input[type="email"], input[type="date"], textarea, select {
   font: inherit;
   font-size: 1rem;
   padding: 0.65rem 0.7rem;
-  border: 2px solid var(--ink);
+  border: 2px solid #5c6b7a;
   border-radius: 4px;
   background: #fff;
   color: var(--ink);
@@ -195,7 +161,7 @@ textarea { min-height: 8rem; resize: vertical; }
   padding: 0.35rem 0.2rem;
 }
 
-.choice input { accent-color: var(--red); width: 1.15rem; height: 1.15rem; margin-top: 0.2rem; }
+.choice input { accent-color: var(--accent); width: 1.15rem; height: 1.15rem; margin-top: 0.2rem; }
 
 .choice label { font-weight: 400; }
 
@@ -207,24 +173,24 @@ textarea { min-height: 8rem; resize: vertical; }
 
 .sheet {
   background: #fff;
-  color: var(--ink);
+  color: #1a1a1a;
   padding: 1.25rem 1.1rem 2rem;
   border: 1px solid var(--line);
 }
 
 .sheet { font-family: "Times New Roman", "Liberation Serif", serif; }
 .sheet h1, .r-h1 {
-  color: var(--red);
+  color: var(--navy);
   font-size: 1.7rem;
   line-height: 1.2;
   margin: 0 0 0.4rem;
-  border-bottom: 2px solid var(--red);
+  border-bottom: 2px solid var(--navy);
   padding-bottom: 0.35rem;
 }
 
-.sheet h2, .r-h2 { color: var(--red); font-size: 1.25rem; margin: 1.3rem 0 0.4rem; }
-.sheet h3, .r-h3 { color: var(--red); font-size: 1.05rem; margin: 1rem 0 0.3rem; }
-.r-label { font-weight: 700; color: var(--red); margin: 0.8rem 0 0.2rem; }
+.sheet h2, .r-h2 { color: var(--navy); font-size: 1.25rem; margin: 1.3rem 0 0.4rem; }
+.sheet h3, .r-h3 { color: var(--navy); font-size: 1.05rem; margin: 1rem 0 0.3rem; }
+.r-label { font-weight: 700; color: var(--navy); margin: 0.8rem 0 0.2rem; }
 .r-note { color: var(--muted); margin: 0.2rem 0; }
 .r-p, .r-field { margin: 0.35rem 0; }
 .r-field.r-aligned { margin-top: 0.9rem; }
@@ -237,7 +203,7 @@ textarea { min-height: 8rem; resize: vertical; }
 .r-sub { margin: 0 0 0.35rem 1.7rem; }
 .r-qa {
   background: var(--shade);
-  border-left: 4px solid var(--red);
+  border-left: 4px solid #1b4f8a;
   padding: 0.6rem 0.75rem;
   white-space: pre-wrap;
 }
@@ -266,7 +232,7 @@ textarea { min-height: 8rem; resize: vertical; }
       content: "Algorithmic Impact Assessment · " counter(page);
       font-family: "Times New Roman", "Liberation Serif", serif;
       font-size: 9pt;
-      color: #4e4a4b;
+      color: #4a5562;
     }
   }
 }

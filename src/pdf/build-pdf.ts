@@ -95,11 +95,11 @@ function blockContent(block: Block, faces: LoadedFaces, missing: Set<string>): P
         text: paint(block.text, faces, missing),
         fontSize: REPORT_STYLE.titlePt,
         bold: true,
-        color: `#${REPORT_STYLE.red}`,
+        color: `#${REPORT_STYLE.navy}`,
         margin: [0, 0, 0, 4],
       },
       {
-        canvas: [{ type: "line", x1: 0, y1: 0, x2: 468, y2: 0, lineWidth: 1, lineColor: `#${REPORT_STYLE.red}` }],
+        canvas: [{ type: "line", x1: 0, y1: 0, x2: 468, y2: 0, lineWidth: 1, lineColor: `#${REPORT_STYLE.navy}` }],
         margin: [0, 0, 0, 10],
       },
     ];
@@ -109,7 +109,7 @@ function blockContent(block: Block, faces: LoadedFaces, missing: Set<string>): P
       text: paint(block.text, faces, missing),
       fontSize: REPORT_STYLE.headingPt,
       bold: true,
-      color: `#${REPORT_STYLE.red}`,
+      color: `#${REPORT_STYLE.navy}`,
       margin: [0, 14, 0, 6],
     };
   }
@@ -118,7 +118,7 @@ function blockContent(block: Block, faces: LoadedFaces, missing: Set<string>): P
       text: paint(block.text, faces, missing),
       fontSize: REPORT_STYLE.subheadPt,
       bold: true,
-      color: `#${REPORT_STYLE.red}`,
+      color: `#${REPORT_STYLE.navy}`,
       margin: [0, 10, 0, 4],
     };
   }
@@ -127,7 +127,7 @@ function blockContent(block: Block, faces: LoadedFaces, missing: Set<string>): P
       text: paint(block.text, faces, missing),
       fontSize: REPORT_STYLE.bodyPt,
       bold: true,
-      color: `#${REPORT_STYLE.red}`,
+      color: `#${REPORT_STYLE.navy}`,
       margin: [0, 8, 0, 2],
     };
   }
