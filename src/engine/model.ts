@@ -21,6 +21,8 @@ export interface ResolvedItem {
   groupId?: string;
   individual: boolean;
   designFact?: string;
+  /** Hidden because the Q6 answers do not fit this threat. The saved statement is ignored. */
+  q6Excluded?: boolean;
 }
 
 export interface GateHit {

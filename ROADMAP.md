@@ -20,7 +20,7 @@ A proposed combination flag also treats biometric identification plus the identi
 
 **Suggested label:** `rules`
 
-Every row in `content/RULES.md` is in force in v1 and still marked proposed. That includes the evidence check, retention (15d), the Q18 Unknown option, the G4 and G6 mappings, the cap-of-3 priority, the status-conflict timing, the outside-people cross-check, the data-level cross-check, and the Q25 export block.
+Every row in `content/RULES.md` is in force in v1 and still marked proposed. That includes the evidence check, retention (15d), the Q18 Unknown option, the G4 and G6 mappings, the cap-of-3 priority, the status-conflict timing, the outside-people cross-check, the data-level cross-check, the Q25 export block, and the Q22 threat-fit mapping.
 
 ## Remaining template paragraphs
 

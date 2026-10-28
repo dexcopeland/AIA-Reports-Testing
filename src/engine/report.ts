@@ -1,13 +1,13 @@
 import { ASSURANCES, BUILDERS, CAPABILITIES, DEPLOYMENT, DESIGN_FACTS, HARM_TYPES, HOSTING, LEVELS, METHODS, PRIOR, PROCUREMENT, ROLES, TARGETS, labelOf } from "../content/catalog";
 import { AREAS } from "../content/rules";
 import { APPROVAL_BANNED, BANNED, FIXED, RP_META, SOURCES } from "../content/rules";
-import { GROUPS, RELATIONS, STATEMENT_BY_ID } from "../content/statements";
+import { GROUPS, RELATIONS, STATEMENT_BY_ID, THREATS } from "../content/statements";
 import type { AnswerFile } from "../content/types";
 import type { Answers } from "./answers";
 import { many, text } from "./answers";
 import { evaluate, levelSafeguard, optionLabel } from "./evaluate";
 import type { Evaluation, LiveMitigation } from "./model";
-import { dataLevel, deployment, selectedGroups, vendorInvolved } from "./visibility";
+import { dataLevel, deployment, priorAssessment, processingPlace, procurementApplicable, selectedGroups, statusConflict, threatApplies, vendorInvolved } from "./visibility";
 
 export interface Block {
   type: "h1" | "h2" | "h3" | "p" | "label" | "field" | "note" | "qa" | "break" | "bullet" | "sub";
@@ -94,6 +94,10 @@ function statementLines(answers: Answers, legacyQ: number): string[] {
       for (const key of valueKeys) {
         const value = text(answers, key);
         if (!value) continue;
+        if (item.id === "22") {
+          const threatId = key.slice("st22__".length);
+          if (THREATS.some((threat) => threat.id === threatId) && !threatApplies(threatId, answers)) continue;
+        }
         const choice = item.choices.find((row) => row.value === value);
         const suffix = key.slice(`st${item.id}__`.length);
         const context = suffix && suffix !== item.id ? suffix.replaceAll("_", " ") : "";
@@ -180,7 +184,9 @@ export function appendixAnswer(answers: Answers, n: number): string {
     lines.push(...statementLines(answers, 14));
   }
   if (n === 15) {
-    push("Where processed", labelOf(HOSTING, text(answers, "q15_where")));
+    const place = processingPlace(answers);
+    const placeLabel = labelOf(HOSTING, place.id);
+    push("Where processed", place.sameAsRun && placeLabel ? `${placeLabel} (same place it runs)` : placeLabel);
     lines.push(...statementLines(answers, 15));
   }
   if (n === 16) {
@@ -191,10 +197,18 @@ export function appendixAnswer(answers: Answers, n: number): string {
     lines.push(...statementLines(answers, 16));
   }
   if (n === 17) push("Deployment status", labelOf(DEPLOYMENT, text(answers, "q17_status")));
-  if (n === 18) push("Procurement", labelOf(PROCUREMENT, text(answers, "q18_procured")));
+  if (n === 18) {
+    if (!procurementApplicable(answers)) lines.push("Not applicable. Built by the State with no vendor and no outside model.");
+    else push("Procurement", labelOf(PROCUREMENT, text(answers, "q18_procured")));
+  }
   if (n === 19) {
-    push("Start of use", text(answers, "q19_start"));
-    push("Impact assessment before deployment", labelOf(PRIOR, text(answers, "q19_prior")));
+    const asked = deployment(answers) === "pilot" || deployment(answers) === "live";
+    if (!asked && !statusConflict(answers)) {
+      lines.push("Impact assessment before deployment: Not applicable. Use has not started.");
+    } else {
+      push("Start of use", text(answers, "q19_start"));
+      push("Impact assessment before deployment", labelOf(PRIOR, priorAssessment(answers)));
+    }
   }
   if (n === 20) {
     push("What could go wrong", text(answers, "q20_harm"));
@@ -202,7 +216,14 @@ export function appendixAnswer(answers: Answers, n: number): string {
     lines.push(...statementLines(answers, 20));
   }
   if (n === 21) lines.push(...statementLines(answers, 21));
-  if (n === 22) lines.push(...statementLines(answers, 22));
+  if (n === 22) {
+    for (const threat of THREATS) {
+      if (!threatApplies(threat.id, answers)) {
+        lines.push(`${threat.label}: Excluded because of the Q6 answers. The agency did not select Does not apply.`);
+      }
+    }
+    lines.push(...statementLines(answers, 22));
+  }
   if (n === 23) {
     push("Monitoring role", text(answers, "q23_monitor"));
     push("Incident role", text(answers, "q23_incident"));
@@ -255,10 +276,10 @@ function inventoryB2(answers: Answers): string {
 
 function inventoryB5(answers: Answers): string {
   const status = deployment(answers);
-  if (status !== "pilot" && status !== "live" && text(answers, "q19_start") === "") return FIXED.notDeployed;
-  const start = text(answers, "q19_start") || "start date not given";
-  const prior = labelOf(PRIOR, text(answers, "q19_prior")) || "not answered";
-  return `Use started ${start}. Impact assessment before deployment: ${prior}.`;
+  const start = text(answers, "q19_start");
+  if (status !== "pilot" && status !== "live" && start === "") return FIXED.notDeployed;
+  const prior = labelOf(PRIOR, priorAssessment(answers)) || "not answered";
+  return `Use started ${start || "start date not given"}. Impact assessment before deployment: ${prior}.`;
 }
 
 function summaryText(result: Evaluation, answers: Answers): string {
@@ -323,7 +344,7 @@ export function buildReport(file: AnswerFile): ReportDoc {
     ["Agency", [text(answers, "q2_agency"), text(answers, "q2_unit")].filter(Boolean).join(", ") || "No answer provided"],
     ["Intake reference", text(answers, "q1_intake") || FIXED.noIntake],
     ["Deployment status", labelOf(DEPLOYMENT, deployment(answers)) || "No answer provided"],
-    ["Procurement date", labelOf(PROCUREMENT, text(answers, "q18_procured")) || "No answer provided"],
+    ...(procurementApplicable(answers) ? [["Procurement date", labelOf(PROCUREMENT, text(answers, "q18_procured")) || "No answer provided"] as [string, string]] : []),
     ["Submitter role", text(answers, "q2_role") || "No answer provided"],
     ["Agency Lead role", text(answers, "q3_is_lead") === "yes" ? (text(answers, "q2_role") || "Submitter") : (text(answers, "q3_lead_role") || "Not named")],
   ];

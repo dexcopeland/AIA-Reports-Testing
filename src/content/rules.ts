@@ -577,4 +577,8 @@ export const PROPOSED_RULES: { id: string; text: string }[] = [
     id: "level-cross-check",
     text: "Q14 data types suggest a minimum level. If that level is above Q13, Section 4 says so. The level itself is not changed.",
   },
+  {
+    id: "threat-fit",
+    text: "Proposed: Q22 shows only the threats that fit the Q6 answers. Prompt injection is limited to generative, chat, or document-retrieval systems. Poisoning is limited to systems that may be trained or fine-tuned on agency data. Unclear threats stay visible, including every threat when capabilities are Unknown or empty. A hidden threat is excluded because of the Q6 answers.",
+  },
 ];

@@ -13,12 +13,13 @@ import {
   ROLES,
   TARGETS,
   YES_NO,
+  labelOf,
 } from "./catalog";
 import { AREAS, DATA_TYPES, OVERLAYS, PROHIBITED } from "./rules";
-import { GROUPS, RELATIONS } from "./statements";
+import { CONTRACT_TERMS, GROUPS, RELATIONS, THREATS } from "./statements";
 import type { Answers } from "../engine/answers";
 import { text } from "../engine/answers";
-import { selectedGroups, showStatement, vendorInvolved } from "../engine/visibility";
+import { selectedGroups, showProcessingPlace, showStatement, threatApplies, vendorInvolved } from "../engine/visibility";
 
 export interface Field {
   id: string;
@@ -31,6 +32,7 @@ export interface Field {
   statementId?: string;
   repeat?: "group" | "term" | "threat";
   show?: (answers: Answers) => boolean;
+  legend?: (answers: Answers) => string;
   role?: boolean;
   autocomplete?: string;
   spellcheck?: boolean;
@@ -44,6 +46,14 @@ export interface FormSection {
 
 const leadNo = (answers: Answers) => text(answers, "q3_is_lead") === "no";
 const notState = (answers: Answers) => text(answers, "q5_builder") !== "state_built" && text(answers, "q5_builder") !== "";
+const stateBuilt = (answers: Answers) => text(answers, "q5_builder") === "state_built";
+const inPilotOrLive = (answers: Answers) => text(answers, "q17_status") === "pilot" || text(answers, "q17_status") === "live";
+
+export function samePlaceLabel(answers: Answers): string {
+  const place = labelOf(HOSTING, text(answers, "q6_hosting"));
+  const named = place && place !== text(answers, "q6_hosting") ? place : "the place named in Q6";
+  return `Is the data processed in the same place it runs (${named})?`;
+}
 const certPicked = (answers: Answers) => {
   const values = answers.q16_assurances;
   const list = Array.isArray(values) ? values : [];
@@ -118,7 +128,17 @@ export const SECTIONS: FormSection[] = [
       { id: "st14a", legacyQ: 14, type: "statement", statementId: "14a", label: "Data sources and quality checks", required: true, help: "Recommended practice (RP3): good practice, not a State rule." },
       { id: "st14b", legacyQ: 14, type: "statement", statementId: "14b", label: "Protecting data from tampering", required: true },
       { id: "st14c", legacyQ: 14, type: "statement", statementId: "14c", label: "Limits on documents pulled into answers", required: true, show: (answers) => showStatement("14c", answers) },
-      { id: "q15_where", legacyQ: 15, type: "radio", label: "Where is the data processed?", required: true, options: HOSTING },
+      {
+        id: "q15_same_place",
+        legacyQ: 15,
+        type: "radio",
+        label: "Is the data processed in the same place it runs?",
+        legend: samePlaceLabel,
+        required: true,
+        options: YES_NO,
+        help: "Yes uses the place named in Q6. No asks for the processing place. If an older file names a different place, this question is left unanswered and that place stays on screen until you choose Yes or No.",
+      },
+      { id: "q15_where", legacyQ: 15, type: "radio", label: "Where is the data processed?", required: true, options: HOSTING, show: showProcessingPlace },
       { id: "st15a", legacyQ: 15, type: "statement", statementId: "15a", label: "Encryption at rest and in transit", required: true, show: (answers) => showStatement("15a", answers), help: "Shown for Level 2 and above, and when the level is Unknown." },
       { id: "st15b", legacyQ: 15, type: "statement", statementId: "15b", label: "Access limited to authorized staff", required: true },
       { id: "st15c", legacyQ: 15, type: "statement", statementId: "15c", label: "Privacy review", required: true, show: (answers) => showStatement("15c", answers), help: "Shown when the privacy track is open: Level 3, Level 4, Unknown, or an overlay." },
@@ -135,9 +155,9 @@ export const SECTIONS: FormSection[] = [
     title: "Section 5: Status",
     fields: [
       { id: "q17_status", legacyQ: 17, type: "radio", label: "Deployment status", required: true, options: DEPLOYMENT },
-      { id: "q18_procured", legacyQ: 18, type: "radio", label: "When was it procured?", required: true, options: PROCUREMENT, help: "Unknown uses the no-date sentence. That option is proposed." },
-      { id: "q19_start", legacyQ: 19, type: "date", label: "When did use start?", help: "Leave blank if it is not in use. A date while status is Planning or Procuring is flagged as a conflict." },
-      { id: "q19_prior", legacyQ: 19, type: "radio", label: "Was an impact assessment done before deployment?", required: true, options: PRIOR, help: "Choose Not applicable if it is not in pilot or live and use has not started." },
+      { id: "q18_procured", legacyQ: 18, type: "radio", label: "When was it procured?", required: true, options: PROCUREMENT, show: (answers) => !stateBuilt(answers), help: "Hidden when Q5 is built by the State with no vendor and no outside model. Unknown uses the no-date sentence. That option is proposed." },
+      { id: "q19_start", legacyQ: 19, type: "date", label: "When did use start?", show: inPilotOrLive, help: "Shown for Pilot and Live. A start date saved with Planning or Procuring still flags a conflict when an older file is loaded." },
+      { id: "q19_prior", legacyQ: 19, type: "radio", label: "Was an impact assessment done before deployment?", required: true, options: PRIOR, show: inPilotOrLive, help: "Shown for Pilot and Live. Planning and Procuring are Not applicable. A saved answer stays in the file and is ignored." },
     ],
   },
   {
@@ -152,7 +172,7 @@ export const SECTIONS: FormSection[] = [
       { id: "st21c", legacyQ: 21, type: "statement", statementId: "21c", label: "Monitoring after launch", required: true },
       { id: "st21d", legacyQ: 21, type: "statement", statementId: "21d", label: "Logging each use", required: true, help: "Recommended practice (RP6)." },
       { id: "st21e", legacyQ: 21, type: "statement", statementId: "21e", label: "Re-testing", required: true },
-      { id: "st22", legacyQ: 22, type: "statement", statementId: "22", repeat: "threat", label: "Protections for each threat", required: true, help: "Recommended practice (RP5). Does not apply counts only when the matching design fact is ticked in Q6. Do not describe an attack." },
+      { id: "st22", legacyQ: 22, type: "statement", statementId: "22", repeat: "threat", label: "Protections for each threat", required: true, help: "Recommended practice (RP5). Only threats that fit the Q6 answers are shown. A hidden threat is excluded because of those answers. The fit rules are proposed. Does not apply, when the agency selects it, still needs the matching design fact. Do not describe an attack." },
       { id: "st22f", legacyQ: 22, type: "statement", statementId: "22f", label: "Security testing", required: true },
       { id: "q23_monitor", legacyQ: 23, type: "short", label: "Role that monitors the AI system", role: true },
       { id: "q23_incident", legacyQ: 23, type: "short", label: "Role that handles incidents", role: true },
@@ -175,4 +195,21 @@ export const SECTIONS: FormSection[] = [
 
 export function visibleFields(section: FormSection, answers: Answers): Field[] {
   return section.fields.filter((field) => !field.show || field.show(answers));
+}
+
+/** Each visible answer control, including repeated statements and each group relation. Info notes are not counted. */
+export function countVisibleQuestions(answers: Answers): number {
+  let count = 0;
+  const relations = selectedGroups(answers).length;
+  for (const section of SECTIONS) {
+    for (const field of visibleFields(section, answers)) {
+      if (field.type === "info") continue;
+      if (field.repeat === "group") count += relations;
+      else if (field.repeat === "term") count += CONTRACT_TERMS.length;
+      else if (field.repeat === "threat") count += THREATS.filter((threat) => threatApplies(threat.id, answers)).length;
+      else count += 1;
+      if (field.type === "groups") count += relations;
+    }
+  }
+  return count;
 }
