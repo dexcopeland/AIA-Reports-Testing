@@ -139,7 +139,8 @@ describe("evaluation engine", () => {
     expect(body).not.toContain("..");
     expect(body).not.toContain(".\".\n");
     expect(body).toContain("Answer relied on (Q11):");
-    expect(body).toContain("- Human review before an output takes effect: A named role reviews every output before it takes effect, following a written procedure.");
+    expect(report.blocks.some((block) => block.type === "bullet" && block.text.startsWith("Human review before an output takes effect: A named role reviews every output before it takes effect, following a written procedure."))).toBe(true);
+    expect(report.blocks.filter((block) => block.type === "bullet").every((block) => !block.text.startsWith("- "))).toBe(true);
     expect(body).toContain("Evidence: Example agency file shows the control for this fictional assessment.");
     const answerLeads = report.blocks.filter((block) => block.text.startsWith("Answer relied on"));
     expect(answerLeads.every((block) => block.text.endsWith("):"))).toBe(true);
@@ -151,7 +152,7 @@ describe("evaluation engine", () => {
       "Notice of AI security incidents",
     ]);
     expect(body).toContain("Answer relied on (Q16):");
-    expect(body).toContain("- Split of responsibilities: It is in the signed contract.");
+    expect(report.blocks.some((block) => block.type === "bullet" && block.text.startsWith("Split of responsibilities: It is in the signed contract."))).toBe(true);
   });
 
   it("treats an unknown review as a Gap and keeps the S04-like gates and deadline", () => {

@@ -57,7 +57,7 @@ function answerBlocks(item: { qRefs: string; answerLines: { label: string; state
   const lines: Block[] = [block("field", `Answer relied on (${item.qRefs}):`, "answer")];
   const answers = item.answerLines.length > 0 ? item.answerLines : [{ label: "Answer", statement: "No answer provided.", evidence: "", targetDate: "" }];
   for (const line of answers) {
-    lines.push(block("bullet", `- ${line.label}: ${line.statement}`, "answer"));
+    lines.push(block("bullet", `${line.label}: ${line.statement}`, "answer"));
     if (line.evidence) lines.push(block("sub", `Evidence: ${line.evidence}`, "answer"));
     if (line.targetDate) lines.push(block("sub", `Target date: ${line.targetDate}.`, "answer"));
   }

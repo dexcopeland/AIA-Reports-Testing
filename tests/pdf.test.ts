@@ -30,6 +30,7 @@ describe("PDF report", () => {
       "10. Sources",
       "Appendix: Questions and answers used in this assessment",
       "Human oversight is in place",
+      "•",
       "Page 1 of",
     ]) {
       expect(flat).toContain(heading);

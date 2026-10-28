@@ -1,8 +1,10 @@
 import {
+  AlignmentType,
   BorderStyle,
   Document,
   Footer,
   HeadingLevel,
+  LevelFormat,
   Packer,
   PageBreak,
   PageNumber,
@@ -71,8 +73,8 @@ function paragraphFrom(block: Block): FileChild[] {
   if (block.type === "bullet") {
     return [
       new Paragraph({
-        spacing: { after: 40 },
-        indent: { left: 360, hanging: 180 },
+        numbering: { reference: "answer-relied-on", level: 0 },
+        spacing: { before: 40, after: 20 },
         children: [run(block.text, { size: 24 })],
       }),
     ];
@@ -80,8 +82,8 @@ function paragraphFrom(block: Block): FileChild[] {
   if (block.type === "sub") {
     return [
       new Paragraph({
-        spacing: { after: 60 },
-        indent: { left: 720 },
+        spacing: { before: 0, after: 60 },
+        indent: { left: 1080 },
         children: [run(block.text, { size: 24 })],
       }),
     ];
@@ -106,10 +108,12 @@ function paragraphFrom(block: Block): FileChild[] {
         }),
     );
   }
+  const aligned = block.text.startsWith("Aligned to:");
+  const answerLead = block.text.startsWith("Answer relied on (");
   return [
     new Paragraph({
-      spacing: { after: 120 },
-      children: [run(block.text, { size: block.type === "field" ? 24 : 24 })],
+      spacing: { before: aligned ? 240 : 0, after: answerLead ? 80 : 120 },
+      children: [run(block.text, { size: 24 })],
     }),
   ];
 }
@@ -129,6 +133,30 @@ export async function reportToDocxBlob(doc: ReportDoc): Promise<Blob> {
     ],
   });
   const document = new Document({
+    numbering: {
+      config: [
+        {
+          reference: "answer-relied-on",
+          levels: [
+            {
+              level: 0,
+              format: LevelFormat.BULLET,
+              text: "•",
+              alignment: AlignmentType.LEFT,
+              style: {
+                paragraph: {
+                  indent: { left: 720, hanging: 360 },
+                },
+                run: {
+                  font: FONT,
+                  size: 24,
+                },
+              },
+            },
+          ],
+        },
+      ],
+    },
     styles: {
       default: {
         document: {

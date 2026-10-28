@@ -192,8 +192,14 @@ textarea { min-height: 8rem; resize: vertical; }
 .r-label { font-weight: 700; color: var(--navy); margin: 0.8rem 0 0.2rem; }
 .r-note { color: var(--muted); margin: 0.2rem 0; }
 .r-p, .r-field { margin: 0.35rem 0; }
-.r-bullet { margin: 0.15rem 0 0.1rem 1.15rem; }
-.r-sub { margin: 0 0 0.35rem 2.3rem; }
+.r-field.r-aligned { margin-top: 0.9rem; }
+.r-bullet {
+  margin: 0.2rem 0 0.1rem 0.35rem;
+  padding-left: 1.15rem;
+  text-indent: -1.15rem;
+}
+.r-bullet::before { content: "• "; }
+.r-sub { margin: 0 0 0.35rem 1.7rem; }
 .r-qa {
   background: var(--shade);
   border-left: 4px solid #1b4f8a;

@@ -94,12 +94,6 @@ function blockContent(block: Block): PdfContent | PdfContent[] {
       margin: [0, 8, 0, 2],
     };
   }
-  if (block.type === "bullet") {
-    return { text: block.text, fontSize: REPORT_STYLE.bodyPt, margin: [14, 1, 0, 1] };
-  }
-  if (block.type === "sub") {
-    return { text: block.text, fontSize: REPORT_STYLE.bodyPt, margin: [32, 0, 0, 3] };
-  }
   if (block.type === "note") {
     return { text: block.text, fontSize: REPORT_STYLE.notePt, color: `#${REPORT_STYLE.muted}`, margin: [0, 0, 0, 4] };
   }
@@ -116,7 +110,40 @@ function blockContent(block: Block): PdfContent | PdfContent[] {
       margin: [0, 2, 0, 8],
     };
   }
-  return { text: block.text, fontSize: REPORT_STYLE.bodyPt, margin: [0, 0, 0, 6] };
+  const aligned = block.text.startsWith("Aligned to:");
+  const answerLead = block.text.startsWith("Answer relied on (");
+  return {
+    text: block.text,
+    fontSize: REPORT_STYLE.bodyPt,
+    margin: aligned ? [0, 12, 0, 6] : answerLead ? [0, 2, 0, 4] : [0, 0, 0, 6],
+  };
+}
+
+function blocksToPdf(blocks: Block[]): PdfContent[] {
+  const content: PdfContent[] = [];
+  for (let index = 0; index < blocks.length; index += 1) {
+    const block = blocks[index];
+    if (block.type !== "bullet") {
+      const piece = blockContent(block);
+      if (Array.isArray(piece)) content.push(...piece);
+      else content.push(piece);
+      continue;
+    }
+    const stack: PdfContent[] = [{ text: block.text }];
+    while (blocks[index + 1]?.type === "sub") {
+      index += 1;
+      stack.push({ text: blocks[index].text, margin: [14, 1, 0, 0] });
+    }
+    content.push({
+      columns: [
+        { width: 12, text: "•", font: "SourceSansPro", fontSize: REPORT_STYLE.bodyPt },
+        { width: "*", stack },
+      ],
+      columnGap: 4,
+      margin: [2, 3, 0, 2],
+    });
+  }
+  return content;
 }
 
 export function reportDefinition(doc: ReportDoc): Record<string, unknown> {
@@ -136,7 +163,7 @@ export function reportDefinition(doc: ReportDoc): Record<string, unknown> {
       color: `#${REPORT_STYLE.muted}`,
       margin: [REPORT_STYLE.marginPt, 8, REPORT_STYLE.marginPt, 0],
     }),
-    content: doc.blocks.flatMap((block) => blockContent(block)),
+    content: blocksToPdf(doc.blocks),
   };
 }
 
