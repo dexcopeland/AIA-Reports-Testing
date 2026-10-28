@@ -75,6 +75,23 @@ describe("evaluation engine", () => {
     }
   });
 
+  it("quotes the statement that sets the weakest status when criteria are combined", () => {
+    const scenario = SCENARIOS.find((item) => item.id === "S01");
+    expect(scenario).toBeTruthy();
+    const answers = buildScenario(scenario!);
+    answers.answers.st11b = "cannot";
+    delete answers.answers.st11b__evidence;
+    const result = evaluate(answers);
+    const c9 = result.criteria.find((item) => item.id === "C9");
+    expect(c9?.status).toBe("Gap");
+    expect(c9?.quote).toContain("cannot change outputs");
+    expect(c9?.found).toContain("cannot change outputs");
+    expect(c9?.quote).not.toContain("written procedure");
+    const rp4 = result.rp.find((item) => item.id === "RP4");
+    expect(rp4?.status).toBe("Not yet");
+    expect(rp4?.quote).toContain("cannot change outputs");
+  });
+
   it("treats an unknown review as a Gap and keeps the S04-like gates and deadline", () => {
     const result = evaluate(file({
       ...base,

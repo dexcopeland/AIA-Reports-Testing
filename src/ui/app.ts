@@ -312,14 +312,25 @@ export function mount(root: Element): void {
     if (field.help) wrap.append(help(field.help, helpId));
     wrap.append(input);
     if (field.role) {
-      const warning = roleWarning(input.value);
-      if (warning) {
-        const w = el("p", warning);
-        w.className = "warn";
-        w.id = `${field.id}-role`;
-        wrap.append(w);
-      }
-      input.addEventListener("blur", () => redraw());
+      const showRoleWarning = () => {
+        const existing = wrap.querySelector(`#${field.id}-role`);
+        const warning = roleWarning(input.value);
+        if (warning) {
+          if (existing) {
+            existing.textContent = warning;
+            return;
+          }
+          const next = el("p", warning);
+          next.className = "warn";
+          next.id = `${field.id}-role`;
+          next.setAttribute("role", "status");
+          wrap.append(next);
+          return;
+        }
+        existing?.remove();
+      };
+      showRoleWarning();
+      input.addEventListener("blur", showRoleWarning);
     }
     return wrap;
   }

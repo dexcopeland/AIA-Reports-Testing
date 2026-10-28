@@ -208,11 +208,36 @@ function itemsOf(items: ResolvedItem[], id: string): ResolvedItem[] {
   return items.filter((item) => item.statementId === id && !item.notApplicable);
 }
 
+function asRp(status: ItemStatus): ItemStatus {
+  if (status === "Met" || status === "Partial" || status === "Gap") return toRp(status);
+  return status;
+}
+
+function statusRank(status: ItemStatus, reported: string): number {
+  const reportedIsRp = reported === "Not yet" || reported === "Partly in place" || reported === "In place" || reported === "Not applicable";
+  const order = reportedIsRp ? RP_ORDER : C_ORDER;
+  const mapped = reportedIsRp ? asRp(status) : status;
+  const index = order.indexOf(mapped);
+  return index === -1 ? order.length : index;
+}
+
+/** Statements whose status is the weakest in the set. That is the answer the finding rests on. */
+function drivingItems(items: ResolvedItem[], reported: string): ResolvedItem[] {
+  if (items.length === 0) return [];
+  let weakestRank = Number.POSITIVE_INFINITY;
+  for (const item of items) weakestRank = Math.min(weakestRank, statusRank(item.status, reported));
+  const weakestItems = items.filter((item) => statusRank(item.status, reported) === weakestRank);
+  const reportedIsRp = reported === "Not yet" || reported === "Partly in place" || reported === "In place" || reported === "Not applicable";
+  const exact = weakestItems.filter((item) => (reportedIsRp ? asRp(item.status) : item.status) === reported);
+  return exact.length > 0 ? exact : weakestItems;
+}
+
 function quoteOf(items: ResolvedItem[]): string {
-  const item = items.find((entry) => !entry.unanswered) ?? items[0];
-  if (!item) return "No statement was selected.";
-  const prefix = item.context ? `${item.context}: ` : "";
-  return `${prefix}${item.choiceText}`;
+  if (items.length === 0) return "No statement was selected.";
+  return items.map((item) => {
+    const label = item.context ? `${item.title} (${item.context})` : item.title;
+    return `${label}: ${item.choiceText}`;
+  }).join("; ");
 }
 
 function qRef(items: ResolvedItem[], fallback: string): string {
@@ -221,27 +246,30 @@ function qRef(items: ResolvedItem[], fallback: string): string {
 }
 
 function foundLine(status: string, items: ResolvedItem[], name: string): string {
-  const unanswered = items.length === 0 || items.every((item) => item.unanswered);
+  const drivers = drivingItems(items, status);
+  const source = drivers.length > 0 ? drivers : items;
+  const unanswered = source.length === 0 || source.every((item) => item.unanswered);
   if (unanswered && (status === "Gap" || status === "Not yet" || status === "Partial")) {
-    return `The answers did not show ${name}.`;
+    const labels = source.map((item) => item.context || item.title).join("; ");
+    return labels ? `The answers did not show ${name} (${labels}).` : `The answers did not show ${name}.`;
   }
-  const quote = quoteOf(items);
-  const q = qRef(items, "the form");
-  if (status === "Gap" || status === "Not yet") return `${q} says "${quote}".`;
-  if (status === "Partial" || status === "Partly in place") return `${q} says "${quote}".`;
+  const quote = quoteOf(source);
+  const q = qRef(source, "the form");
   if (status === "Not applicable") return quote;
   return `${q} says "${quote}".`;
 }
 
 function criterion(id: string, status: string, found: string, items: ResolvedItem[], qFallback: string): CriterionResult {
   const meta = CRITERIA_META.find((item) => item.id === id) ?? RP_META.find((item) => item.id === id);
+  const drivers = drivingItems(items, status);
+  const source = drivers.length > 0 ? drivers : items;
   return {
     id,
     name: meta?.name ?? id,
     status,
     found,
-    quote: quoteOf(items),
-    qRefs: qRef(items, qFallback),
+    quote: quoteOf(source),
+    qRefs: qRef(source.length > 0 ? source : items, qFallback),
   };
 }
 
