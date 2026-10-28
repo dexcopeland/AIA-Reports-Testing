@@ -55,19 +55,30 @@ function itemLabel(item: ResolvedItem): string {
   return item.context ? `${item.title} (${item.context})` : item.title;
 }
 
-export function buildDetail(items: ResolvedItem[], prefix = ""): string {
+function noMitigationSentence(labels: string[]): string {
+  if (labels.length === 0) return "";
+  const names = proseList(labels);
+  if (labels.length === 1) return `${names} remains open, and this report does not include a recommended mitigation for it.`;
+  return `${names} remain open, and this report does not include a recommended mitigation for them.`;
+}
+
+export function buildDetail(items: ResolvedItem[], prefix = "", keptIds?: ReadonlySet<string>): string {
   const names = proseList(items.map(itemLabel));
   const dates = proseList([...new Set(items.map((item) => item.targetDate).filter(Boolean).map(formatDate))]);
-  const mitigations = proseList(
-    [...new Set(items.map((item) => item.mitigation).filter((id): id is string => Boolean(id)))].map(
-      (id) => MITIGATION_BY_ID[id]?.title ?? id,
-    ),
-  );
+  const mitigationIds = [...new Set(items.map((item) => item.mitigation).filter((id): id is string => Boolean(id)))];
+  const kept = mitigationIds.filter((id) => !keptIds || keptIds.has(id));
+  const droppedLabels = items
+    .filter((item) => item.mitigation && keptIds && !keptIds.has(item.mitigation))
+    .map(itemLabel);
+  const keptTitles = proseList(kept.map((id) => MITIGATION_BY_ID[id]?.title ?? id));
   const followup = items.some((item) => item.needsFollowup);
-  let action = "";
-  if (mitigations && followup) action = `The mitigation ${mitigations} applies, and a follow-up applies.`;
-  else if (mitigations) action = `The mitigation ${mitigations} applies.`;
-  else if (followup) action = "A follow-up applies.";
+  const parts: string[] = [];
+  if (keptTitles && followup) parts.push(`The mitigation ${keptTitles} applies, and a follow-up applies.`);
+  else if (keptTitles) parts.push(`The mitigation ${keptTitles} applies.`);
+  else if (followup && droppedLabels.length === 0) parts.push("A follow-up applies.");
+  const uncovered = noMitigationSentence([...new Set(droppedLabels)]);
+  if (uncovered) parts.push(uncovered);
+  const action = parts.join(" ");
   const open = names
     ? `Still open: ${names}${dates ? `, with a target date of ${dates}` : ""}.`
     : dates

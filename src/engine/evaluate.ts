@@ -253,14 +253,14 @@ function narrateTo(
   id: string,
   status: string,
   items: ResolvedItem[],
-  options: { phrase?: string; areas?: string; prefix?: string; lead?: AnswerLine[]; qRefs: string },
+  options: { phrase?: string; areas?: string; prefix?: string; lead?: AnswerLine[]; qRefs: string; keptIds?: ReadonlySet<string> },
 ): CriterionResult {
   const drivers = drivingItems(items, status);
   const open = drivers.filter((item) => item.status !== "Met" && item.status !== "In place" && item.status !== "Not applicable");
   const found = renderFinding(
     id,
     status,
-    { areas: options.areas ?? "", detail: buildDetail(open, options.prefix ?? ""), situation: "" },
+    { areas: options.areas ?? "", detail: buildDetail(open, options.prefix ?? "", options.keptIds), situation: "" },
     options.phrase,
   );
   const quoted = open.length > 0 ? open : drivers;
@@ -538,33 +538,28 @@ export function evaluate(file: AnswerFile): Evaluation {
   const c9Items = ["11a", "11b", "11c"].flatMap((id) => itemsOf(items, id));
   const c10Prefix = level === "unknown" || text(answers, "q13_level") === "" ? "The data level is Unknown (not assigned)." : "";
   const c4Prefix = role === "unknown" || role === "" ? "The decision role is not determined." : role === "decides" && c4 === "Gap" ? "The output decides or acts without a person approving each one." : "";
-  const criteria: CriterionResult[] = [
-    narrateTo("C1", rights ? "Impact: Yes" : "Impact: No", [], { areas: areaLabels(areas, RIGHTS_AREAS), lead: q8, qRefs: "Q8" }),
-    narrateTo("C2", safety ? "Impact: Yes" : "Impact: No", [], { areas: areaLabels(areas, SAFETY_AREAS), lead: q8, qRefs: "Q8" }),
-    narrateTo("C3", areas.includes("benefits_services") ? "Impact: Yes" : "Impact: No", [], { lead: q8, qRefs: "Q8" }),
-    narrateTo("C4", c4, c4Items, { prefix: c4Prefix, lead: q10Lines(answers), qRefs: "Q10, Q11" }),
-    narrateTo("C5", c5, [...groupItems, ...langItems], { qRefs: "Q9, Q12" }),
-    narrateTo("C6", c6, itemsOf(items, "21b"), { qRefs: "Q21" }),
-    narrateTo("C7", c7, c7Items, { phrase: c7Phrase, prefix: outsideContradiction(answers) ? "Q12 says no one outside the agency is affected, and Q9 names another group." : "", lead: outsideLead, qRefs: "Q12" }),
-    narrateTo("C8", c8, c8Items, { phrase: c8Phrase, prefix: outsideContradiction(answers) ? "Q12 says no one outside the agency is affected, and Q9 names another group." : "", lead: outsideLead, qRefs: "Q12" }),
-    narrateTo("C9", c9, c9Items, { qRefs: "Q11" }),
-    narrateTo("C10", c10, c10Parts, { prefix: c10Prefix, lead: q13Lines(answers), qRefs: "Q13, Q15, Q16" }),
-    narrateTo("C11", c11, ["21a", "21c"].flatMap((id) => itemsOf(items, id)), { qRefs: "Q21" }),
-    narrateTo("C12", c12, itemsOf(items, "23a"), { qRefs: "Q23" }),
-  ];
-
-  const rpResults: CriterionResult[] = [
-    narrateTo("RP1", rp1, rp1item, { prefix: rp1 === "Partly in place" && text(answers, "q20_harm") === "" ? "The description of what could go wrong is blank." : "", lead: q20Lines(answers), qRefs: "Q20" }),
-    narrateTo("RP2", rp2, itemsOf(items, "16b"), { qRefs: "Q16" }),
-    narrateTo("RP3", rp3, ["14a", "14b", "14c"].flatMap((id) => itemsOf(items, id)), { qRefs: "Q14" }),
-    narrateTo("RP4", rp4, [...itemsOf(items, "11d"), ...itemsOf(items, "11b")], { qRefs: "Q11" }),
-    narrateTo("RP5", rp5, ["22", "22f"].flatMap((id) => itemsOf(items, id)), { qRefs: "Q22" }),
-    narrateTo("RP6", rp6, ["21d", "21e"].flatMap((id) => itemsOf(items, id)), { qRefs: "Q21" }),
-    narrateTo("RP7", rp7, ["23b", "23c"].flatMap((id) => itemsOf(items, id)), { qRefs: "Q23" }),
-    narrateTo("RP8", rp8, ["24a", "24b"].flatMap((id) => itemsOf(items, id)), { qRefs: "Q24" }),
-  ];
-
-  const statusById = new Map<string, string>([...criteria, ...rpResults].map((item) => [item.id, item.status]));
+  const statusById = new Map<string, string>([
+    ["C1", rights ? "Impact: Yes" : "Impact: No"],
+    ["C2", safety ? "Impact: Yes" : "Impact: No"],
+    ["C3", areas.includes("benefits_services") ? "Impact: Yes" : "Impact: No"],
+    ["C4", c4],
+    ["C5", c5],
+    ["C6", c6],
+    ["C7", c7],
+    ["C8", c8],
+    ["C9", c9],
+    ["C10", c10],
+    ["C11", c11],
+    ["C12", c12],
+    ["RP1", rp1],
+    ["RP2", rp2],
+    ["RP3", rp3],
+    ["RP4", rp4],
+    ["RP5", rp5],
+    ["RP6", rp6],
+    ["RP7", rp7],
+    ["RP8", rp8],
+  ]);
   const wellAnswered = ["C4", "C5", "C6", "C7", "C8", "C9", "C10", "C11", "C12"].every((id) => statusById.get(id) !== "Gap")
     && ["RP1", "RP2", "RP3", "RP4", "RP5", "RP6", "RP7", "RP8"].every((id) => statusById.get(id) !== "Not yet");
 
@@ -621,6 +616,31 @@ export function evaluate(file: AnswerFile): Evaluation {
     });
   }
   const capped = applyCap(live, wellAnswered);
+  const keptMitigationIds = new Set(capped.kept.map((item) => item.id));
+  const criteria: CriterionResult[] = [
+    narrateTo("C1", rights ? "Impact: Yes" : "Impact: No", [], { areas: areaLabels(areas, RIGHTS_AREAS), lead: q8, qRefs: "Q8", keptIds: keptMitigationIds }),
+    narrateTo("C2", safety ? "Impact: Yes" : "Impact: No", [], { areas: areaLabels(areas, SAFETY_AREAS), lead: q8, qRefs: "Q8", keptIds: keptMitigationIds }),
+    narrateTo("C3", areas.includes("benefits_services") ? "Impact: Yes" : "Impact: No", [], { lead: q8, qRefs: "Q8", keptIds: keptMitigationIds }),
+    narrateTo("C4", c4, c4Items, { prefix: c4Prefix, lead: q10Lines(answers), qRefs: "Q10, Q11", keptIds: keptMitigationIds }),
+    narrateTo("C5", c5, [...groupItems, ...langItems], { qRefs: "Q9, Q12", keptIds: keptMitigationIds }),
+    narrateTo("C6", c6, itemsOf(items, "21b"), { qRefs: "Q21", keptIds: keptMitigationIds }),
+    narrateTo("C7", c7, c7Items, { phrase: c7Phrase, prefix: outsideContradiction(answers) ? "Q12 says no one outside the agency is affected, and Q9 names another group." : "", lead: outsideLead, qRefs: "Q12", keptIds: keptMitigationIds }),
+    narrateTo("C8", c8, c8Items, { phrase: c8Phrase, prefix: outsideContradiction(answers) ? "Q12 says no one outside the agency is affected, and Q9 names another group." : "", lead: outsideLead, qRefs: "Q12", keptIds: keptMitigationIds }),
+    narrateTo("C9", c9, c9Items, { qRefs: "Q11", keptIds: keptMitigationIds }),
+    narrateTo("C10", c10, c10Parts, { prefix: c10Prefix, lead: q13Lines(answers), qRefs: "Q13, Q15, Q16", keptIds: keptMitigationIds }),
+    narrateTo("C11", c11, ["21a", "21c"].flatMap((id) => itemsOf(items, id)), { qRefs: "Q21", keptIds: keptMitigationIds }),
+    narrateTo("C12", c12, itemsOf(items, "23a"), { qRefs: "Q23", keptIds: keptMitigationIds }),
+  ];
+  const rpResults: CriterionResult[] = [
+    narrateTo("RP1", rp1, rp1item, { prefix: rp1 === "Partly in place" && text(answers, "q20_harm") === "" ? "The description of what could go wrong is blank." : "", lead: q20Lines(answers), qRefs: "Q20", keptIds: keptMitigationIds }),
+    narrateTo("RP2", rp2, itemsOf(items, "16b"), { qRefs: "Q16", keptIds: keptMitigationIds }),
+    narrateTo("RP3", rp3, ["14a", "14b", "14c"].flatMap((id) => itemsOf(items, id)), { qRefs: "Q14", keptIds: keptMitigationIds }),
+    narrateTo("RP4", rp4, [...itemsOf(items, "11d"), ...itemsOf(items, "11b")], { qRefs: "Q11", keptIds: keptMitigationIds }),
+    narrateTo("RP5", rp5, ["22", "22f"].flatMap((id) => itemsOf(items, id)), { qRefs: "Q22", keptIds: keptMitigationIds }),
+    narrateTo("RP6", rp6, ["21d", "21e"].flatMap((id) => itemsOf(items, id)), { qRefs: "Q21", keptIds: keptMitigationIds }),
+    narrateTo("RP7", rp7, ["23b", "23c"].flatMap((id) => itemsOf(items, id)), { qRefs: "Q23", keptIds: keptMitigationIds }),
+    narrateTo("RP8", rp8, ["24a", "24b"].flatMap((id) => itemsOf(items, id)), { qRefs: "Q24", keptIds: keptMitigationIds }),
+  ];
 
   const extraFollow: Followup[] = [];
   if (text(answers, "q1_intake") === "") extraFollow.push({ q: 1, text: "Q1: What is the intake reference number for this AI system?", mitigationId: null });

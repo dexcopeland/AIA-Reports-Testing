@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { MITIGATIONS } from "../src/content/rules";
 import { FORM_VERSION, RULES_VERSION, SCHEMA_VERSION, type AnswerFile } from "../src/content/types";
 import { findingTemplates } from "../src/engine/findings";
 import { STATEMENTS } from "../src/content/statements";
@@ -253,6 +254,36 @@ describe("evaluation engine", () => {
     expect(result.wellAnswered).toBe(true);
     expect(result.mitigations.length).toBeLessThanOrEqual(3);
     expect(result.mitigations.filter((item) => item.timing === "Ongoing")).toHaveLength(1);
+  });
+
+  it("names only mitigations that remain after the cap", () => {
+    const scenario = SCENARIOS.find((item) => item.id === "S01");
+    expect(scenario).toBeTruthy();
+    const answers = buildScenario(scenario!);
+    for (const key of ["st11a", "st21a", "st21b", "st23a"]) {
+      answers.answers[key] = "planned";
+      answers.answers[`${key}__date`] = "2026-12-01";
+      delete answers.answers[`${key}__evidence`];
+    }
+    const result = evaluate(answers);
+    expect(result.wellAnswered).toBe(true);
+    expect(result.capApplied).toBe(true);
+    const keptIds = result.mitigations.map((item) => item.id);
+    expect(keptIds).toEqual(expect.arrayContaining(["M-REVIEW", "M-ACCURACY", "M-ONGOING"]));
+    expect(keptIds).not.toContain("M-BIAS");
+    expect(keptIds).not.toContain("M-OWNER");
+    const findings = [...result.criteria, ...result.rp].map((item) => item.found);
+    const joined = findings.join("\n");
+    for (const mitigation of MITIGATIONS) {
+      const named = findings.some((found) => found.includes(`The mitigation ${mitigation.title}`) || found.includes(`${mitigation.title} applies`));
+      if (named) expect(keptIds).toContain(mitigation.id);
+    }
+    expect(joined).toContain("The mitigation Human review of each output before it takes effect applies.");
+    expect(joined).toContain("The mitigation Accuracy testing and drift monitoring applies.");
+    expect(joined).toContain("Testing whether results differ across groups remains open, and this report does not include a recommended mitigation for it.");
+    expect(joined).toContain("Incident and reassessment ownership remains open, and this report does not include a recommended mitigation for it.");
+    expect(joined).not.toContain("Bias testing on a Maryland-like population");
+    expect(joined).not.toContain("Named incident and reassessment owner");
   });
 
   it("uses Before use for a live system and Before deployment for planning", () => {
