@@ -1,0 +1,31 @@
+{
+  "name": "maryland-aia",
+  "version": "1.0.0",
+  "private": true,
+  "description": "In-browser Algorithmic Impact Assessment for Maryland state agencies. No server. No AI.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "validate": "tsx scripts/validate-scenarios.ts",
+    "rules-index": "tsx scripts/emit-rules-index.ts",
+    "smoke": "node scripts/smoke-ui.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@fontsource/source-sans-pro": "^5.2.5",
+    "docx": "^9.5.1"
+  },
+  "devDependencies": {
+    "puppeteer-core": "^25.16.0",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3",
+    "vite": "^7.1.12",
+    "vitest": "^3.2.4"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

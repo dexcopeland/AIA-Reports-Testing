@@ -1,0 +1,1775 @@
+{
+  "schema_version": "1.0.0",
+  "form_version": "v2-structured-1.0.0",
+  "rules_version": "1.0.0",
+  "statement_count": 32,
+  "statements": [
+    {
+      "id": "11a",
+      "legacy_q": 11,
+      "title": "Human review before an output takes effect",
+      "feeds": [
+        "C9",
+        "C4",
+        "G4"
+      ],
+      "timing": "TN",
+      "track": "C",
+      "proposed": true,
+      "choices": [
+        {
+          "value": "none",
+          "status": "Gap",
+          "mitigation": "M-REVIEW",
+          "asks": null,
+          "sets_gate": "G4"
+        },
+        {
+          "value": "after_only",
+          "status": "Gap",
+          "mitigation": "M-REVIEW",
+          "asks": null,
+          "sets_gate": "G4"
+        },
+        {
+          "value": "sample",
+          "status": "Partial",
+          "mitigation": "M-REVIEW",
+          "asks": null,
+          "sets_gate": "G4"
+        },
+        {
+          "value": "planned",
+          "status": "Partial",
+          "mitigation": "M-REVIEW",
+          "asks": "target_date",
+          "sets_gate": null
+        },
+        {
+          "value": "every_unwritten",
+          "status": "Partial",
+          "mitigation": "M-REVIEW",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "every_written",
+          "status": "Met",
+          "mitigation": null,
+          "asks": "evidence",
+          "sets_gate": null
+        },
+        {
+          "value": "unknown",
+          "status": "Gap",
+          "mitigation": "M-REVIEW",
+          "asks": null,
+          "sets_gate": null
+        }
+      ]
+    },
+    {
+      "id": "11b",
+      "legacy_q": 11,
+      "title": "Power to change or stop",
+      "feeds": [
+        "C9",
+        "RP4"
+      ],
+      "timing": "TN",
+      "track": "C",
+      "proposed": true,
+      "choices": [
+        {
+          "value": "cannot",
+          "status": "Gap",
+          "mitigation": "M-REVIEW",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "change_only",
+          "status": "Partial",
+          "mitigation": "M-REVIEW",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "planned",
+          "status": "Partial",
+          "mitigation": "M-REVIEW",
+          "asks": "target_date",
+          "sets_gate": null
+        },
+        {
+          "value": "both",
+          "status": "Met",
+          "mitigation": null,
+          "asks": "evidence",
+          "sets_gate": null
+        },
+        {
+          "value": "unknown",
+          "status": "Gap",
+          "mitigation": "M-REVIEW",
+          "asks": null,
+          "sets_gate": null
+        }
+      ]
+    },
+    {
+      "id": "11c",
+      "legacy_q": 11,
+      "title": "Overrides recorded",
+      "feeds": [
+        "C9"
+      ],
+      "timing": "TN",
+      "track": "C",
+      "proposed": true,
+      "choices": [
+        {
+          "value": "none",
+          "status": "Gap",
+          "mitigation": "M-REVIEW",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "sometimes",
+          "status": "Partial",
+          "mitigation": "M-REVIEW",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "planned",
+          "status": "Partial",
+          "mitigation": "M-REVIEW",
+          "asks": "target_date",
+          "sets_gate": null
+        },
+        {
+          "value": "every",
+          "status": "Met",
+          "mitigation": null,
+          "asks": "evidence",
+          "sets_gate": null
+        },
+        {
+          "value": "unknown",
+          "status": "Gap",
+          "mitigation": "M-REVIEW",
+          "asks": null,
+          "sets_gate": null
+        }
+      ]
+    },
+    {
+      "id": "11d",
+      "legacy_q": 11,
+      "title": "Staff instructions and training",
+      "feeds": [
+        "RP4"
+      ],
+      "timing": "TW",
+      "track": "RP",
+      "proposed": true,
+      "choices": [
+        {
+          "value": "none",
+          "status": "Not yet",
+          "mitigation": "M-TRAIN",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "informal",
+          "status": "Partly in place",
+          "mitigation": "M-TRAIN",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "planned",
+          "status": "Partly in place",
+          "mitigation": "M-TRAIN",
+          "asks": "target_date",
+          "sets_gate": null
+        },
+        {
+          "value": "partial_written",
+          "status": "Partly in place",
+          "mitigation": "M-TRAIN",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "full",
+          "status": "In place",
+          "mitigation": null,
+          "asks": "evidence",
+          "sets_gate": null
+        },
+        {
+          "value": "unknown",
+          "status": "Not yet",
+          "mitigation": null,
+          "asks": null,
+          "sets_gate": null
+        }
+      ]
+    },
+    {
+      "id": "12a",
+      "legacy_q": 12,
+      "title": "Telling people AI is involved",
+      "feeds": [
+        "C7"
+      ],
+      "timing": "TN",
+      "track": "C",
+      "proposed": true,
+      "choices": [
+        {
+          "value": "none",
+          "status": "Gap",
+          "mitigation": "M-NOTICE",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "general",
+          "status": "Partial",
+          "mitigation": "M-NOTICE",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "planned",
+          "status": "Partial",
+          "mitigation": "M-NOTICE",
+          "asks": "target_date",
+          "sets_gate": null
+        },
+        {
+          "value": "at_decision",
+          "status": "Met",
+          "mitigation": null,
+          "asks": "evidence",
+          "sets_gate": null
+        },
+        {
+          "value": "unknown",
+          "status": "Gap",
+          "mitigation": "M-NOTICE",
+          "asks": null,
+          "sets_gate": null
+        }
+      ]
+    },
+    {
+      "id": "12b",
+      "legacy_q": 12,
+      "title": "Reaching a person",
+      "feeds": [
+        "C8"
+      ],
+      "timing": "TN",
+      "track": "C",
+      "proposed": true,
+      "choices": [
+        {
+          "value": "none",
+          "status": "Gap",
+          "mitigation": "M-NOTICE",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "general",
+          "status": "Partial",
+          "mitigation": "M-NOTICE",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "planned",
+          "status": "Partial",
+          "mitigation": "M-NOTICE",
+          "asks": "target_date",
+          "sets_gate": null
+        },
+        {
+          "value": "set_path",
+          "status": "Met",
+          "mitigation": null,
+          "asks": "evidence",
+          "sets_gate": null
+        },
+        {
+          "value": "unknown",
+          "status": "Gap",
+          "mitigation": "M-NOTICE",
+          "asks": null,
+          "sets_gate": null
+        }
+      ]
+    },
+    {
+      "id": "12c",
+      "legacy_q": 12,
+      "title": "Fixing data and challenging a result",
+      "feeds": [
+        "C8"
+      ],
+      "timing": "TN",
+      "track": "C",
+      "proposed": true,
+      "choices": [
+        {
+          "value": "none",
+          "status": "Gap",
+          "mitigation": "M-CONTEST",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "general",
+          "status": "Partial",
+          "mitigation": "M-CONTEST",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "planned",
+          "status": "Partial",
+          "mitigation": "M-CONTEST",
+          "asks": "target_date",
+          "sets_gate": null
+        },
+        {
+          "value": "reviewed",
+          "status": "Met",
+          "mitigation": null,
+          "asks": "evidence",
+          "sets_gate": null
+        },
+        {
+          "value": "unknown",
+          "status": "Gap",
+          "mitigation": "M-CONTEST",
+          "asks": null,
+          "sets_gate": null
+        }
+      ]
+    },
+    {
+      "id": "12d",
+      "legacy_q": 12,
+      "title": "Language access",
+      "feeds": [
+        "C5"
+      ],
+      "timing": "TN",
+      "track": "C",
+      "proposed": true,
+      "choices": [
+        {
+          "value": "english_only",
+          "status": "Gap",
+          "mitigation": "M-LANG",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "on_request",
+          "status": "Partial",
+          "mitigation": "M-LANG",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "untested",
+          "status": "Partial",
+          "mitigation": "M-LANG",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "checked",
+          "status": "Met",
+          "mitigation": null,
+          "asks": "evidence",
+          "sets_gate": null
+        },
+        {
+          "value": "unknown",
+          "status": "Partial",
+          "mitigation": null,
+          "asks": null,
+          "sets_gate": null
+        }
+      ]
+    },
+    {
+      "id": "12e",
+      "legacy_q": 12,
+      "title": "Access path for this group",
+      "feeds": [
+        "C5"
+      ],
+      "timing": "TN",
+      "track": "C",
+      "proposed": true,
+      "choices": [
+        {
+          "value": "shut_out",
+          "status": "Gap",
+          "mitigation": "M-ACCESS",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "no_path",
+          "status": "Partial",
+          "mitigation": "M-ACCESS",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "hard",
+          "status": "Partial",
+          "mitigation": "M-ACCESS",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "fits",
+          "status": "Met",
+          "mitigation": null,
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "unknown",
+          "status": "Partial",
+          "mitigation": null,
+          "asks": null,
+          "sets_gate": null
+        }
+      ]
+    },
+    {
+      "id": "12f",
+      "legacy_q": 12,
+      "title": "Safety for people at risk of abuse",
+      "feeds": [
+        "C10"
+      ],
+      "timing": "TN",
+      "track": "C",
+      "proposed": true,
+      "choices": [
+        {
+          "value": "none",
+          "status": "Gap",
+          "mitigation": "M-ABUSE",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "some",
+          "status": "Partial",
+          "mitigation": "M-ABUSE",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "planned",
+          "status": "Partial",
+          "mitigation": "M-ABUSE",
+          "asks": "target_date",
+          "sets_gate": null
+        },
+        {
+          "value": "all",
+          "status": "Met",
+          "mitigation": null,
+          "asks": "evidence",
+          "sets_gate": null
+        },
+        {
+          "value": "unknown",
+          "status": "Gap",
+          "mitigation": "M-ABUSE",
+          "asks": null,
+          "sets_gate": null
+        }
+      ]
+    },
+    {
+      "id": "14a",
+      "legacy_q": 14,
+      "title": "Data sources and quality checks",
+      "feeds": [
+        "RP3"
+      ],
+      "timing": "TW",
+      "track": "RP",
+      "proposed": true,
+      "choices": [
+        {
+          "value": "none",
+          "status": "Not yet",
+          "mitigation": "M-DATAQ",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "informal",
+          "status": "Partly in place",
+          "mitigation": "M-DATAQ",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "planned",
+          "status": "Partly in place",
+          "mitigation": "M-DATAQ",
+          "asks": "target_date",
+          "sets_gate": null
+        },
+        {
+          "value": "scheduled",
+          "status": "In place",
+          "mitigation": null,
+          "asks": "evidence",
+          "sets_gate": null
+        },
+        {
+          "value": "unknown",
+          "status": "Not yet",
+          "mitigation": null,
+          "asks": null,
+          "sets_gate": null
+        }
+      ]
+    },
+    {
+      "id": "14b",
+      "legacy_q": 14,
+      "title": "Protecting training or reference data from tampering",
+      "feeds": [
+        "RP3"
+      ],
+      "timing": "TW",
+      "track": "RP",
+      "proposed": true,
+      "choices": [
+        {
+          "value": "none",
+          "status": "Not yet",
+          "mitigation": "M-DATAQ",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "limited",
+          "status": "Partly in place",
+          "mitigation": "M-DATAQ",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "planned",
+          "status": "Partly in place",
+          "mitigation": "M-DATAQ",
+          "asks": "target_date",
+          "sets_gate": null
+        },
+        {
+          "value": "logged",
+          "status": "In place",
+          "mitigation": null,
+          "asks": "evidence",
+          "sets_gate": null
+        },
+        {
+          "value": "unknown",
+          "status": "Not yet",
+          "mitigation": null,
+          "asks": null,
+          "sets_gate": null
+        }
+      ]
+    },
+    {
+      "id": "14c",
+      "legacy_q": 14,
+      "title": "Limits on documents pulled into answers",
+      "feeds": [
+        "RP3"
+      ],
+      "timing": "TW",
+      "track": "RP",
+      "proposed": true,
+      "choices": [
+        {
+          "value": "too_wide",
+          "status": "Not yet",
+          "mitigation": "M-DATAQ",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "planned",
+          "status": "Partly in place",
+          "mitigation": "M-DATAQ",
+          "asks": "target_date",
+          "sets_gate": null
+        },
+        {
+          "value": "trusted",
+          "status": "Partly in place",
+          "mitigation": "M-DATAQ",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "untrusted",
+          "status": "In place",
+          "mitigation": null,
+          "asks": "evidence",
+          "sets_gate": null
+        },
+        {
+          "value": "unknown",
+          "status": "Not yet",
+          "mitigation": null,
+          "asks": null,
+          "sets_gate": null
+        }
+      ]
+    },
+    {
+      "id": "15a",
+      "legacy_q": 15,
+      "title": "Encryption at rest and in transit",
+      "feeds": [
+        "C10"
+      ],
+      "timing": "TN",
+      "track": "C",
+      "proposed": true,
+      "choices": [
+        {
+          "value": "none",
+          "status": "Gap",
+          "mitigation": "M-ENCRYPT",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "one",
+          "status": "Partial",
+          "mitigation": "M-ENCRYPT",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "planned",
+          "status": "Partial",
+          "mitigation": "M-ENCRYPT",
+          "asks": "target_date",
+          "sets_gate": null
+        },
+        {
+          "value": "agency_only",
+          "status": "Partial",
+          "mitigation": "M-ENCRYPT",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "everywhere",
+          "status": "Met",
+          "mitigation": null,
+          "asks": "evidence",
+          "sets_gate": null
+        },
+        {
+          "value": "unknown",
+          "status": "Gap",
+          "mitigation": "M-ENCRYPT",
+          "asks": null,
+          "sets_gate": null
+        }
+      ]
+    },
+    {
+      "id": "15b",
+      "legacy_q": 15,
+      "title": "Access limited to authorized staff",
+      "feeds": [
+        "C10"
+      ],
+      "timing": "TN",
+      "track": "C",
+      "proposed": true,
+      "choices": [
+        {
+          "value": "open",
+          "status": "Gap",
+          "mitigation": "M-ENCRYPT",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "practice",
+          "status": "Partial",
+          "mitigation": "M-ENCRYPT",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "planned",
+          "status": "Partial",
+          "mitigation": "M-ENCRYPT",
+          "asks": "target_date",
+          "sets_gate": null
+        },
+        {
+          "value": "controls",
+          "status": "Met",
+          "mitigation": null,
+          "asks": "evidence",
+          "sets_gate": null
+        },
+        {
+          "value": "unknown",
+          "status": "Gap",
+          "mitigation": "M-ENCRYPT",
+          "asks": null,
+          "sets_gate": null
+        }
+      ]
+    },
+    {
+      "id": "15c",
+      "legacy_q": 15,
+      "title": "Privacy review (PTA, and PIA if directed)",
+      "feeds": [
+        "C10"
+      ],
+      "timing": "TN",
+      "track": "C",
+      "proposed": true,
+      "choices": [
+        {
+          "value": "none",
+          "status": "Gap",
+          "mitigation": "M-PRIVACY",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "pta_progress",
+          "status": "Partial",
+          "mitigation": "M-PRIVACY",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "pia_open",
+          "status": "Partial",
+          "mitigation": "M-PRIVACY",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "done",
+          "status": "Met",
+          "mitigation": null,
+          "asks": "evidence",
+          "sets_gate": null
+        },
+        {
+          "value": "unknown",
+          "status": "Gap",
+          "mitigation": "M-PRIVACY",
+          "asks": null,
+          "sets_gate": null
+        }
+      ]
+    },
+    {
+      "id": "15d",
+      "legacy_q": 15,
+      "title": "Retention",
+      "feeds": [
+        "C10"
+      ],
+      "timing": "TN",
+      "track": "C",
+      "proposed": true,
+      "choices": [
+        {
+          "value": "none",
+          "status": "Partial",
+          "mitigation": "M-PRIVACY",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "not_deleted",
+          "status": "Partial",
+          "mitigation": "M-PRIVACY",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "on_schedule",
+          "status": "Met",
+          "mitigation": null,
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "unknown",
+          "status": "Gap",
+          "mitigation": null,
+          "asks": null,
+          "sets_gate": null
+        }
+      ]
+    },
+    {
+      "id": "16a",
+      "legacy_q": 16,
+      "title": "Vendor use of State data for training",
+      "feeds": [
+        "C10"
+      ],
+      "timing": "TC",
+      "track": "C",
+      "proposed": true,
+      "choices": [
+        {
+          "value": "allowed",
+          "status": "Gap",
+          "mitigation": "M-NOTRAIN",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "silent",
+          "status": "Gap",
+          "mitigation": "M-NOTRAIN",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "requested",
+          "status": "Partial",
+          "mitigation": "M-NOTRAIN",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "banned",
+          "status": "Met",
+          "mitigation": null,
+          "asks": "evidence",
+          "sets_gate": null
+        },
+        {
+          "value": "unknown",
+          "status": "Gap",
+          "mitigation": "M-NOTRAIN",
+          "asks": null,
+          "sets_gate": null
+        }
+      ]
+    },
+    {
+      "id": "16b",
+      "legacy_q": 16,
+      "title": "Contract term",
+      "feeds": [
+        "RP2"
+      ],
+      "timing": "TC",
+      "track": "RP",
+      "proposed": true,
+      "choices": [
+        {
+          "value": "absent",
+          "status": "Not yet",
+          "mitigation": "M-CONTRACT",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "requested",
+          "status": "Partly in place",
+          "mitigation": "M-CONTRACT",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "draft",
+          "status": "Partly in place",
+          "mitigation": "M-CONTRACT",
+          "asks": "target_date",
+          "sets_gate": null
+        },
+        {
+          "value": "signed",
+          "status": "In place",
+          "mitigation": null,
+          "asks": "evidence",
+          "sets_gate": null
+        },
+        {
+          "value": "unknown",
+          "status": "Not yet",
+          "mitigation": null,
+          "asks": null,
+          "sets_gate": null
+        }
+      ]
+    },
+    {
+      "id": "20a",
+      "legacy_q": 20,
+      "title": "How far the impact analysis goes",
+      "feeds": [
+        "RP1"
+      ],
+      "timing": "TW",
+      "track": "RP",
+      "proposed": true,
+      "choices": [
+        {
+          "value": "none",
+          "status": "Not yet",
+          "mitigation": "M-IMPACT",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "talked",
+          "status": "Partly in place",
+          "mitigation": "M-IMPACT",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "partial_list",
+          "status": "Partly in place",
+          "mitigation": "M-IMPACT",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "written",
+          "status": "In place",
+          "mitigation": null,
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "unknown",
+          "status": "Not yet",
+          "mitigation": null,
+          "asks": null,
+          "sets_gate": null
+        }
+      ]
+    },
+    {
+      "id": "21a",
+      "legacy_q": 21,
+      "title": "Accuracy testing",
+      "feeds": [
+        "C11"
+      ],
+      "timing": "TW",
+      "track": "C",
+      "proposed": true,
+      "choices": [
+        {
+          "value": "vendor_only",
+          "status": "Gap",
+          "mitigation": "M-ACCURACY",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "informal",
+          "status": "Partial",
+          "mitigation": "M-ACCURACY",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "planned",
+          "status": "Partial",
+          "mitigation": "M-ACCURACY",
+          "asks": "target_date",
+          "sets_gate": null
+        },
+        {
+          "value": "recorded",
+          "status": "Met",
+          "mitigation": null,
+          "asks": "evidence",
+          "sets_gate": null
+        },
+        {
+          "value": "unknown",
+          "status": "Gap",
+          "mitigation": "M-ACCURACY",
+          "asks": null,
+          "sets_gate": null
+        }
+      ]
+    },
+    {
+      "id": "21b",
+      "legacy_q": 21,
+      "title": "Testing whether results differ across groups",
+      "feeds": [
+        "C6"
+      ],
+      "timing": "TW",
+      "track": "C",
+      "proposed": true,
+      "choices": [
+        {
+          "value": "none",
+          "status": "Gap",
+          "mitigation": "M-BIAS",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "vendor_claim",
+          "status": "Gap",
+          "mitigation": "M-BIAS",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "planned",
+          "status": "Partial",
+          "mitigation": "M-BIAS",
+          "asks": "target_date",
+          "sets_gate": null
+        },
+        {
+          "value": "once",
+          "status": "Partial",
+          "mitigation": "M-BIAS",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "audited",
+          "status": "Met",
+          "mitigation": null,
+          "asks": "evidence",
+          "sets_gate": null
+        },
+        {
+          "value": "unknown",
+          "status": "Gap",
+          "mitigation": "M-BIAS",
+          "asks": null,
+          "sets_gate": null
+        }
+      ]
+    },
+    {
+      "id": "21c",
+      "legacy_q": 21,
+      "title": "Monitoring after launch (drift)",
+      "feeds": [
+        "C11"
+      ],
+      "timing": "TW",
+      "track": "C",
+      "proposed": true,
+      "choices": [
+        {
+          "value": "none",
+          "status": "Gap",
+          "mitigation": "M-ACCURACY",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "complaints",
+          "status": "Partial",
+          "mitigation": "M-ACCURACY",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "planned",
+          "status": "Partial",
+          "mitigation": "M-ACCURACY",
+          "asks": "target_date",
+          "sets_gate": null
+        },
+        {
+          "value": "threshold",
+          "status": "Met",
+          "mitigation": null,
+          "asks": "evidence",
+          "sets_gate": null
+        },
+        {
+          "value": "unknown",
+          "status": "Gap",
+          "mitigation": "M-ACCURACY",
+          "asks": null,
+          "sets_gate": null
+        }
+      ]
+    },
+    {
+      "id": "21d",
+      "legacy_q": 21,
+      "title": "Logging each use",
+      "feeds": [
+        "RP6"
+      ],
+      "timing": "TW",
+      "track": "RP",
+      "proposed": true,
+      "choices": [
+        {
+          "value": "none",
+          "status": "Not yet",
+          "mitigation": "M-LOG",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "partial_fields",
+          "status": "Partly in place",
+          "mitigation": "M-LOG",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "planned",
+          "status": "Partly in place",
+          "mitigation": "M-LOG",
+          "asks": "target_date",
+          "sets_gate": null
+        },
+        {
+          "value": "full",
+          "status": "In place",
+          "mitigation": null,
+          "asks": "evidence",
+          "sets_gate": null
+        },
+        {
+          "value": "unknown",
+          "status": "Not yet",
+          "mitigation": null,
+          "asks": null,
+          "sets_gate": null
+        }
+      ]
+    },
+    {
+      "id": "21e",
+      "legacy_q": 21,
+      "title": "Re-testing",
+      "feeds": [
+        "RP6"
+      ],
+      "timing": "TW",
+      "track": "RP",
+      "proposed": true,
+      "choices": [
+        {
+          "value": "never",
+          "status": "Not yet",
+          "mitigation": "M-LOG",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "on_problem",
+          "status": "Partly in place",
+          "mitigation": "M-LOG",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "one_of",
+          "status": "Partly in place",
+          "mitigation": "M-LOG",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "both",
+          "status": "In place",
+          "mitigation": null,
+          "asks": "evidence",
+          "sets_gate": null
+        },
+        {
+          "value": "unknown",
+          "status": "Not yet",
+          "mitigation": null,
+          "asks": null,
+          "sets_gate": null
+        }
+      ]
+    },
+    {
+      "id": "22",
+      "legacy_q": 22,
+      "title": "Protection for this threat",
+      "feeds": [
+        "RP5"
+      ],
+      "timing": "TW",
+      "track": "RP",
+      "proposed": true,
+      "choices": [
+        {
+          "value": "none",
+          "status": "Not yet",
+          "mitigation": "M-SEC",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "planned",
+          "status": "Partly in place",
+          "mitigation": "M-SEC",
+          "asks": "target_date",
+          "sets_gate": null
+        },
+        {
+          "value": "some",
+          "status": "Partly in place",
+          "mitigation": "M-SEC",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "all",
+          "status": "In place",
+          "mitigation": null,
+          "asks": "evidence",
+          "sets_gate": null
+        },
+        {
+          "value": "does_not_apply",
+          "status": "In place",
+          "mitigation": null,
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "unknown",
+          "status": "Not yet",
+          "mitigation": null,
+          "asks": null,
+          "sets_gate": null
+        }
+      ]
+    },
+    {
+      "id": "22f",
+      "legacy_q": 22,
+      "title": "Security testing",
+      "feeds": [
+        "RP5"
+      ],
+      "timing": "TW",
+      "track": "RP",
+      "proposed": true,
+      "choices": [
+        {
+          "value": "none",
+          "status": "Not yet",
+          "mitigation": "M-SEC",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "planned",
+          "status": "Partly in place",
+          "mitigation": "M-SEC",
+          "asks": "target_date",
+          "sets_gate": null
+        },
+        {
+          "value": "untested",
+          "status": "Partly in place",
+          "mitigation": "M-SEC",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "tested",
+          "status": "In place",
+          "mitigation": null,
+          "asks": "evidence",
+          "sets_gate": null
+        },
+        {
+          "value": "unknown",
+          "status": "Not yet",
+          "mitigation": null,
+          "asks": null,
+          "sets_gate": null
+        }
+      ]
+    },
+    {
+      "id": "23a",
+      "legacy_q": 23,
+      "title": "Incident and reassessment ownership",
+      "feeds": [
+        "C12"
+      ],
+      "timing": "TW",
+      "track": "C",
+      "proposed": true,
+      "choices": [
+        {
+          "value": "none",
+          "status": "Gap",
+          "mitigation": "M-OWNER",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "named_only",
+          "status": "Partial",
+          "mitigation": "M-OWNER",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "planned",
+          "status": "Partial",
+          "mitigation": "M-OWNER",
+          "asks": "target_date",
+          "sets_gate": null
+        },
+        {
+          "value": "yearly",
+          "status": "Met",
+          "mitigation": null,
+          "asks": "evidence",
+          "sets_gate": null
+        },
+        {
+          "value": "unknown",
+          "status": "Gap",
+          "mitigation": "M-OWNER",
+          "asks": null,
+          "sets_gate": null
+        }
+      ]
+    },
+    {
+      "id": "23b",
+      "legacy_q": 23,
+      "title": "Telling affected people about an incident",
+      "feeds": [
+        "RP7"
+      ],
+      "timing": "TW",
+      "track": "RP",
+      "proposed": true,
+      "choices": [
+        {
+          "value": "none",
+          "status": "Not yet",
+          "mitigation": "M-INCIDENT",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "ad_hoc",
+          "status": "Partly in place",
+          "mitigation": "M-INCIDENT",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "planned",
+          "status": "Partly in place",
+          "mitigation": "M-INCIDENT",
+          "asks": "target_date",
+          "sets_gate": null
+        },
+        {
+          "value": "set",
+          "status": "In place",
+          "mitigation": null,
+          "asks": "evidence",
+          "sets_gate": null
+        },
+        {
+          "value": "unknown",
+          "status": "Not yet",
+          "mitigation": null,
+          "asks": null,
+          "sets_gate": null
+        }
+      ]
+    },
+    {
+      "id": "23c",
+      "legacy_q": 23,
+      "title": "Staff concerns channel outside the team",
+      "feeds": [
+        "RP7"
+      ],
+      "timing": "TW",
+      "track": "RP",
+      "proposed": true,
+      "choices": [
+        {
+          "value": "inside",
+          "status": "Not yet",
+          "mitigation": "M-INCIDENT",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "untold",
+          "status": "Partly in place",
+          "mitigation": "M-INCIDENT",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "planned",
+          "status": "Partly in place",
+          "mitigation": "M-INCIDENT",
+          "asks": "target_date",
+          "sets_gate": null
+        },
+        {
+          "value": "told",
+          "status": "In place",
+          "mitigation": null,
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "unknown",
+          "status": "Not yet",
+          "mitigation": null,
+          "asks": null,
+          "sets_gate": null
+        }
+      ]
+    },
+    {
+      "id": "24a",
+      "legacy_q": 24,
+      "title": "Re-check triggers",
+      "feeds": [
+        "RP8"
+      ],
+      "timing": "TW",
+      "track": "RP",
+      "proposed": true,
+      "choices": [
+        {
+          "value": "none",
+          "status": "Not yet",
+          "mitigation": "M-CHANGE",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "yearly_only",
+          "status": "Partly in place",
+          "mitigation": "M-CHANGE",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "some",
+          "status": "Partly in place",
+          "mitigation": "M-CHANGE",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "all_four",
+          "status": "In place",
+          "mitigation": null,
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "unknown",
+          "status": "Not yet",
+          "mitigation": null,
+          "asks": null,
+          "sets_gate": null
+        }
+      ]
+    },
+    {
+      "id": "24b",
+      "legacy_q": 24,
+      "title": "Retirement plan",
+      "feeds": [
+        "RP8"
+      ],
+      "timing": "TW",
+      "track": "RP",
+      "proposed": true,
+      "choices": [
+        {
+          "value": "none",
+          "status": "Not yet",
+          "mitigation": "M-CHANGE",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "draft",
+          "status": "Partly in place",
+          "mitigation": "M-CHANGE",
+          "asks": "target_date",
+          "sets_gate": null
+        },
+        {
+          "value": "some",
+          "status": "Partly in place",
+          "mitigation": "M-CHANGE",
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "full",
+          "status": "In place",
+          "mitigation": null,
+          "asks": null,
+          "sets_gate": null
+        },
+        {
+          "value": "unknown",
+          "status": "Not yet",
+          "mitigation": null,
+          "asks": null,
+          "sets_gate": null
+        }
+      ]
+    }
+  ],
+  "mitigations": [
+    {
+      "id": "M-PROHIBITED",
+      "title": "Resolve the prohibited use before any use",
+      "timing": "TN",
+      "rp_only": false
+    },
+    {
+      "id": "M-REVIEW",
+      "title": "Human review of each output before it takes effect",
+      "timing": "TN",
+      "rp_only": false
+    },
+    {
+      "id": "M-TRAIN",
+      "title": "Written instructions and training",
+      "timing": "TW",
+      "rp_only": true
+    },
+    {
+      "id": "M-NOTICE",
+      "title": "AI notice and a contact path to a person",
+      "timing": "TN",
+      "rp_only": false
+    },
+    {
+      "id": "M-CONTEST",
+      "title": "A way to correct data and challenge a result",
+      "timing": "TN",
+      "rp_only": false
+    },
+    {
+      "id": "M-LANG",
+      "title": "Language access",
+      "timing": "TN",
+      "rp_only": false
+    },
+    {
+      "id": "M-ACCESS",
+      "title": "An access path that fits each named group",
+      "timing": "TN",
+      "rp_only": false
+    },
+    {
+      "id": "M-ABUSE",
+      "title": "Quick exit, no saved history and safe notices",
+      "timing": "TN",
+      "rp_only": false
+    },
+    {
+      "id": "M-DATAQ",
+      "title": "Record sources, check quality and limit retrieval",
+      "timing": "TW",
+      "rp_only": true
+    },
+    {
+      "id": "M-ENCRYPT",
+      "title": "Encryption and access limits",
+      "timing": "TN",
+      "rp_only": false
+    },
+    {
+      "id": "M-PRIVACY",
+      "title": "Privacy review and retention",
+      "timing": "TN",
+      "rp_only": false
+    },
+    {
+      "id": "M-NOTRAIN",
+      "title": "Contract ban on training on State data",
+      "timing": "TC",
+      "rp_only": false
+    },
+    {
+      "id": "M-CONTRACT",
+      "title": "Contract duties and notice terms",
+      "timing": "TC",
+      "rp_only": true
+    },
+    {
+      "id": "M-IMPACT",
+      "title": "Written analysis of misuse, failure and harm",
+      "timing": "TW",
+      "rp_only": true
+    },
+    {
+      "id": "M-ACCURACY",
+      "title": "Accuracy testing and drift monitoring",
+      "timing": "TW",
+      "rp_only": false
+    },
+    {
+      "id": "M-BIAS",
+      "title": "Bias testing on a Maryland-like population",
+      "timing": "TW",
+      "rp_only": false
+    },
+    {
+      "id": "M-LOG",
+      "title": "Logging and scheduled re-testing",
+      "timing": "TW",
+      "rp_only": true
+    },
+    {
+      "id": "M-SEC",
+      "title": "Threat model and security testing",
+      "timing": "TW",
+      "rp_only": true
+    },
+    {
+      "id": "M-OWNER",
+      "title": "Named incident and reassessment owner",
+      "timing": "TW",
+      "rp_only": false
+    },
+    {
+      "id": "M-INCIDENT",
+      "title": "Incident notice and a staff concerns channel",
+      "timing": "TW",
+      "rp_only": true
+    },
+    {
+      "id": "M-CHANGE",
+      "title": "Re-check triggers and a retirement plan",
+      "timing": "TW",
+      "rp_only": true
+    },
+    {
+      "id": "M-ONGOING",
+      "title": "Keep monitoring, audits and yearly reassessment",
+      "timing": "TO",
+      "rp_only": false
+    }
+  ],
+  "proposed_rules": [
+    {
+      "id": "statement-wording",
+      "text": "All 32 safeguard statement sets, including their status and mitigation mappings, are proposals for review."
+    },
+    {
+      "id": "evidence-check",
+      "text": "Proposed rule: blank or token evidence on a strongest statement (under 5 words, or a token such as yes, done, or see above) drops that item to Partial or Partly in place and raises a follow-up. This is not a fact check."
+    },
+    {
+      "id": "evidence-required-split",
+      "text": "Evidence is required for a Met criterion item and optional for an In place recommended-practice item. A thin optional line still drops the status."
+    },
+    {
+      "id": "retention",
+      "text": "Retention (item 15d) is a proposed C10 item. Unknown raises a follow-up and does not by itself add a mitigation."
+    },
+    {
+      "id": "q18-unknown",
+      "text": "Q18 includes Unknown. Blank or Unknown uses the no-date sentence and a Q18 follow-up."
+    },
+    {
+      "id": "g4-decides",
+      "text": "G4 applies when Q10 is decides, unless the agency picked a statement that every output is reviewed before it takes effect. Sample review, review after effect, and no review also set G4."
+    },
+    {
+      "id": "g4-cross-check",
+      "text": "Proposed cross-check: Q6 acts in other systems together with Q10 info only sets G4 when every output is not reviewed first (scenario 12 pattern)."
+    },
+    {
+      "id": "g6",
+      "text": "G6 is proposed as record matching plus an area where the match can lead to an adverse action."
+    },
+    {
+      "id": "biometric-combo",
+      "text": "Proposed combination flag: biometric identification plus the identifying-people area raises the prohibited-use blocker even if the checklist was left as none. The published Prohibited Uses list is not fully encoded in v1."
+    },
+    {
+      "id": "export-gate",
+      "text": "Proposed: the Word and print export stays blocked until Q25 is confirmed. The on-screen draft still renders."
+    },
+    {
+      "id": "cap-priority",
+      "text": "When no C4–C12 item is Gap and no RP item is Not yet, mitigations are capped at 3 including Ongoing. Priority is a prohibited use or abuse-risk control, then a C5 path for a group that uses the system or is acted on as individuals, then other partial items by earliest timing."
+    },
+    {
+      "id": "status-conflict",
+      "text": "A start date while Q17 is Planning or Procuring is a proposed cross-check. Timing then uses Before use."
+    },
+    {
+      "id": "outside-people",
+      "text": "Q12 answered as no outside people, while Q9 names a group other than State employees, is a proposed cross-check. C7 and C8 become Gap."
+    },
+    {
+      "id": "level-cross-check",
+      "text": "Q14 data types suggest a minimum level. If that level is above Q13, Section 4 says so. The level itself is not changed."
+    }
+  ],
+  "fixed_paragraphs": 3
+}
