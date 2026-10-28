@@ -10,7 +10,7 @@ mkdirSync(outDir, { recursive: true });
 const scenario = SCENARIOS.find((item) => item.id === "S01");
 if (!scenario) throw new Error("S01 missing");
 const report = buildReport(buildScenario(scenario));
-const bytes = await reportToPdfBytes(report);
+const { bytes } = await reportToPdfBytes(report);
 writeFileSync(`${outDir}/s01-report.pdf`, bytes);
 const parser = new PDFParse({ data: bytes });
 const text = await parser.getText();
@@ -24,6 +24,7 @@ const addName = (number: number, name: string) => {
 pages.forEach((page, index) => {
   const pageText = "text" in page ? String(page.text) : "";
   const number = "num" in page ? Number(page.num) : index + 1;
+  if (number === 1) addName(number, "pdf-page-1.png");
   if (pageText.includes("C9 –")) addName(number, "pdf-c9.png");
   if (pageText.includes("RP1 –")) addName(number, "pdf-rp1.png");
   if (pageText.includes("RP2 –") || pageText.includes("RP3 –")) addName(number, `pdf-rp-page-${number}.png`);

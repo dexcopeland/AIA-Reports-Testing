@@ -178,6 +178,7 @@ textarea { min-height: 8rem; resize: vertical; }
   border: 1px solid var(--line);
 }
 
+.sheet { font-family: "Times New Roman", "Liberation Serif", serif; }
 .sheet h1, .r-h1 {
   color: var(--navy);
   font-size: 1.7rem;
@@ -229,7 +230,7 @@ textarea { min-height: 8rem; resize: vertical; }
     margin: 1in;
     @bottom-center {
       content: "Algorithmic Impact Assessment · " counter(page);
-      font-family: "Source Sans Pro", sans-serif;
+      font-family: "Times New Roman", "Liberation Serif", serif;
       font-size: 9pt;
       color: #4a5562;
     }

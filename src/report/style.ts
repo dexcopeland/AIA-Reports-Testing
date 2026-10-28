@@ -1,6 +1,13 @@
-/** Shared layout tokens for the Word file and the PDF. Both render the same report blocks. */
+/**
+ * Shared layout tokens for the Word file and the PDF.
+ * The Word file asks for Times New Roman by name. The PDF embeds Liberation Serif,
+ * which is metric-compatible and licensed under the SIL Open Font License.
+ * Characters Liberation Serif lacks are drawn from DejaVu Serif when it has them.
+ */
 export const REPORT_STYLE = {
-  font: "Source Sans Pro",
+  font: "Times New Roman",
+  pdfFamily: "LiberationSerif",
+  fallbackFamily: "DejaVuSerif",
   navy: "0A3161",
   body: "1A1A1A",
   muted: "4A5562",

@@ -10,7 +10,8 @@ describe("PDF report", () => {
     const scenario = SCENARIOS.find((item) => item.id === "S01");
     expect(scenario).toBeTruthy();
     const report = buildReport(buildScenario(scenario!));
-    const bytes = await reportToPdfBytes(report);
+    const { bytes, warnings } = await reportToPdfBytes(report);
+    expect(warnings).toEqual([]);
     expect(bytes.byteLength).toBeGreaterThan(8000);
     expect(Buffer.from(bytes.subarray(0, 5)).toString("utf8")).toBe("%PDF-");
 
@@ -37,5 +38,25 @@ describe("PDF report", () => {
     }
     const headings = report.blocks.filter((block) => block.type === "h1" || block.type === "h2").map((block) => block.text);
     for (const heading of headings) expect(flat).toContain(heading);
+  });
+
+  it("keeps accuracy ≥ 95% in the PDF and names characters neither font can draw", async () => {
+    const scenario = SCENARIOS.find((item) => item.id === "S01");
+    expect(scenario).toBeTruthy();
+    const answers = buildScenario(scenario!);
+    answers.answers.q20_harm = "Example: accuracy ≥ 95% for ∀ groups on the fictional holdout set.";
+    answers.answers.q8_how = "Example effect ✓ for this fictional system.";
+    const report = buildReport(answers);
+    const { bytes, warnings } = await reportToPdfBytes(report);
+    const parser = new PDFParse({ data: bytes });
+    const text = await parser.getText();
+    await parser.destroy();
+    const flat = text.text.replace(/\s+/g, " ");
+    expect(flat).toContain("accuracy ≥ 95%");
+    expect(flat).toContain("∀");
+    expect(warnings.some((warning) => warning.character === "≥")).toBe(false);
+    expect(warnings.some((warning) => warning.character === "∀")).toBe(false);
+    const missing = warnings.find((warning) => warning.character === "✓");
+    expect(missing?.questions).toContain("Q8");
   });
 });

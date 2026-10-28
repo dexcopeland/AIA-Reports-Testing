@@ -220,10 +220,15 @@ export function mount(root: Element): void {
         exportNote.textContent = "Confirm Q25 before you download the PDF. This block is a proposed rule. The on-screen draft is still available.";
         return;
       }
-      void reportToPdfBlob(doc).then((blob) => {
+      void reportToPdfBlob(doc).then(({ blob, warnings }) => {
         const safe = doc.systemName.replace(/[^\w.-]+/g, "-").slice(0, 60);
         downloadBlob(blob, `AIA-Report-${safe || "draft"}.pdf`);
-        exportNote.textContent = "PDF downloaded. It is built from the same report as the Word file.";
+        if (warnings.length === 0) {
+          exportNote.textContent = "PDF downloaded. It is built from the same report as the Word file.";
+          return;
+        }
+        const listed = warnings.map((warning) => `${warning.character} (${warning.questions.join(", ")})`).join("; ");
+        exportNote.textContent = `PDF downloaded. These characters are not in the report fonts, so they may not appear: ${listed}.`;
       }).catch(() => {
         exportNote.textContent = "The PDF could not be built in this browser.";
       });
