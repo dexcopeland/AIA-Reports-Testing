@@ -353,6 +353,18 @@ describe("evaluation engine", () => {
     const generative = file({ ...base, q6_capabilities: ["generates_text", "public_chat", "retrieves_documents"], q6_method: "llm" });
     expect(threatApplies("prompt_injection", generative.answers)).toBe(true);
     expect(threatApplies("poisoned_data", generative.answers)).toBe(true);
+
+    const publicRank = {
+      q6_capabilities: ["ranks"],
+      q6_method: "statistical",
+      q6_design_facts: ["public_inputs_only"],
+      st16a: "allowed",
+    };
+    expect(threatApplies("poisoned_data", file({ ...base, ...publicRank, q5_builder: "vendor_product" }).answers)).toBe(true);
+    const stateBuilt = file({ ...base, ...publicRank, q5_builder: "state_built" });
+    expect(threatApplies("poisoned_data", stateBuilt.answers)).toBe(false);
+    expect(stateBuilt.answers.st16a).toBe("allowed");
+    expect(evaluate(stateBuilt).items.find((item) => item.instanceId === "22__poisoned_data")?.q6Excluded).toBe(true);
   });
 
   it("counts fewer visible questions after the branching rules", () => {

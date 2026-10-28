@@ -114,7 +114,7 @@ function poisoningApplies(answers: Answers): boolean {
   if (capabilitiesUnclear(answers) || methodUnclear(answers)) return true;
   const caps = capabilities(answers);
   if (caps.some((id) => GENERATIVE.has(id))) return true;
-  if (text(answers, "st16a") === "allowed") return true;
+  if (vendorInvolved(answers) && text(answers, "st16a") === "allowed") return true;
   const method = text(answers, "q6_method");
   if (designFacts(answers).includes("public_inputs_only") && (method === "statistical" || method === "rules_plus_model")) return false;
   return true;
