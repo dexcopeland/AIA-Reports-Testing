@@ -16,7 +16,7 @@ import {
 import type { Block, ReportDoc } from "../engine/report";
 import { REPORT_STYLE } from "../report/style";
 
-const NAVY = REPORT_STYLE.navy;
+const RED = REPORT_STYLE.red;
 const BODY = REPORT_STYLE.body;
 const MUTED = REPORT_STYLE.muted;
 const FONT = REPORT_STYLE.font;
@@ -37,9 +37,9 @@ function paragraphFrom(block: Block): FileChild[] {
     return [
       new Paragraph({
         heading: HeadingLevel.TITLE,
-        border: { bottom: { color: NAVY, space: 1, style: BorderStyle.SINGLE, size: 12 } },
+        border: { bottom: { color: RED, space: 1, style: BorderStyle.SINGLE, size: 12 } },
         spacing: { after: 200 },
-        children: [run(block.text, { size: REPORT_STYLE.titlePt * 2, bold: true, color: NAVY })],
+        children: [run(block.text, { size: REPORT_STYLE.titlePt * 2, bold: true, color: RED })],
       }),
     ];
   }
@@ -48,7 +48,7 @@ function paragraphFrom(block: Block): FileChild[] {
       new Paragraph({
         heading: HeadingLevel.HEADING_1,
         spacing: { before: 280, after: 120 },
-        children: [run(block.text, { size: REPORT_STYLE.headingPt * 2, bold: true, color: NAVY })],
+        children: [run(block.text, { size: REPORT_STYLE.headingPt * 2, bold: true, color: RED })],
       }),
     ];
   }
@@ -57,7 +57,7 @@ function paragraphFrom(block: Block): FileChild[] {
       new Paragraph({
         heading: HeadingLevel.HEADING_2,
         spacing: { before: 200, after: 80 },
-        children: [run(block.text, { size: Math.round(REPORT_STYLE.subheadPt * 2), bold: true, color: NAVY })],
+        children: [run(block.text, { size: Math.round(REPORT_STYLE.subheadPt * 2), bold: true, color: RED })],
       }),
     ];
   }
@@ -66,7 +66,7 @@ function paragraphFrom(block: Block): FileChild[] {
       new Paragraph({
         spacing: { before: 160, after: 40 },
         keepNext: true,
-        children: [run(block.text, { size: 24, bold: true, color: NAVY })],
+        children: [run(block.text, { size: 24, bold: true, color: RED })],
       }),
     ];
   }
@@ -102,7 +102,7 @@ function paragraphFrom(block: Block): FileChild[] {
       (line, index) =>
         new Paragraph({
           shading: { type: ShadingType.CLEAR, fill: "F4F7FB" },
-          border: index === 0 ? { left: { color: "1B4F8A", space: 8, style: BorderStyle.SINGLE, size: 16 } } : undefined,
+          border: index === 0 ? { left: { color: REPORT_STYLE.rule, space: 8, style: BorderStyle.SINGLE, size: 16 } } : undefined,
           spacing: { after: index === lines.length - 1 ? 160 : 40 },
           children: [run(line || " ", { size: 24 })],
         }),
