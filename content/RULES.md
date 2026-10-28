@@ -1,5 +1,7 @@
 # Rules used by the in-browser AIA
 
+Finding sentences live in `content/findings.json` (`findings_version`). Each criterion and recommended-practice check has one template per status. The engine fills `{{detail}}`, `{{areas}}`, and `{{situation}}`. It does not paste the agency's statement into "What we found."
+
 Versions in `src/content/types.ts`:
 
 - Schema version `1.0.0` (answers files)

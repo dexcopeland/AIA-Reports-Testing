@@ -12,11 +12,12 @@ import {
   type FileChild,
 } from "docx";
 import type { Block, ReportDoc } from "../engine/report";
+import { REPORT_STYLE } from "../report/style";
 
-const NAVY = "0A3161";
-const BODY = "1A1A1A";
-const MUTED = "4A5562";
-const FONT = "Source Sans Pro";
+const NAVY = REPORT_STYLE.navy;
+const BODY = REPORT_STYLE.body;
+const MUTED = REPORT_STYLE.muted;
+const FONT = REPORT_STYLE.font;
 
 function run(text: string, options: { size: number; bold?: boolean; color?: string; font?: string }): TextRun {
   return new TextRun({
@@ -36,7 +37,7 @@ function paragraphFrom(block: Block): FileChild[] {
         heading: HeadingLevel.TITLE,
         border: { bottom: { color: NAVY, space: 1, style: BorderStyle.SINGLE, size: 12 } },
         spacing: { after: 200 },
-        children: [run(block.text, { size: 44, bold: true, color: NAVY })],
+        children: [run(block.text, { size: REPORT_STYLE.titlePt * 2, bold: true, color: NAVY })],
       }),
     ];
   }
@@ -45,7 +46,7 @@ function paragraphFrom(block: Block): FileChild[] {
       new Paragraph({
         heading: HeadingLevel.HEADING_1,
         spacing: { before: 280, after: 120 },
-        children: [run(block.text, { size: 32, bold: true, color: NAVY })],
+        children: [run(block.text, { size: REPORT_STYLE.headingPt * 2, bold: true, color: NAVY })],
       }),
     ];
   }
@@ -54,7 +55,7 @@ function paragraphFrom(block: Block): FileChild[] {
       new Paragraph({
         heading: HeadingLevel.HEADING_2,
         spacing: { before: 200, after: 80 },
-        children: [run(block.text, { size: 27, bold: true, color: NAVY })],
+        children: [run(block.text, { size: Math.round(REPORT_STYLE.subheadPt * 2), bold: true, color: NAVY })],
       }),
     ];
   }

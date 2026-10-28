@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { FORM_VERSION, RULES_VERSION, SCHEMA_VERSION, type AnswerFile } from "../src/content/types";
+import { findingTemplates } from "../src/engine/findings";
 import { STATEMENTS } from "../src/content/statements";
 import { evaluate } from "../src/engine/evaluate";
 import { buildReport } from "../src/engine/report";
@@ -56,6 +57,22 @@ const base = {
 };
 
 describe("evaluation engine", () => {
+  it("has one findings template for every status", () => {
+    const templates = findingTemplates();
+    for (const id of ["C1", "C2", "C3"]) {
+      expect(templates.criteria[id]["Impact: Yes"]).toEqual(expect.any(String));
+      expect(templates.criteria[id]["Impact: No"]).toEqual(expect.any(String));
+    }
+    for (const id of ["C4", "C5", "C6", "C7", "C8", "C9", "C10", "C11", "C12"]) {
+      for (const status of ["Met", "Partial", "Gap"]) expect(templates.criteria[id][status]).toEqual(expect.any(String));
+    }
+    for (const id of ["RP1", "RP2", "RP3", "RP4", "RP5", "RP6", "RP7", "RP8"]) {
+      for (const status of ["In place", "Partly in place", "Not yet", "Not applicable"]) {
+        expect(templates.rp[id][status]).toEqual(expect.any(String));
+      }
+    }
+  });
+
   it("publishes a rules index that matches the modules", () => {
     const index = JSON.parse(readFileSync(new URL("../content/rules-index.json", import.meta.url), "utf8")) as {
       rules_version: string;
@@ -84,12 +101,42 @@ describe("evaluation engine", () => {
     const result = evaluate(answers);
     const c9 = result.criteria.find((item) => item.id === "C9");
     expect(c9?.status).toBe("Gap");
+    expect(c9?.found).toContain("Human oversight is absent or not determined");
+    expect(c9?.found).toContain("Power to change or stop");
+    expect(c9?.found).not.toContain("cannot change outputs");
+    expect(c9?.found).not.toContain("written procedure");
     expect(c9?.quote).toContain("cannot change outputs");
-    expect(c9?.found).toContain("cannot change outputs");
     expect(c9?.quote).not.toContain("written procedure");
+    expect(c9?.quote).not.toContain(".;");
     const rp4 = result.rp.find((item) => item.id === "RP4");
     expect(rp4?.status).toBe("Not yet");
     expect(rp4?.quote).toContain("cannot change outputs");
+    expect(rp4?.found).not.toContain("cannot change outputs");
+  });
+
+  it("separates S01 findings from the verbatim answers", () => {
+    const scenario = SCENARIOS.find((item) => item.id === "S01");
+    const result = evaluate(buildScenario(scenario!));
+    const c9 = result.criteria.find((item) => item.id === "C9");
+    const rp1 = result.rp.find((item) => item.id === "RP1");
+    const c2 = result.criteria.find((item) => item.id === "C2");
+    const c3 = result.criteria.find((item) => item.id === "C3");
+    expect(c9?.found).toContain("Human oversight is in place");
+    expect(c9?.found).not.toContain("following a written procedure");
+    expect(c9?.quote).toContain("following a written procedure");
+    expect(c9?.quote).toContain("Evidence:");
+    expect(rp1?.found).toContain("in writing");
+    expect(rp1?.found).not.toContain("A written analysis covers foreseeable misuse");
+    expect(rp1?.quote).toContain("A written analysis covers foreseeable misuse");
+    expect(c2?.found).toContain("Safety is not affected");
+    expect(c2?.quote).toContain("Benefits or public services");
+    expect(c2?.quote).not.toContain("No statement was selected");
+    expect(c3?.quote).toContain("Benefits or public services");
+    expect(c3?.quote).not.toContain("No statement was selected");
+    const report = buildReport(buildScenario(scenario!));
+    const body = report.blocks.map((block) => block.text).join("\n");
+    expect(body).not.toContain(".;");
+    expect(body).not.toContain(".\".\n");
   });
 
   it("treats an unknown review as a Gap and keeps the S04-like gates and deadline", () => {

@@ -1,0 +1,121 @@
+{
+  "findings_version": "1.1.0",
+  "note": "One plain-language template per status. Slots: {{areas}}, {{detail}}, {{situation}}. Do not put the agency's verbatim answer in these templates. That text belongs in Answer relied on.",
+  "criteria": {
+    "C1": {
+      "Impact: Yes": "Rights are affected. The output can reach {{areas}}.",
+      "Impact: No": "Rights are not affected. The answers do not name a rights area."
+    },
+    "C2": {
+      "Impact: Yes": "Safety is affected. The output can reach {{areas}}.",
+      "Impact: No": "Safety is not affected. The answers do not name a safety area."
+    },
+    "C3": {
+      "Impact: Yes": "Benefits or public services are affected.",
+      "Impact: No": "Benefits or public services are not affected. The answers do not name that area."
+    },
+    "C4": {
+      "Met": "Staff keep the decision. The output recommends or informs, and a person reviews it before it takes effect.",
+      "Partial": "The decision role or the review is only partly in place. {{detail}}",
+      "Gap": "The output can take effect without the review this criterion requires, or the decision role is not determined. {{detail}}"
+    },
+    "C5": {
+      "Met": "Every named group has a path that fits it, including language access where that group is named.",
+      "Partial": "At least one named group does not have a fitting path. {{detail}}",
+      "Gap": "Groups who need extra care are not identified, or a practice shuts a group out. {{detail}}"
+    },
+    "C6": {
+      "Met": "Bias testing is in place. Results are tested on a population like Maryland's, and outcomes across groups are checked on a schedule.",
+      "Partial": "Bias testing is incomplete or only planned. {{detail}}",
+      "Gap": "Bias testing is absent or not determined. {{detail}}"
+    },
+    "C7": {
+      "Met": "{{situation}}",
+      "Partial": "Notice that AI is involved is incomplete. {{detail}}",
+      "Gap": "Notice that AI is involved is absent or not determined. {{detail}}",
+      "phrases": {
+        "no_outside": "No one outside the agency is affected, so a separate public notice is not required.",
+        "in_place": "People are told that AI is involved where they meet the decision or contact. Notice is in place."
+      }
+    },
+    "C8": {
+      "Met": "{{situation}}",
+      "Partial": "The path to a person or a challenge is incomplete. {{detail}}",
+      "Gap": "A path to a person or a way to challenge a result is absent or not determined. {{detail}}",
+      "phrases": {
+        "no_outside": "No one outside the agency is affected, so a public challenge path is not required.",
+        "in_place": "People can reach a person and challenge a result, and a person can change the result."
+      }
+    },
+    "C9": {
+      "Met": "Human oversight is in place. A person reviews outputs before they take effect, can change or stop the AI system, and overrides are recorded.",
+      "Partial": "Human oversight is incomplete. {{detail}}",
+      "Gap": "Human oversight is absent or not determined. {{detail}}"
+    },
+    "C10": {
+      "Met": "Data protection for this level is in place, including access limits and any encryption or privacy review the level requires.",
+      "Partial": "Data protection is incomplete. {{detail}}",
+      "Gap": "Data protection is absent or not determined. {{detail}}"
+    },
+    "C11": {
+      "Met": "Accuracy testing and monitoring after launch are in place. Results are tested with set criteria and tracked against a threshold.",
+      "Partial": "Accuracy testing or monitoring after launch is incomplete. {{detail}}",
+      "Gap": "Accuracy testing or monitoring after launch is absent or not determined. {{detail}}"
+    },
+    "C12": {
+      "Met": "Accountability is in place. Named roles cover monitoring, incidents, and reassessment at least yearly.",
+      "Partial": "Accountability is incomplete. {{detail}}",
+      "Gap": "A named owner for incidents or reassessment is absent or not determined. {{detail}}"
+    }
+  },
+  "rp": {
+    "RP1": {
+      "In place": "Foreseeable misuse, how the AI system can fail, and who is harmed are described in writing. This recommended practice is in place.",
+      "Partly in place": "The impact analysis is only partly written. {{detail}}",
+      "Not yet": "An impact analysis is absent or not determined. {{detail}}",
+      "Not applicable": "This recommended practice does not apply to this AI system."
+    },
+    "RP2": {
+      "In place": "The contract splits responsibilities and requires notice of model changes and security incidents. A certificate alone does not make this in place.",
+      "Partly in place": "Some contract terms are still draft, requested, or missing. {{detail}}",
+      "Not yet": "The contract terms for responsibilities and notice are absent or not determined. {{detail}}",
+      "Not applicable": "This check does not apply. The AI system is built by the State with no outside model or vendor."
+    },
+    "RP3": {
+      "In place": "Data sources are recorded, quality is checked, and training or reference data is protected from tampering.",
+      "Partly in place": "Source records, quality checks, or tamper protection are incomplete. {{detail}}",
+      "Not yet": "Source records, quality checks, or tamper protection are absent or not determined. {{detail}}",
+      "Not applicable": "This recommended practice does not apply to this AI system."
+    },
+    "RP4": {
+      "In place": "Staff have written instructions and training, and a named role can change or stop the AI system.",
+      "Partly in place": "Staff instructions or the power to stop the AI system are incomplete. {{detail}}",
+      "Not yet": "Staff instructions or the power to stop the AI system are absent or not determined. {{detail}}",
+      "Not applicable": "This recommended practice does not apply to this AI system."
+    },
+    "RP5": {
+      "In place": "The applicable AI security threats are covered and security testing is recorded. Design facts are listed for any threat marked as not applying.",
+      "Partly in place": "Threat coverage or security testing is incomplete. {{detail}}",
+      "Not yet": "Threat coverage or security testing is absent or not determined. {{detail}}",
+      "Not applicable": "This recommended practice does not apply to this AI system."
+    },
+    "RP6": {
+      "In place": "Each use is logged, and a fixed test set is re-run on a schedule and after model updates.",
+      "Partly in place": "Logging or re-testing is incomplete. {{detail}}",
+      "Not yet": "Logging or re-testing is absent or not determined. {{detail}}",
+      "Not applicable": "This recommended practice does not apply to this AI system."
+    },
+    "RP7": {
+      "In place": "A named role tells affected people about an incident, and staff have a concerns channel outside the team.",
+      "Partly in place": "Incident notice or the staff concerns channel is incomplete. {{detail}}",
+      "Not yet": "Incident notice or the staff concerns channel is absent or not determined. {{detail}}",
+      "Not applicable": "This recommended practice does not apply to this AI system."
+    },
+    "RP8": {
+      "In place": "A new model, new data, new tools, or a new use triggers a re-check, and retirement covers models, data, stores, and logs.",
+      "Partly in place": "Re-check triggers or the retirement plan are incomplete. {{detail}}",
+      "Not yet": "Re-check triggers or the retirement plan are absent or not determined. {{detail}}",
+      "Not applicable": "This recommended practice does not apply to this AI system."
+    }
+  }
+}

@@ -16,9 +16,11 @@
   },
   "dependencies": {
     "@fontsource/source-sans-pro": "^5.2.5",
-    "docx": "^9.5.1"
+    "docx": "^9.5.1",
+    "pdfmake": "^0.3.13"
   },
   "devDependencies": {
+    "pdf-parse": "^2.4.5",
     "puppeteer-core": "^25.16.0",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3",

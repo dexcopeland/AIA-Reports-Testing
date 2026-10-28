@@ -1,4 +1,5 @@
 import { ASSURANCES, BUILDERS, CAPABILITIES, DEPLOYMENT, DESIGN_FACTS, HARM_TYPES, HOSTING, LEVELS, METHODS, PRIOR, PROCUREMENT, ROLES, TARGETS, labelOf } from "../content/catalog";
+import { AREAS } from "../content/rules";
 import { APPROVAL_BANNED, BANNED, FIXED, RP_META, SOURCES } from "../content/rules";
 import { GROUPS, RELATIONS, STATEMENT_BY_ID } from "../content/statements";
 import type { AnswerFile } from "../content/types";
@@ -206,14 +207,14 @@ export function appendixAnswer(answers: Answers, n: number): string {
 function riskLine(mit: LiveMitigation): string {
   const covers = mit.covers.length ? ` (${mit.covers.join(", ")})` : "";
   const quote = mit.quotes[0];
-  const named = quote ? `Q${quote.q} says "${quote.text}"` : "The answers leave this safeguard open";
+  const statement = quote ? `Q${quote.q}, ${quote.text.replace(/[.]+$/, "")}` : "The answers leave this safeguard open";
   if (mit.id === "M-ONGOING") {
     return `Ongoing checks cover the safeguards this report adds or the answers already describe, including yearly reassessment${covers}.`;
   }
   if (mit.id === "M-PROHIBITED") {
-    return `The Responsible AI Policy lists a prohibited use [P1]${covers}. ${named}.`;
+    return `The Responsible AI Policy lists a prohibited use [P1]. ${statement}${covers}.`;
   }
-  const body = `${named}${covers}.`;
+  const body = `${statement}${covers}.`;
   return mit.rpOnly ? `Recommended practice: ${body}` : body;
 }
 
@@ -320,7 +321,7 @@ export function buildReport(file: AnswerFile): ReportDoc {
 
   blocks.push(block("h2", "4. Why this AI system is High-risk", "template"));
   blocks.push(block("p", "The intake found this AI system High-risk.", "template"));
-  const areaNames = many(answers, "q8_areas").join(", ") || "no area selected";
+  const areaNames = many(answers, "q8_areas").map((id) => AREAS.find((area) => area.id === id)?.label ?? id).join(", ") || "no area selected";
   blocks.push(block("p", `High-risk area: ${areaNames}. This is ${result.area.label} (SF&P § 3.5-801) [S1].`, "slot"));
   if (text(answers, "q8_how")) blocks.push(block("p", `How the agency describes the effect: ${text(answers, "q8_how")}`, "answer"));
   if (result.gates.length === 0) blocks.push(block("p", "No risk gate was set from the coded answers.", "template"));

@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "form_version": "v2-structured-1.0.0",
-  "rules_version": "1.0.0",
+  "rules_version": "1.1.0",
   "statement_count": 32,
   "statements": [
     {
@@ -1771,5 +1771,6 @@
       "text": "Q14 data types suggest a minimum level. If that level is above Q13, Section 4 says so. The level itself is not changed."
     }
   ],
-  "fixed_paragraphs": 3
+  "fixed_paragraphs": 3,
+  "findings_version": "1.1.0"
 }
