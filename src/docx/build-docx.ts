@@ -1,8 +1,10 @@
 import {
+  AlignmentType,
   BorderStyle,
   Document,
   Footer,
   HeadingLevel,
+  LevelFormat,
   Packer,
   PageBreak,
   PageNumber,
@@ -12,11 +14,12 @@ import {
   type FileChild,
 } from "docx";
 import type { Block, ReportDoc } from "../engine/report";
+import { REPORT_STYLE } from "../report/style";
 
-const NAVY = "0A3161";
-const BODY = "1A1A1A";
-const MUTED = "4A5562";
-const FONT = "Source Sans Pro";
+const NAVY = REPORT_STYLE.navy;
+const BODY = REPORT_STYLE.body;
+const MUTED = REPORT_STYLE.muted;
+const FONT = REPORT_STYLE.font;
 
 function run(text: string, options: { size: number; bold?: boolean; color?: string; font?: string }): TextRun {
   return new TextRun({
@@ -36,7 +39,7 @@ function paragraphFrom(block: Block): FileChild[] {
         heading: HeadingLevel.TITLE,
         border: { bottom: { color: NAVY, space: 1, style: BorderStyle.SINGLE, size: 12 } },
         spacing: { after: 200 },
-        children: [run(block.text, { size: 44, bold: true, color: NAVY })],
+        children: [run(block.text, { size: REPORT_STYLE.titlePt * 2, bold: true, color: NAVY })],
       }),
     ];
   }
@@ -45,7 +48,7 @@ function paragraphFrom(block: Block): FileChild[] {
       new Paragraph({
         heading: HeadingLevel.HEADING_1,
         spacing: { before: 280, after: 120 },
-        children: [run(block.text, { size: 32, bold: true, color: NAVY })],
+        children: [run(block.text, { size: REPORT_STYLE.headingPt * 2, bold: true, color: NAVY })],
       }),
     ];
   }
@@ -54,7 +57,7 @@ function paragraphFrom(block: Block): FileChild[] {
       new Paragraph({
         heading: HeadingLevel.HEADING_2,
         spacing: { before: 200, after: 80 },
-        children: [run(block.text, { size: 27, bold: true, color: NAVY })],
+        children: [run(block.text, { size: Math.round(REPORT_STYLE.subheadPt * 2), bold: true, color: NAVY })],
       }),
     ];
   }
@@ -64,6 +67,24 @@ function paragraphFrom(block: Block): FileChild[] {
         spacing: { before: 160, after: 40 },
         keepNext: true,
         children: [run(block.text, { size: 24, bold: true, color: NAVY })],
+      }),
+    ];
+  }
+  if (block.type === "bullet") {
+    return [
+      new Paragraph({
+        numbering: { reference: "answer-relied-on", level: 0 },
+        spacing: { before: 40, after: 20 },
+        children: [run(block.text, { size: 24 })],
+      }),
+    ];
+  }
+  if (block.type === "sub") {
+    return [
+      new Paragraph({
+        spacing: { before: 0, after: 60 },
+        indent: { left: 1080 },
+        children: [run(block.text, { size: 24 })],
       }),
     ];
   }
@@ -87,10 +108,12 @@ function paragraphFrom(block: Block): FileChild[] {
         }),
     );
   }
+  const aligned = block.text.startsWith("Aligned to:");
+  const answerLead = block.text.startsWith("Answer relied on (");
   return [
     new Paragraph({
-      spacing: { after: 120 },
-      children: [run(block.text, { size: block.type === "field" ? 24 : 24 })],
+      spacing: { before: aligned ? 240 : 0, after: answerLead ? 80 : 120 },
+      children: [run(block.text, { size: 24 })],
     }),
   ];
 }
@@ -110,6 +133,30 @@ export async function reportToDocxBlob(doc: ReportDoc): Promise<Blob> {
     ],
   });
   const document = new Document({
+    numbering: {
+      config: [
+        {
+          reference: "answer-relied-on",
+          levels: [
+            {
+              level: 0,
+              format: LevelFormat.BULLET,
+              text: "•",
+              alignment: AlignmentType.LEFT,
+              style: {
+                paragraph: {
+                  indent: { left: 720, hanging: 360 },
+                },
+                run: {
+                  font: FONT,
+                  size: 24,
+                },
+              },
+            },
+          ],
+        },
+      ],
+    },
     styles: {
       default: {
         document: {

@@ -12,7 +12,7 @@ It follows the shape of Canada's [AIA tool](https://github.com/canada-ca/aia-eia
 2. Start a new assessment, or load an example. Examples are fictional and labeled.
 3. Answer section by section. Later questions appear only when they apply. Statement sets run from weakest to strongest, plus "We don't know / not determined yet." A planned line asks for a target date. The strongest line can ask for one line of evidence.
 4. The browser saves the draft on this computer. Use **Save JSON file** to download a copy. The file includes `schema_version`, `form_version` and `rules_version`.
-5. Read the on-screen draft. After Q25 is confirmed, download a Word file or print to PDF. The Word file is the record copy. It uses Source Sans Pro at 12 pt, US Letter, 1 inch margins, and a footer with Page X of Y. Section 9 and the appendix start on a new page. The report body has no tables.
+5. Read the on-screen draft. After Q25 is confirmed, download a Word file or a PDF. Both are built from the same report. The Word file uses Times New Roman. The PDF embeds Liberation Serif (metric-compatible, SIL Open Font License) and uses DejaVu Serif for characters Liberation Serif does not have. If a character is in neither font, the download says so and names the question. The PDF is US Letter with 1 inch margins, a "Page X of Y" footer, Section 9 and the appendix starting on new pages, and shaded answer paragraphs. The report body has no tables.
 
 Keep the JSON file in agency storage. Do not put resident data in it. The questions ask about the AI system, not about a person's case file.
 
@@ -51,7 +51,9 @@ Edit the data modules, not the page layout, unless the layout is what you mean t
 | Option lists | `src/content/catalog.ts` |
 | Form fields, help text, show/hide | `src/content/form.ts` |
 | Which rule is still a proposal | `content/RULES.md` and `proposed: true` in the modules |
+| Finding sentences (What we found) | `content/findings.json` |
 | Report assembly | `src/engine/report.ts` |
+| Word and PDF layout tokens | `src/report/style.ts` |
 | Scoring | `src/engine/evaluate.ts` |
 
 Published index of statement codes, statuses and mitigations: `content/rules-index.json`. Regenerate it with `npm run rules-index` after a content edit.
@@ -94,7 +96,7 @@ Asset paths are relative, so the same build works at that project URL and on a l
 
 ## Stack
 
-Vite and TypeScript, with no UI framework. The form uses native controls (labels, fieldsets, radios, checkboxes). The Word file is built in the browser with the `docx` library. Source Sans Pro is bundled from Fontsource (SIL Open Font License).
+Vite and TypeScript, with no UI framework. The form uses native controls (labels, fieldsets, radios, checkboxes). The Word file is built in the browser with the `docx` library and asks for Times New Roman. The PDF embeds Liberation Serif (SIL Open Font License, in `src/fonts/`) and uses DejaVu Serif, under the Bitstream Vera license in that same folder, when Liberation Serif has no glyph. Times New Roman itself is not included in this repository.
 
 ## Remaining work
 

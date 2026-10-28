@@ -3,6 +3,7 @@ import { FORM_VERSION, RULES_VERSION, SCHEMA_VERSION } from "../src/content/type
 import { PROPOSED_RULES, MITIGATIONS } from "../src/content/rules";
 import { STATEMENTS } from "../src/content/statements";
 import { FIXED } from "../src/content/rules";
+import { FINDINGS_VERSION } from "../src/engine/findings";
 
 const index = {
   schema_version: SCHEMA_VERSION,
@@ -28,6 +29,7 @@ const index = {
   mitigations: MITIGATIONS.map((item) => ({ id: item.id, title: item.title, timing: item.timing, rp_only: item.rpOnly })),
   proposed_rules: PROPOSED_RULES,
   fixed_paragraphs: FIXED.purpose.length,
+  findings_version: FINDINGS_VERSION,
 };
 writeFileSync(new URL("../content/rules-index.json", import.meta.url), `${JSON.stringify(index, null, 2)}\n`);
 console.log(`Wrote content/rules-index.json (${STATEMENTS.length} statements).`);

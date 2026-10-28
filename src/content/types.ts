@@ -1,6 +1,6 @@
 export const SCHEMA_VERSION = "1.0.0";
 export const FORM_VERSION = "v2-structured-1.0.0";
-export const RULES_VERSION = "1.0.0";
+export const RULES_VERSION = "1.1.0";
 
 export type CriterionStatus = "Met" | "Partial" | "Gap";
 export type RpStatus = "In place" | "Partly in place" | "Not yet" | "Not applicable";

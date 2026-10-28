@@ -14,7 +14,7 @@ export function renderReport(doc: ReportDoc): HTMLElement {
     }
     const tag = block.type === "h1" ? "h1" : block.type === "h2" ? "h2" : block.type === "h3" ? "h3" : block.type === "qa" ? "p" : block.type === "label" ? "p" : "p";
     const el = document.createElement(tag);
-    el.className = `r-${block.type}`;
+    el.className = block.text.startsWith("Aligned to:") ? `r-${block.type} r-aligned` : `r-${block.type}`;
     if (block.type === "qa") el.textContent = block.text;
     else el.textContent = block.text;
     if (block.type === "h1") el.classList.add("report-title");

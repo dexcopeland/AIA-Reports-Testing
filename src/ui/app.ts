@@ -5,6 +5,7 @@ import type { Answers } from "../engine/answers";
 import { many, text } from "../engine/answers";
 import { buildReport } from "../engine/report";
 import { downloadBlob, reportToDocxBlob } from "../docx/build-docx";
+import { reportToPdfBlob } from "../pdf/build-pdf";
 import { renderReport } from "./report-view";
 import { autoload, autosave, clearAutosave, downloadJson, emptyFile, normalizeFile } from "./storage";
 
@@ -209,21 +210,32 @@ export function mount(root: Element): void {
       void reportToDocxBlob(doc).then((blob) => {
         const safe = doc.systemName.replace(/[^\w.-]+/g, "-").slice(0, 60);
         downloadBlob(blob, `AIA-Report-${safe || "draft"}.docx`);
-        exportNote.textContent = "Word file downloaded. It is the record copy, with Page X of Y in the footer.";
+        exportNote.textContent = "Word file downloaded. It uses Page X of Y in the footer.";
       }).catch(() => {
         exportNote.textContent = "The Word file could not be built in this browser.";
       });
     }, "secondary"));
-    actions.append(button("Print or save as PDF", () => {
+    actions.append(button("Download PDF", () => {
       if (!(text(file.answers, "q25_confirm") === "confirm" || many(file.answers, "q25_confirm").includes("confirm"))) {
-        exportNote.textContent = "Confirm Q25 before printing. This block is a proposed rule.";
+        exportNote.textContent = "Confirm Q25 before you download the PDF. This block is a proposed rule. The on-screen draft is still available.";
         return;
       }
-      window.print();
+      void reportToPdfBlob(doc).then(({ blob, warnings }) => {
+        const safe = doc.systemName.replace(/[^\w.-]+/g, "-").slice(0, 60);
+        downloadBlob(blob, `AIA-Report-${safe || "draft"}.pdf`);
+        if (warnings.length === 0) {
+          exportNote.textContent = "PDF downloaded. It is built from the same report as the Word file.";
+          return;
+        }
+        const listed = warnings.map((warning) => `${warning.character} (${warning.questions.join(", ")})`).join("; ");
+        exportNote.textContent = `PDF downloaded. These characters are not in the report fonts, so they may not appear: ${listed}.`;
+      }).catch(() => {
+        exportNote.textContent = "The PDF could not be built in this browser.";
+      });
     }, "secondary"));
     box.append(actions);
     if (blocked) {
-      const note = el("p", "Word and print stay off until Q25 is confirmed.");
+      const note = el("p", "Word and PDF downloads stay off until Q25 is confirmed.");
       note.className = "no-print";
       box.append(note);
     }

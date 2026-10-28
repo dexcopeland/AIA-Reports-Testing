@@ -60,13 +60,22 @@ export interface ConfirmFact {
   text: string;
 }
 
+export interface AnswerLine {
+  label: string;
+  statement: string;
+  evidence: string;
+  targetDate: string;
+}
+
 export interface CriterionResult {
   id: string;
   name: string;
   status: string;
   found: string;
+  /** Plain join of the answer lines, kept for checks. The report renders answerLines instead. */
   quote: string;
   qRefs: string;
+  answerLines: AnswerLine[];
 }
 
 export interface Evaluation {

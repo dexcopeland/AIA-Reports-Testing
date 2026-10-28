@@ -1,6 +1,5 @@
 import { ASSURANCES, BUILDERS, CAPABILITIES, HARM_TYPES, HOSTING, LEVELS, METHODS, PRIOR, PROCUREMENT, ROLES, TARGETS, labelOf } from "../content/catalog";
 import {
-  AREAS,
   CRITERIA_META,
   DATA_TYPES,
   EVIDENCE_CHECK,
@@ -26,6 +25,19 @@ import {
 import { FORM_VERSION, RULES_VERSION, type AnswerFile, type ItemStatus, type StatementDef, type Timing, type TimingProfile } from "../content/types";
 import type { Answers } from "./answers";
 import { has, many, text } from "./answers";
+import {
+  areaLabels,
+  buildDetail,
+  q10Lines,
+  q12OutsideLines,
+  q13Lines,
+  q20Lines,
+  q8Lines,
+  quoteFromLines,
+  renderFinding,
+  statementLines,
+} from "./findings";
+import type { AnswerLine } from "./model";
 import { fingerprint } from "./fingerprint";
 import type { ConfirmFact, CriterionResult, CrossCheck, Evaluation, Followup, GateHit, LiveMitigation, ResolvedItem } from "./model";
 import {
@@ -232,45 +244,27 @@ function drivingItems(items: ResolvedItem[], reported: string): ResolvedItem[] {
   return exact.length > 0 ? exact : weakestItems;
 }
 
-function quoteOf(items: ResolvedItem[]): string {
-  if (items.length === 0) return "No statement was selected.";
-  return items.map((item) => {
-    const label = item.context ? `${item.title} (${item.context})` : item.title;
-    return `${label}: ${item.choiceText}`;
-  }).join("; ");
-}
-
-function qRef(items: ResolvedItem[], fallback: string): string {
-  const qs = [...new Set(items.map((item) => `Q${item.legacyQ}`))];
-  return qs.length ? qs.join(", ") : fallback;
-}
-
-function foundLine(status: string, items: ResolvedItem[], name: string): string {
-  const drivers = drivingItems(items, status);
-  const source = drivers.length > 0 ? drivers : items;
-  const unanswered = source.length === 0 || source.every((item) => item.unanswered);
-  if (unanswered && (status === "Gap" || status === "Not yet" || status === "Partial")) {
-    const labels = source.map((item) => item.context || item.title).join("; ");
-    return labels ? `The answers did not show ${name} (${labels}).` : `The answers did not show ${name}.`;
-  }
-  const quote = quoteOf(source);
-  const q = qRef(source, "the form");
-  if (status === "Not applicable") return quote;
-  return `${q} says "${quote}".`;
-}
-
-function criterion(id: string, status: string, found: string, items: ResolvedItem[], qFallback: string): CriterionResult {
+function criterion(id: string, status: string, found: string, answerLines: AnswerLine[], qRefs: string): CriterionResult {
   const meta = CRITERIA_META.find((item) => item.id === id) ?? RP_META.find((item) => item.id === id);
+  return { id, name: meta?.name ?? id, status, found, quote: quoteFromLines(answerLines), qRefs, answerLines };
+}
+
+function narrateTo(
+  id: string,
+  status: string,
+  items: ResolvedItem[],
+  options: { phrase?: string; areas?: string; prefix?: string; lead?: AnswerLine[]; qRefs: string; keptIds?: ReadonlySet<string> },
+): CriterionResult {
   const drivers = drivingItems(items, status);
-  const source = drivers.length > 0 ? drivers : items;
-  return {
+  const open = drivers.filter((item) => item.status !== "Met" && item.status !== "In place" && item.status !== "Not applicable");
+  const found = renderFinding(
     id,
-    name: meta?.name ?? id,
     status,
-    found,
-    quote: quoteOf(source),
-    qRefs: qRef(source.length > 0 ? source : items, qFallback),
-  };
+    { areas: options.areas ?? "", detail: buildDetail(open, options.prefix ?? "", options.keptIds), situation: "" },
+    options.phrase,
+  );
+  const quoted = open.length > 0 ? open : drivers;
+  return criterion(id, status, found, [...(options.lead ?? []), ...statementLines(quoted)], options.qRefs);
 }
 
 function pickTiming(profile: TimingProfile, answers: Answers, conflict: boolean): Timing {
@@ -535,34 +529,37 @@ export function evaluate(file: AnswerFile): Evaluation {
   const rp7 = weakest(["23b", "23c"].flatMap((id) => itemsOf(items, id).map((item) => item.status)), "RP");
   const rp8 = weakest(["24a", "24b"].flatMap((id) => itemsOf(items, id).map((item) => item.status)), "RP");
 
-  const areaNames = areas.map((id) => AREAS.find((area) => area.id === id)?.label ?? id).join(", ") || "no area selected";
-  const criteria: CriterionResult[] = [
-    criterion("C1", rights ? "Impact: Yes" : "Impact: No", rights ? `Q8 names ${areaNames}, which can affect rights, civil liberties, equal opportunities, privacy or access to critical resources.` : "Q8 does not name a rights area.", [], "Q8"),
-    criterion("C2", safety ? "Impact: Yes" : "Impact: No", safety ? `Q8 names ${areaNames}, which can affect life, well-being or critical infrastructure.` : "Q8 does not name a safety area.", [], "Q8"),
-    criterion("C3", areas.includes("benefits_services") ? "Impact: Yes" : "Impact: No", areas.includes("benefits_services") ? "Q8 names benefits or public services." : "Q8 does not name benefits or public services.", [], "Q8"),
-    criterion("C4", c4, foundLine(c4, c4Items, "how a person controls the decision"), c4Items, "Q10"),
-    criterion("C5", c5, foundLine(c5, [...groupItems, ...langItems], "a path for each named group"), [...groupItems, ...langItems], "Q9"),
-    criterion("C6", c6, foundLine(c6, itemsOf(items, "21b"), "testing of results across groups"), itemsOf(items, "21b"), "Q21"),
-    criterion("C7", c7, !outsideYes(answers) ? (c7 === "Met" ? "Q12 says no one outside the agency is affected." : "Q12 does not show notice for people outside the agency.") : foundLine(c7, itemsOf(items, "12a"), "notice that AI is involved"), itemsOf(items, "12a"), "Q12"),
-    criterion("C8", c8, !outsideYes(answers) ? (c8 === "Met" ? "Q12 says no one outside the agency needs a challenge path." : "Q12 does not show a way to reach a person or challenge a result.") : foundLine(c8, [...itemsOf(items, "12b"), ...itemsOf(items, "12c")], "a way to reach a person and challenge a result"), [...itemsOf(items, "12b"), ...itemsOf(items, "12c")], "Q12"),
-    criterion("C9", c9, foundLine(c9, ["11a", "11b", "11c"].flatMap((id) => itemsOf(items, id)), "human review, change or stop power, and recorded overrides"), ["11a", "11b", "11c"].flatMap((id) => itemsOf(items, id)), "Q11"),
-    criterion("C10", c10, level === "unknown" ? "The answers did not show the data level. Data level: Unknown (not assigned)." : foundLine(c10, c10Parts, "data protection for this level"), c10Parts, "Q13"),
-    criterion("C11", c11, foundLine(c11, ["21a", "21c"].flatMap((id) => itemsOf(items, id)), "accuracy testing and drift monitoring"), ["21a", "21c"].flatMap((id) => itemsOf(items, id)), "Q21"),
-    criterion("C12", c12, foundLine(c12, itemsOf(items, "23a"), "a named owner for incidents and reassessment"), itemsOf(items, "23a"), "Q23"),
-  ];
-
-  const rpResults: CriterionResult[] = [
-    criterion("RP1", rp1, foundLine(rp1, rp1item, "a written impact analysis"), rp1item, "Q20"),
-    criterion("RP2", rp2, rp2 === "Not applicable" ? "The AI system is built by the State with no outside model or vendor." : foundLine(rp2, itemsOf(items, "16b"), "contract terms for responsibilities and notice"), itemsOf(items, "16b"), "Q16"),
-    criterion("RP3", rp3, foundLine(rp3, ["14a", "14b", "14c"].flatMap((id) => itemsOf(items, id)), "recorded sources, quality checks and tamper protection"), ["14a", "14b", "14c"].flatMap((id) => itemsOf(items, id)), "Q14"),
-    criterion("RP4", rp4, foundLine(rp4, [...itemsOf(items, "11d"), ...itemsOf(items, "11b")], "staff instructions and power to stop the AI system"), [...itemsOf(items, "11d"), ...itemsOf(items, "11b")], "Q11"),
-    criterion("RP5", rp5, foundLine(rp5, ["22", "22f"].flatMap((id) => itemsOf(items, id)), "protections and testing for AI security threats"), ["22", "22f"].flatMap((id) => itemsOf(items, id)), "Q22"),
-    criterion("RP6", rp6, foundLine(rp6, ["21d", "21e"].flatMap((id) => itemsOf(items, id)), "logging and scheduled re-testing"), ["21d", "21e"].flatMap((id) => itemsOf(items, id)), "Q21"),
-    criterion("RP7", rp7, foundLine(rp7, ["23b", "23c"].flatMap((id) => itemsOf(items, id)), "incident notice and a concerns channel"), ["23b", "23c"].flatMap((id) => itemsOf(items, id)), "Q23"),
-    criterion("RP8", rp8, foundLine(rp8, ["24a", "24b"].flatMap((id) => itemsOf(items, id)), "re-check triggers and a retirement plan"), ["24a", "24b"].flatMap((id) => itemsOf(items, id)), "Q24"),
-  ];
-
-  const statusById = new Map<string, string>([...criteria, ...rpResults].map((item) => [item.id, item.status]));
+  const q8 = q8Lines(answers);
+  const outsideLead = q12OutsideLines(answers);
+  const c7Phrase = !outsideYes(answers) && c7 === "Met" ? "no_outside" : c7 === "Met" ? "in_place" : undefined;
+  const c8Phrase = !outsideYes(answers) && c8 === "Met" ? "no_outside" : c8 === "Met" ? "in_place" : undefined;
+  const c7Items = itemsOf(items, "12a");
+  const c8Items = [...itemsOf(items, "12b"), ...itemsOf(items, "12c")];
+  const c9Items = ["11a", "11b", "11c"].flatMap((id) => itemsOf(items, id));
+  const c10Prefix = level === "unknown" || text(answers, "q13_level") === "" ? "The data level is Unknown (not assigned)." : "";
+  const c4Prefix = role === "unknown" || role === "" ? "The decision role is not determined." : role === "decides" && c4 === "Gap" ? "The output decides or acts without a person approving each one." : "";
+  const statusById = new Map<string, string>([
+    ["C1", rights ? "Impact: Yes" : "Impact: No"],
+    ["C2", safety ? "Impact: Yes" : "Impact: No"],
+    ["C3", areas.includes("benefits_services") ? "Impact: Yes" : "Impact: No"],
+    ["C4", c4],
+    ["C5", c5],
+    ["C6", c6],
+    ["C7", c7],
+    ["C8", c8],
+    ["C9", c9],
+    ["C10", c10],
+    ["C11", c11],
+    ["C12", c12],
+    ["RP1", rp1],
+    ["RP2", rp2],
+    ["RP3", rp3],
+    ["RP4", rp4],
+    ["RP5", rp5],
+    ["RP6", rp6],
+    ["RP7", rp7],
+    ["RP8", rp8],
+  ]);
   const wellAnswered = ["C4", "C5", "C6", "C7", "C8", "C9", "C10", "C11", "C12"].every((id) => statusById.get(id) !== "Gap")
     && ["RP1", "RP2", "RP3", "RP4", "RP5", "RP6", "RP7", "RP8"].every((id) => statusById.get(id) !== "Not yet");
 
@@ -619,6 +616,31 @@ export function evaluate(file: AnswerFile): Evaluation {
     });
   }
   const capped = applyCap(live, wellAnswered);
+  const keptMitigationIds = new Set(capped.kept.map((item) => item.id));
+  const criteria: CriterionResult[] = [
+    narrateTo("C1", rights ? "Impact: Yes" : "Impact: No", [], { areas: areaLabels(areas, RIGHTS_AREAS), lead: q8, qRefs: "Q8", keptIds: keptMitigationIds }),
+    narrateTo("C2", safety ? "Impact: Yes" : "Impact: No", [], { areas: areaLabels(areas, SAFETY_AREAS), lead: q8, qRefs: "Q8", keptIds: keptMitigationIds }),
+    narrateTo("C3", areas.includes("benefits_services") ? "Impact: Yes" : "Impact: No", [], { lead: q8, qRefs: "Q8", keptIds: keptMitigationIds }),
+    narrateTo("C4", c4, c4Items, { prefix: c4Prefix, lead: q10Lines(answers), qRefs: "Q10, Q11", keptIds: keptMitigationIds }),
+    narrateTo("C5", c5, [...groupItems, ...langItems], { qRefs: "Q9, Q12", keptIds: keptMitigationIds }),
+    narrateTo("C6", c6, itemsOf(items, "21b"), { qRefs: "Q21", keptIds: keptMitigationIds }),
+    narrateTo("C7", c7, c7Items, { phrase: c7Phrase, prefix: outsideContradiction(answers) ? "Q12 says no one outside the agency is affected, and Q9 names another group." : "", lead: outsideLead, qRefs: "Q12", keptIds: keptMitigationIds }),
+    narrateTo("C8", c8, c8Items, { phrase: c8Phrase, prefix: outsideContradiction(answers) ? "Q12 says no one outside the agency is affected, and Q9 names another group." : "", lead: outsideLead, qRefs: "Q12", keptIds: keptMitigationIds }),
+    narrateTo("C9", c9, c9Items, { qRefs: "Q11", keptIds: keptMitigationIds }),
+    narrateTo("C10", c10, c10Parts, { prefix: c10Prefix, lead: q13Lines(answers), qRefs: "Q13, Q15, Q16", keptIds: keptMitigationIds }),
+    narrateTo("C11", c11, ["21a", "21c"].flatMap((id) => itemsOf(items, id)), { qRefs: "Q21", keptIds: keptMitigationIds }),
+    narrateTo("C12", c12, itemsOf(items, "23a"), { qRefs: "Q23", keptIds: keptMitigationIds }),
+  ];
+  const rpResults: CriterionResult[] = [
+    narrateTo("RP1", rp1, rp1item, { prefix: rp1 === "Partly in place" && text(answers, "q20_harm") === "" ? "The description of what could go wrong is blank." : "", lead: q20Lines(answers), qRefs: "Q20", keptIds: keptMitigationIds }),
+    narrateTo("RP2", rp2, itemsOf(items, "16b"), { qRefs: "Q16", keptIds: keptMitigationIds }),
+    narrateTo("RP3", rp3, ["14a", "14b", "14c"].flatMap((id) => itemsOf(items, id)), { qRefs: "Q14", keptIds: keptMitigationIds }),
+    narrateTo("RP4", rp4, [...itemsOf(items, "11d"), ...itemsOf(items, "11b")], { qRefs: "Q11", keptIds: keptMitigationIds }),
+    narrateTo("RP5", rp5, ["22", "22f"].flatMap((id) => itemsOf(items, id)), { qRefs: "Q22", keptIds: keptMitigationIds }),
+    narrateTo("RP6", rp6, ["21d", "21e"].flatMap((id) => itemsOf(items, id)), { qRefs: "Q21", keptIds: keptMitigationIds }),
+    narrateTo("RP7", rp7, ["23b", "23c"].flatMap((id) => itemsOf(items, id)), { qRefs: "Q23", keptIds: keptMitigationIds }),
+    narrateTo("RP8", rp8, ["24a", "24b"].flatMap((id) => itemsOf(items, id)), { qRefs: "Q24", keptIds: keptMitigationIds }),
+  ];
 
   const extraFollow: Followup[] = [];
   if (text(answers, "q1_intake") === "") extraFollow.push({ q: 1, text: "Q1: What is the intake reference number for this AI system?", mitigationId: null });

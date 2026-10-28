@@ -1,4 +1,5 @@
 import { ASSURANCES, BUILDERS, CAPABILITIES, DEPLOYMENT, DESIGN_FACTS, HARM_TYPES, HOSTING, LEVELS, METHODS, PRIOR, PROCUREMENT, ROLES, TARGETS, labelOf } from "../content/catalog";
+import { AREAS } from "../content/rules";
 import { APPROVAL_BANNED, BANNED, FIXED, RP_META, SOURCES } from "../content/rules";
 import { GROUPS, RELATIONS, STATEMENT_BY_ID } from "../content/statements";
 import type { AnswerFile } from "../content/types";
@@ -9,7 +10,7 @@ import type { Evaluation, LiveMitigation } from "./model";
 import { dataLevel, deployment, selectedGroups, vendorInvolved } from "./visibility";
 
 export interface Block {
-  type: "h1" | "h2" | "h3" | "p" | "label" | "field" | "note" | "qa" | "break";
+  type: "h1" | "h2" | "h3" | "p" | "label" | "field" | "note" | "qa" | "break" | "bullet" | "sub";
   text: string;
   source: "template" | "answer" | "slot";
 }
@@ -50,6 +51,17 @@ const QUESTIONS: { n: number; section: string; text: string; rp?: string }[] = [
 
 function block(type: Block["type"], text: string, source: Block["source"]): Block {
   return { type, text, source };
+}
+
+function answerBlocks(item: { qRefs: string; answerLines: { label: string; statement: string; evidence: string; targetDate: string }[] }): Block[] {
+  const lines: Block[] = [block("field", `Answer relied on (${item.qRefs}):`, "answer")];
+  const answers = item.answerLines.length > 0 ? item.answerLines : [{ label: "Answer", statement: "No answer provided.", evidence: "", targetDate: "" }];
+  for (const line of answers) {
+    lines.push(block("bullet", `${line.label}: ${line.statement}`, "answer"));
+    if (line.evidence) lines.push(block("sub", `Evidence: ${line.evidence}`, "answer"));
+    if (line.targetDate) lines.push(block("sub", `Target date: ${line.targetDate}.`, "answer"));
+  }
+  return lines;
 }
 
 function words(value: string): number {
@@ -206,14 +218,14 @@ export function appendixAnswer(answers: Answers, n: number): string {
 function riskLine(mit: LiveMitigation): string {
   const covers = mit.covers.length ? ` (${mit.covers.join(", ")})` : "";
   const quote = mit.quotes[0];
-  const named = quote ? `Q${quote.q} says "${quote.text}"` : "The answers leave this safeguard open";
+  const statement = quote ? `Q${quote.q}, ${quote.text.replace(/[.]+$/, "")}` : "The answers leave this safeguard open";
   if (mit.id === "M-ONGOING") {
     return `Ongoing checks cover the safeguards this report adds or the answers already describe, including yearly reassessment${covers}.`;
   }
   if (mit.id === "M-PROHIBITED") {
-    return `The Responsible AI Policy lists a prohibited use [P1]${covers}. ${named}.`;
+    return `The Responsible AI Policy lists a prohibited use [P1]. ${statement}${covers}.`;
   }
-  const body = `${named}${covers}.`;
+  const body = `${statement}${covers}.`;
   return mit.rpOnly ? `Recommended practice: ${body}` : body;
 }
 
@@ -320,7 +332,7 @@ export function buildReport(file: AnswerFile): ReportDoc {
 
   blocks.push(block("h2", "4. Why this AI system is High-risk", "template"));
   blocks.push(block("p", "The intake found this AI system High-risk.", "template"));
-  const areaNames = many(answers, "q8_areas").join(", ") || "no area selected";
+  const areaNames = many(answers, "q8_areas").map((id) => AREAS.find((area) => area.id === id)?.label ?? id).join(", ") || "no area selected";
   blocks.push(block("p", `High-risk area: ${areaNames}. This is ${result.area.label} (SF&P § 3.5-801) [S1].`, "slot"));
   if (text(answers, "q8_how")) blocks.push(block("p", `How the agency describes the effect: ${text(answers, "q8_how")}`, "answer"));
   if (result.gates.length === 0) blocks.push(block("p", "No risk gate was set from the coded answers.", "template"));
@@ -350,7 +362,7 @@ export function buildReport(file: AnswerFile): ReportDoc {
   for (const item of result.criteria) {
     blocks.push(block("label", `${item.id} – ${item.name}: ${item.status}`, "template"));
     blocks.push(block("field", `What we found: ${item.found}`, "slot"));
-    blocks.push(block("field", `Answer relied on: ${item.quote} (${item.qRefs}).`, "answer"));
+    blocks.push(...answerBlocks(item));
   }
   blocks.push(block("h3", "Recommended practice checks (ISO/IEC 42001 and ISO/IEC 27090)", "template"));
   blocks.push(block("p", "These checks are recommendations. They are not Maryland law and not DoIT policy.", "template"));
@@ -358,7 +370,7 @@ export function buildReport(file: AnswerFile): ReportDoc {
     const aligned = RP_META.find((row) => row.id === item.id)?.aligned ?? "";
     blocks.push(block("label", `${item.id} – ${item.name}: ${item.status}`, "template"));
     blocks.push(block("field", `What we found: ${item.found}`, "slot"));
-    blocks.push(block("field", `Answer relied on: ${item.quote} (${item.qRefs}).`, "answer"));
+    blocks.push(...answerBlocks(item));
     blocks.push(block("field", `Aligned to: ${aligned}`, "template"));
   }
 
