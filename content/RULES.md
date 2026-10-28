@@ -71,7 +71,7 @@ A start date saved on an older file while Q17 is Planning or Procuring still set
 
 Q15 starts as a yes/no question: "Is the data processed in the same place it runs (the Q6 hosting answer)?" The control defaults to Yes. Yes uses the Q6 value. No shows the hosting radio, and the engine uses that answer.
 
-An older file that has `q15_where` and no `q15_same_place` still loads. The saved place is kept and used until the person answers the new question.
+An older file that has `q15_where` and no `q15_same_place` still loads. The saved place is kept and used until the person answers the new question. If that place differs from Q6, the yes/no is left unanswered and the saved place stays on screen, so choosing Yes is a real change.
 
 ### Q22 threat fit (proposed)
 

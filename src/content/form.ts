@@ -19,7 +19,7 @@ import { AREAS, DATA_TYPES, OVERLAYS, PROHIBITED } from "./rules";
 import { CONTRACT_TERMS, GROUPS, RELATIONS, THREATS } from "./statements";
 import type { Answers } from "../engine/answers";
 import { text } from "../engine/answers";
-import { selectedGroups, showStatement, threatApplies, vendorInvolved } from "../engine/visibility";
+import { selectedGroups, showProcessingPlace, showStatement, threatApplies, vendorInvolved } from "../engine/visibility";
 
 export interface Field {
   id: string;
@@ -136,9 +136,9 @@ export const SECTIONS: FormSection[] = [
         legend: samePlaceLabel,
         required: true,
         options: YES_NO,
-        help: "Yes uses the place named in Q6. No asks for the processing place. An older file that already has a processing place keeps that value until this is answered.",
+        help: "Yes uses the place named in Q6. No asks for the processing place. If an older file names a different place, this question is left unanswered and that place stays on screen until you choose Yes or No.",
       },
-      { id: "q15_where", legacyQ: 15, type: "radio", label: "Where is the data processed?", required: true, options: HOSTING, show: (answers) => text(answers, "q15_same_place") === "no" },
+      { id: "q15_where", legacyQ: 15, type: "radio", label: "Where is the data processed?", required: true, options: HOSTING, show: showProcessingPlace },
       { id: "st15a", legacyQ: 15, type: "statement", statementId: "15a", label: "Encryption at rest and in transit", required: true, show: (answers) => showStatement("15a", answers), help: "Shown for Level 2 and above, and when the level is Unknown." },
       { id: "st15b", legacyQ: 15, type: "statement", statementId: "15b", label: "Access limited to authorized staff", required: true },
       { id: "st15c", legacyQ: 15, type: "statement", statementId: "15c", label: "Privacy review", required: true, show: (answers) => showStatement("15c", answers), help: "Shown when the privacy track is open: Level 3, Level 4, Unknown, or an overlay." },

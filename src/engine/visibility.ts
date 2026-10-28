@@ -137,6 +137,27 @@ export function threatApplies(id: string, answers: Answers): boolean {
   return true;
 }
 
+/** An older file named a processing place that is not the Q6 hosting place, and has not answered the new yes/no. */
+export function legacyProcessingPlace(answers: Answers): boolean {
+  const where = text(answers, "q15_where");
+  return text(answers, "q15_same_place") === "" && where !== "" && where !== text(answers, "q6_hosting");
+}
+
+/**
+ * What the yes/no control should show. Empty means leave both unselected so a saved place can be confirmed.
+ * A blank answer still displays Yes when it does not disagree with the place the report will use.
+ */
+export function displayedSamePlace(answers: Answers): "yes" | "no" | "" {
+  const same = text(answers, "q15_same_place");
+  if (same === "yes" || same === "no") return same;
+  if (legacyProcessingPlace(answers)) return "";
+  return "yes";
+}
+
+export function showProcessingPlace(answers: Answers): boolean {
+  return text(answers, "q15_same_place") === "no" || legacyProcessingPlace(answers);
+}
+
 /**
  * Yes, or a blank answer on a new file, uses the Q6 hosting value.
  * No uses q15_where. An older file that has q15_where and no yes/no answer keeps that value.

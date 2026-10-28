@@ -1,6 +1,6 @@
 import { SECTIONS, visibleFields, type Field, type FormSection } from "../content/form";
 import { CONTRACT_TERMS, GROUPS, RELATIONS, STATEMENT_BY_ID, THREATS } from "../content/statements";
-import { threatApplies } from "../engine/visibility";
+import { displayedSamePlace, threatApplies } from "../engine/visibility";
 import { FORM_VERSION, RULES_VERSION, SCHEMA_VERSION, type AnswerFile, type AnswerValue } from "../content/types";
 import type { Answers } from "../engine/answers";
 import { many, text } from "../engine/answers";
@@ -286,7 +286,7 @@ export function mount(root: Element): void {
         input.id = `${field.id}-${option.id}`;
         input.value = option.id;
         const current = text(file.answers, field.id);
-        const selected = field.id === "q15_same_place" && current === "" ? "yes" : current;
+        const selected = field.id === "q15_same_place" ? displayedSamePlace(file.answers) : current;
         if (field.type === "radio") input.checked = selected === option.id;
         else input.checked = many(file.answers, field.id).includes(option.id);
         input.addEventListener("change", () => {
@@ -580,7 +580,7 @@ function missing(section: FormSection, answers: Answers): string[] {
       if (many(answers, field.id).length === 0) blanks.push(field.label);
       continue;
     }
-    if (field.id === "q15_same_place" && !text(answers, field.id)) continue;
+    if (field.id === "q15_same_place" && displayedSamePlace(answers) === "yes" && !text(answers, field.id)) continue;
     if (!text(answers, field.id)) blanks.push(field.label);
   }
   return blanks;

@@ -6,7 +6,7 @@ import { FORM_VERSION, RULES_VERSION, SCHEMA_VERSION, type AnswerFile } from "..
 import { findingTemplates } from "../src/engine/findings";
 import { STATEMENTS } from "../src/content/statements";
 import { evaluate } from "../src/engine/evaluate";
-import { priorAssessment, processingPlace, statusConflict, threatApplies } from "../src/engine/visibility";
+import { displayedSamePlace, priorAssessment, processingPlace, showProcessingPlace, statusConflict, threatApplies } from "../src/engine/visibility";
 import { buildReport } from "../src/engine/report";
 import { buildScenario } from "../src/scenarios/build";
 import { SCENARIOS } from "../src/scenarios/catalog";
@@ -300,10 +300,17 @@ describe("evaluation engine", () => {
 
     const older = file({ ...base, q6_hosting: "state_data_center", q15_where: "staff_devices" });
     expect(processingPlace(older.answers)).toEqual({ id: "staff_devices", sameAsRun: false });
+    expect(displayedSamePlace(older.answers)).toBe("");
+    expect(showProcessingPlace(older.answers)).toBe(true);
+    expect(visibleFields(data!, older.answers).some((field) => field.id === "q15_where")).toBe(true);
     expect(older.answers.q15_where).toBe("staff_devices");
+    const matched = file({ ...base, q6_hosting: "state_data_center", q15_where: "state_data_center" });
+    expect(displayedSamePlace(matched.answers)).toBe("yes");
+    expect(showProcessingPlace(matched.answers)).toBe(false);
     const fresh = file({ ...base, q6_hosting: "state_data_center" });
     delete fresh.answers.q15_where;
     expect(processingPlace(fresh.answers)).toEqual({ id: "state_data_center", sameAsRun: true });
+    expect(displayedSamePlace(fresh.answers)).toBe("yes");
   });
 
   it("excludes threats that do not fit Q6 and keeps threats whose fit is unclear", () => {
