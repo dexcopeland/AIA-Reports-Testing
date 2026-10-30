@@ -203,12 +203,19 @@ textarea { min-height: 8rem; resize: vertical; }
 .r-sub { margin: 0 0 0.35rem 1.7rem; }
 .r-steps { margin: 0.2rem 0 0.7rem; padding-left: 1.4rem; }
 .r-steps a { color: var(--navy); }
-.sign-box { border: 1px solid var(--navy); margin: 0.8rem 0 1rem; padding: 0.15rem 0.7rem 0.7rem; }
-.sign-field { margin-top: 0.55rem; }
-.sign-label { font-weight: 700; color: var(--navy); margin: 0 0 0.25rem; }
-.sign-write { border: 1px solid #1b4f8a; background: var(--shade); min-height: 1.8rem; }
-.sign-multiline { min-height: 4.2rem; }
-.sign-signature { min-height: 4.8rem; }
+.ack-row { margin: 0.45rem 0 0.15rem; }
+.ack-statement { margin: 0; }
+.ack-controls { display: flex; flex-wrap: wrap; gap: 0.7rem 1rem; align-items: center; margin-top: 0.15rem; }
+.ack-choice { display: inline-flex; align-items: center; gap: 0.3rem; }
+.ack-date { display: inline-flex; align-items: center; gap: 0.35rem; font-weight: 700; color: var(--navy); }
+.ack-date-line { display: inline-block; width: 6rem; border-bottom: 1px solid var(--navy); height: 1rem; }
+.sign-box { border: 1px solid var(--navy); margin: 0.2rem 0 0.35rem; padding: 0.15rem 0.45rem 0.3rem; }
+.sign-inline { display: flex; flex-wrap: wrap; gap: 0.45rem 0.8rem; }
+.sign-inline-item { display: flex; flex-direction: column; gap: 0.15rem; min-width: 7rem; flex: 1; }
+.sign-label { font-weight: 700; color: var(--navy); margin: 0.15rem 0; }
+.sign-write { border-bottom: 1px solid #1b4f8a; background: var(--shade); min-height: 1.15rem; }
+.sign-multiline { min-height: 2.1rem; border: 1px solid #1b4f8a; }
+.sign-signature { min-height: 2.3rem; border: 1px solid #1b4f8a; }
 .r-qa {
   background: var(--shade);
   border-left: 4px solid #1b4f8a;

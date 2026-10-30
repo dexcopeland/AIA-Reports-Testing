@@ -100,54 +100,125 @@ function linked(text: string, link: string | undefined, faces: LoadedFaces, miss
   return { text: painted.map((run) => ({ ...run, ...style })) };
 }
 
-function signBox(block: Block, faces: LoadedFaces, missing: Set<string>): PdfContent[] {
-  const title = block.text.split("\n")[0] ?? "";
-  const fields = block.fields ?? [];
-  const row = (field: SignField): PdfContent[] => [{
+const thinBox = {
+  hLineColor: () => `#${REPORT_STYLE.navy}`,
+  vLineColor: () => `#${REPORT_STYLE.navy}`,
+  hLineWidth: () => 0.6,
+  vLineWidth: () => 0.6,
+  paddingLeft: () => 0,
+  paddingRight: () => 0,
+  paddingTop: () => 0,
+  paddingBottom: () => 0,
+};
+
+function marker(name: string, width: number): PdfContent {
+  return {
+    width,
     stack: [
+      { text: " ", id: `fld_${name}`, fontSize: 11, margin: [1, 1, 0, 0] },
       {
-        text: paint(field.label, faces, missing),
-        bold: true,
-        fontSize: REPORT_STYLE.bodyPt,
-        color: `#${REPORT_STYLE.navy}`,
-        margin: [8, 6, 8, 2],
-      },
-      {
-        text: " ",
-        id: `fld_${field.name}`,
-        fontSize: REPORT_STYLE.bodyPt,
-        margin: [8, 2, 8, field.lines * 16],
+        canvas: [{ type: "line", x1: 0, y1: 0, x2: Math.max(12, width - 6), y2: 0, lineWidth: 0.6, lineColor: `#${REPORT_STYLE.navy}` }],
+        relativePosition: { x: 1, y: -1 },
       },
     ],
-    fillColor: `#${REPORT_STYLE.shade}`,
-  }];
+  };
+}
+
+function choiceMark(field: SignField): PdfContent[] {
   return [
+    { width: "auto", text: field.label, fontSize: 11, margin: [4, 2, 2, 0] },
     {
-      text: paint(title, faces, missing),
-      bold: true,
-      fontSize: REPORT_STYLE.bodyPt,
-      color: `#${REPORT_STYLE.navy}`,
-      margin: [0, 10, 0, 4],
-    },
-    {
-      table: {
-        widths: ["*"],
-        dontBreakRows: true,
-        body: fields.map(row),
-      },
-      layout: {
-        hLineColor: () => `#${REPORT_STYLE.navy}`,
-        vLineColor: () => `#${REPORT_STYLE.navy}`,
-        hLineWidth: () => 1,
-        vLineWidth: () => 1,
-        paddingLeft: () => 0,
-        paddingRight: () => 0,
-        paddingTop: () => 0,
-        paddingBottom: () => 0,
-      },
-      margin: [0, 0, 0, 8],
+      width: 14,
+      stack: [
+        { text: " ", id: `fld_${field.name}`, fontSize: 9, margin: [0, 1, 0, 0] },
+        {
+          canvas: [{ type: "rect", x: 0, y: 0, w: 11, h: 11, lineWidth: 0.8, lineColor: `#${REPORT_STYLE.navy}` }],
+          relativePosition: { x: 0, y: -12 },
+        },
+      ],
     },
   ];
+}
+
+function commentBox(field: SignField, faces: LoadedFaces, missing: Set<string>): PdfContent {
+  return {
+    table: {
+      widths: ["*"],
+      dontBreakRows: true,
+      body: [[{
+        stack: [
+          {
+            text: paint(field.label, faces, missing),
+            bold: true,
+            fontSize: 11,
+            color: `#${REPORT_STYLE.navy}`,
+            margin: [4, 3, 4, 0],
+          },
+          { text: " ", id: `fld_${field.name}`, fontSize: 11, margin: [4, 0, 4, field.lines * 11] },
+        ],
+        fillColor: `#${REPORT_STYLE.shade}`,
+      }]],
+    },
+    layout: thinBox,
+    margin: [0, 1, 0, 2],
+  };
+}
+
+function acknowledgmentRow(block: Block, fields: SignField[], faces: LoadedFaces, missing: Set<string>): PdfContent {
+  const date = fields.find((field) => field.kind === "date");
+  const choices = fields.filter((field) => field.kind === "choice");
+  return {
+    columns: [
+      { width: "*", text: paint(block.text, faces, missing), fontSize: 11, margin: [0, 1, 4, 0] },
+      ...choices.flatMap((field) => choiceMark(field)),
+      ...(date ? [{ width: "auto", text: "Date", bold: true, fontSize: 11, margin: [6, 2, 2, 0] } satisfies PdfContent, marker(date.name, date.width ?? 72)] : []),
+    ],
+    columnGap: 2,
+    margin: [0, 6, 0, 1],
+  };
+}
+
+function signatureBox(fields: SignField[], faces: LoadedFaces, missing: Set<string>): PdfContent {
+  const lineFields = fields.filter((field) => field.kind === "text" || field.kind === "date");
+  const signature = fields.find((field) => field.kind === "signature");
+  const columns: PdfContent[] = lineFields.flatMap((field) => [
+    { width: "auto", text: field.kind === "text" && field.label.startsWith("Title") ? "Title" : field.label, bold: true, fontSize: 11, margin: [4, 4, 3, 0] },
+    marker(field.name, field.width ?? 90),
+  ]);
+  const stack: PdfContent[] = [{ columns, columnGap: 2, margin: [0, 2, 0, 0] }];
+  if (signature) {
+    stack.push({
+      text: paint(signature.label, faces, missing),
+      bold: true,
+      fontSize: 11,
+      color: `#${REPORT_STYLE.navy}`,
+      margin: [4, 3, 4, 0],
+    });
+    stack.push({ text: " ", id: `fld_${signature.name}`, fontSize: 11, margin: [4, 0, 4, 20] });
+  }
+  return {
+    table: {
+      widths: ["*"],
+      dontBreakRows: true,
+      body: [[{ stack, fillColor: `#${REPORT_STYLE.shade}` }]],
+    },
+    layout: thinBox,
+    margin: [0, 4, 0, 2],
+  };
+}
+
+function signBox(block: Block, faces: LoadedFaces, missing: Set<string>): PdfContent[] {
+  const fields = block.fields ?? [];
+  const loose = fields.filter((field) => !field.boxed);
+  const boxed = fields.filter((field) => field.boxed);
+  const stack: PdfContent[] = [];
+  if (loose.length > 0) stack.push(acknowledgmentRow(block, loose, faces, missing));
+  if (loose.length > 0) {
+    for (const field of boxed) stack.push(commentBox(field, faces, missing));
+  } else if (boxed.length > 0) {
+    stack.push(signatureBox(boxed, faces, missing));
+  }
+  return [{ unbreakable: true, stack, margin: [0, 2, 0, 1] }];
 }
 
 function blockContent(block: Block, faces: LoadedFaces, missing: Set<string>): PdfContent | PdfContent[] {

@@ -1,27 +1,97 @@
 import type { Block, ReportDoc, SignField } from "../engine/report";
 
-function signBox(block: Block): HTMLElement {
+function choiceControl(field: SignField, group: string): HTMLElement {
+  const label = document.createElement("label");
+  label.className = "ack-choice";
+  const input = document.createElement("input");
+  input.type = "radio";
+  input.name = group;
+  input.value = field.label;
+  label.append(input, document.createTextNode(` ${field.label}`));
+  return label;
+}
+
+function dateLine(): HTMLElement {
+  const label = document.createElement("span");
+  label.className = "ack-date";
+  const line = document.createElement("span");
+  line.className = "ack-date-line";
+  label.append(document.createTextNode("Date"), line);
+  return label;
+}
+
+function writeSpace(field: SignField): HTMLElement {
+  const space = document.createElement("div");
+  space.className = field.kind === "signature" ? "sign-write sign-signature" : field.kind === "multiline" ? "sign-write sign-multiline" : "sign-write";
+  return space;
+}
+
+function boxedFields(title: string, fields: SignField[], inline: boolean): HTMLElement {
   const box = document.createElement("section");
   box.className = "sign-box";
-  const title = document.createElement("p");
-  title.className = "r-label";
-  title.textContent = block.text.split("\n")[0] ?? "";
-  box.append(title);
-  for (const field of block.fields ?? []) box.append(signField(field));
+  if (title) {
+    const heading = document.createElement("p");
+    heading.className = "sign-label";
+    heading.textContent = title;
+    box.append(heading);
+  }
+  if (inline) {
+    const row = document.createElement("div");
+    row.className = "sign-inline";
+    for (const field of fields) {
+      if (field.kind === "signature") continue;
+      const item = document.createElement("label");
+      item.className = "sign-inline-item";
+      const name = document.createElement("span");
+      name.className = "sign-label";
+      name.textContent = field.label.startsWith("Title") ? "Title" : field.label;
+      item.append(name, writeSpace(field));
+      row.append(item);
+    }
+    box.append(row);
+    const signature = fields.find((field) => field.kind === "signature");
+    if (signature) {
+      const label = document.createElement("p");
+      label.className = "sign-label";
+      label.textContent = signature.label;
+      box.append(label, writeSpace(signature));
+    }
+    return box;
+  }
+  for (const field of fields) {
+    const label = document.createElement("p");
+    label.className = "sign-label";
+    label.textContent = field.label;
+    box.append(label, writeSpace(field));
+  }
   return box;
 }
 
-function signField(field: SignField): HTMLElement {
+function renderSign(block: Block): HTMLElement {
+  const fields = block.fields ?? [];
+  const wrap = document.createElement("div");
+  wrap.className = "sign-group";
+  if (!fields.some((field) => field.kind === "choice")) {
+    wrap.append(boxedFields(block.text, fields, true));
+    return wrap;
+  }
   const row = document.createElement("div");
-  row.className = "sign-field";
-  const label = document.createElement("p");
-  label.className = "sign-label";
-  label.textContent = field.label;
-  const space = document.createElement("div");
-  space.className = field.kind === "signature" ? "sign-write sign-signature" : field.kind === "multiline" ? "sign-write sign-multiline" : "sign-write";
-  space.style.minHeight = `${Math.max(field.lines, 1) * 1.35}rem`;
-  row.append(label, space);
-  return row;
+  row.className = "ack-row";
+  const statement = document.createElement("p");
+  statement.className = "ack-statement";
+  statement.textContent = block.text;
+  const controls = document.createElement("div");
+  controls.className = "ack-controls";
+  const group = fields.find((field) => field.group)?.group ?? "ack";
+  for (const field of fields) {
+    if (field.kind === "choice") controls.append(choiceControl(field, group));
+    else if (field.kind === "date") controls.append(dateLine());
+  }
+  row.append(statement, controls);
+  wrap.append(row);
+  const boxed = fields.filter((field) => field.boxed);
+  if (boxed.length > 0) wrap.append(boxedFields("", boxed, false));
+  return wrap;
 }
 
 export function renderReport(doc: ReportDoc): HTMLElement {
@@ -49,7 +119,7 @@ export function renderReport(doc: ReportDoc): HTMLElement {
     }
     closeList();
     if (block.type === "sign") {
-      article.append(signBox(block));
+      article.append(renderSign(block));
       continue;
     }
     if (block.type === "break") {

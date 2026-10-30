@@ -78,7 +78,7 @@ describe("bottom line up front", () => {
 });
 
 describe("sign-off boxes", () => {
-  it("replaces loose acknowledgment lines with one boxed field set per mitigation plus the Agency Lead", () => {
+  it("uses a compact Yes/No row per mitigation and boxes only the comment and signature", () => {
     const scenario = SCENARIOS.find((item) => item.id === "S02");
     expect(scenario).toBeTruthy();
     const report = buildReport(buildScenario(scenario!));
@@ -86,22 +86,27 @@ describe("sign-off boxes", () => {
     expect(signs.length).toBeGreaterThan(1);
     const lead = signs[signs.length - 1];
     expect(lead.fields?.map((field) => field.label)).toEqual([
-      "Agency Lead signature",
       "Name",
       "Title (printed role)",
-      "Agency",
       "Date",
+      "Agency Lead signature",
     ]);
+    expect(lead.fields?.every((field) => field.boxed)).toBe(true);
     expect(lead.fields?.find((field) => field.label === "Agency Lead signature")?.kind).toBe("signature");
-    expect(lead.fields?.find((field) => field.label === "Name")?.kind).toBe("text");
-    const comments = signs.slice(0, -1);
-    expect(comments.every((box) => box.fields?.some((field) => field.label === "Acknowledged (Yes / No)" && field.kind === "text"))).toBe(true);
-    expect(comments.every((box) => box.fields?.some((field) => field.label === "Comment" && field.kind === "multiline" && field.lines >= 3))).toBe(true);
-    expect(comments.every((box) => box.fields?.some((field) => field.label === "Our plan and target date" && field.kind === "multiline"))).toBe(true);
+    const acknowledgments = signs.slice(0, -1);
+    for (const row of acknowledgments) {
+      const fields = row.fields ?? [];
+      expect(fields.filter((field) => field.kind === "choice").map((field) => field.label)).toEqual(["Yes", "No"]);
+      expect(new Set(fields.filter((field) => field.kind === "choice").map((field) => field.group)).size).toBe(1);
+      expect(fields.some((field) => field.kind === "date" && !field.boxed && field.lines === 1)).toBe(true);
+      expect(fields.some((field) => field.label === "Comment" && field.kind === "multiline" && field.boxed && field.lines <= 2)).toBe(true);
+      expect(fields.some((field) => field.kind === "choice" && field.boxed)).toBe(false);
+    }
     expect(new Set(signs.flatMap((box) => box.fields?.map((field) => field.name) ?? [])).size).toBe(signs.reduce((sum, box) => sum + (box.fields?.length ?? 0), 0));
     const body = report.blocks.map((block) => block.text).join("\n");
     expect(body).not.toContain("________");
-    expect((body.match(/Acknowledged \(Yes \/ No\)/g) ?? []).length).toBe(comments.length);
+    expect(body).not.toContain("Our plan and target date");
+    expect((body.match(/Acknowledged \(Yes \/ No\)/g) ?? []).length).toBe(acknowledgments.length);
     expect(report.checks.find((check) => check.id === "section9")?.ok).toBe(true);
   });
 });

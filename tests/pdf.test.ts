@@ -68,13 +68,24 @@ describe("PDF report", () => {
     const raw = Buffer.from(bytes).toString("latin1");
     expect(raw).toContain("/FT /Tx");
     expect(raw).toContain("/FT /Sig");
+    expect(raw).toContain("/FT /Btn");
     expect(raw).toContain("(lead_signature)");
     expect(raw).toContain("(lead_name)");
+    expect(raw).toContain("(lead_date)");
     expect(raw).toContain("(comment_1)");
+    expect(raw).toContain("(date_1)");
+    expect(raw).toContain("(ack_1)");
     expect(raw).toContain("/Ff 4096");
+    expect(raw).toContain("/Ff 49152");
     const parser = new PDFParse({ data: bytes });
     const text = await parser.getText();
     await parser.destroy();
+    const section9 = (text.pages ?? []).filter((page) => {
+      const body = "text" in page ? String(page.text) : "";
+      return body.includes("Acknowledged (Yes / No)") || body.includes("Agency Lead signature");
+    });
+    expect(section9.length).toBeGreaterThan(0);
+    expect(section9.length).toBeLessThanOrEqual(3);
     const flat = text.text.replace(/\s+/g, " ");
     expect(flat).toContain("Bottom line up front");
     expect(flat).toContain("The outcome is high-risk routing.");

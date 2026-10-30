@@ -2,6 +2,7 @@ import {
   AlignmentType,
   Bookmark,
   BorderStyle,
+  CheckBox,
   Document,
   Footer,
   HeadingLevel,
@@ -45,42 +46,140 @@ function childrenOf(block: Block, options: { size: number; bold?: boolean; color
   return [new Bookmark({ id: block.anchor, children: [text] })];
 }
 
-function signTable(block: Block): FileChild[] {
-  const title = block.text.split("\n")[0] ?? "";
-  const border = { style: BorderStyle.SINGLE, size: 8, color: NAVY };
-  const borders = { top: border, bottom: border, left: border, right: border };
-  const rowFor = (field: SignField) => new TableRow({
-    cantSplit: true,
+const openBorder = { style: BorderStyle.NIL, size: 0, color: "FFFFFF" };
+const openBorders = { top: openBorder, bottom: openBorder, left: openBorder, right: openBorder };
+const lineBorder = { style: BorderStyle.SINGLE, size: 6, color: NAVY };
+const boxBorders = { top: lineBorder, bottom: lineBorder, left: lineBorder, right: lineBorder };
+
+function fieldMarker(field: SignField): TextRun {
+  return run(`{{cc|${field.name}|${field.lines}|${field.label}}}`, { size: 22 });
+}
+
+function acknowledgmentTable(block: Block): Table {
+  const fields = block.fields ?? [];
+  const yes = fields.find((field) => field.kind === "choice" && field.label === "Yes");
+  const no = fields.find((field) => field.kind === "choice" && field.label === "No");
+  const date = fields.find((field) => field.kind === "date");
+  const choiceCell = (field: SignField | undefined, width: number) => new TableCell({
+    width: { size: width, type: WidthType.DXA },
+    borders: openBorders,
+    margins: { top: 20, bottom: 20, left: 40, right: 40 },
     children: [
-      new TableCell({
-        width: { size: 9360, type: WidthType.DXA },
-        borders,
-        shading: { type: ShadingType.CLEAR, fill: REPORT_STYLE.shade },
-        margins: { top: 80, bottom: 80, left: 120, right: 120 },
+      new Paragraph({
+        spacing: { before: 20, after: 20 },
+        children: field
+          ? [run(`${field.label} `, { size: 22 }), new CheckBox({ alias: `${field.label} ${field.group ?? field.name}` })]
+          : [run(" ", { size: 22 })],
+      }),
+    ],
+  });
+  return new Table({
+    width: { size: 9360, type: WidthType.DXA },
+    columnWidths: [5460, 1100, 1000, 1800],
+    rows: [
+      new TableRow({
+        cantSplit: true,
         children: [
-          new Paragraph({
-            spacing: { after: 40 },
-            children: [run(field.label, { size: 24, bold: true, color: NAVY })],
+          new TableCell({
+            width: { size: 5460, type: WidthType.DXA },
+            borders: openBorders,
+            margins: { top: 20, bottom: 20, left: 0, right: 60 },
+            children: [new Paragraph({ spacing: { before: 20, after: 20 }, children: [run(block.text, { size: 22 })] })],
           }),
-          new Paragraph({
-            spacing: { before: 40, after: 40 },
-            children: [run(`{{cc|${field.name}|${field.lines}|${field.label}}}`, { size: 24 })],
+          choiceCell(yes, 1100),
+          choiceCell(no, 1000),
+          new TableCell({
+            width: { size: 1800, type: WidthType.DXA },
+            borders: { ...openBorders, bottom: lineBorder },
+            margins: { top: 20, bottom: 20, left: 60, right: 0 },
+            children: [
+              new Paragraph({
+                spacing: { before: 20, after: 20 },
+                children: date ? [run("Date ", { size: 22, bold: true, color: NAVY }), fieldMarker(date)] : [run(" ", { size: 22 })],
+              }),
+            ],
           }),
         ],
       }),
     ],
   });
+}
+
+function commentTable(field: SignField): Table {
+  return new Table({
+    width: { size: 9360, type: WidthType.DXA },
+    columnWidths: [9360],
+    rows: [
+      new TableRow({
+        cantSplit: true,
+        children: [
+          new TableCell({
+            width: { size: 9360, type: WidthType.DXA },
+            borders: boxBorders,
+            shading: { type: ShadingType.CLEAR, fill: REPORT_STYLE.shade },
+            margins: { top: 40, bottom: 40, left: 80, right: 80 },
+            children: [
+              new Paragraph({ spacing: { after: 20 }, children: [run(field.label, { size: 22, bold: true, color: NAVY })] }),
+              new Paragraph({ spacing: { before: 0, after: 0 }, children: [fieldMarker(field)] }),
+            ],
+          }),
+        ],
+      }),
+    ],
+  });
+}
+
+function leadTable(fields: SignField[]): Table {
+  const lineFields = fields.filter((field) => field.kind === "text" || field.kind === "date");
+  const signature = fields.find((field) => field.kind === "signature");
+  const widths = [3120, 3600, 2640];
+  const cells = lineFields.map((field, index) => new TableCell({
+    width: { size: widths[index] ?? 3120, type: WidthType.DXA },
+    borders: boxBorders,
+    shading: { type: ShadingType.CLEAR, fill: REPORT_STYLE.shade },
+    margins: { top: 30, bottom: 30, left: 60, right: 60 },
+    children: [
+      new Paragraph({
+        spacing: { before: 20, after: 20 },
+        border: { bottom: { style: BorderStyle.SINGLE, size: 4, color: NAVY, space: 1 } },
+        children: [run(`${field.label.startsWith("Title") ? "Title" : field.label} `, { size: 22, bold: true, color: NAVY }), fieldMarker(field)],
+      }),
+    ],
+  }));
+  const signatureCell = new TableCell({
+    columnSpan: 3,
+    width: { size: 9360, type: WidthType.DXA },
+    borders: boxBorders,
+    shading: { type: ShadingType.CLEAR, fill: REPORT_STYLE.shade },
+    margins: { top: 30, bottom: 40, left: 60, right: 60 },
+    children: [
+      new Paragraph({ spacing: { after: 20 }, children: [run(signature?.label ?? "Signature", { size: 22, bold: true, color: NAVY })] }),
+      new Paragraph({ children: signature ? [fieldMarker(signature)] : [run(" ", { size: 22 })] }),
+    ],
+  });
+  return new Table({
+    width: { size: 9360, type: WidthType.DXA },
+    columnWidths: widths,
+    rows: [
+      new TableRow({ cantSplit: true, children: cells }),
+      new TableRow({ cantSplit: true, children: [signatureCell] }),
+    ],
+  });
+}
+
+function signTable(block: Block): FileChild[] {
+  const fields = block.fields ?? [];
+  if (fields.some((field) => field.kind === "choice")) {
+    const comment = fields.find((field) => field.boxed);
+    return [acknowledgmentTable(block), ...(comment ? [commentTable(comment)] : [])];
+  }
   return [
     new Paragraph({
-      spacing: { before: 200, after: 80 },
+      spacing: { before: 120, after: 40 },
       keepNext: true,
-      children: [run(title, { size: 24, bold: true, color: NAVY })],
+      children: [run(block.text, { size: 22, bold: true, color: NAVY })],
     }),
-    new Table({
-      width: { size: 9360, type: WidthType.DXA },
-      columnWidths: [9360],
-      rows: (block.fields ?? []).map(rowFor),
-    }),
+    leadTable(fields),
   ];
 }
 

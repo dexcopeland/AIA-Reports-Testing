@@ -13,8 +13,14 @@ import { dataLevel, deployment, priorAssessment, processingPlace, procurementApp
 export interface SignField {
   name: string;
   label: string;
-  kind: "text" | "multiline" | "signature";
+  kind: "text" | "multiline" | "signature" | "choice" | "date";
   lines: number;
+  /** Radio group. Choice fields that share a group are mutually exclusive. */
+  group?: string;
+  /** Widget width in points when the field should stay short. */
+  width?: number;
+  /** Drawn inside a bordered box. Acknowledgments leave this unset. */
+  boxed?: boolean;
 }
 
 export interface Block {
@@ -81,22 +87,22 @@ function labelAnchor(text: string): string | undefined {
 
 function mitigationSign(mit: LiveMitigation, number: number): Block {
   const fields: SignField[] = [
-    { name: `ack_${number}`, label: "Acknowledged (Yes / No)", kind: "text", lines: 1 },
-    { name: `plan_${number}`, label: "Our plan and target date", kind: "multiline", lines: 3 },
-    { name: `comment_${number}`, label: "Comment", kind: "multiline", lines: 4 },
+    { name: `ack_${number}_yes`, label: "Yes", kind: "choice", lines: 1, group: `ack_${number}`, width: 12 },
+    { name: `ack_${number}_no`, label: "No", kind: "choice", lines: 1, group: `ack_${number}`, width: 12 },
+    { name: `date_${number}`, label: "Date", kind: "date", lines: 1, width: 72 },
+    { name: `comment_${number}`, label: "Comment", kind: "multiline", lines: 2, boxed: true },
   ];
-  return block("sign", [`M${number} – ${mit.title}`, ...fields.map((field) => field.label)].join("\n"), "template", { fields });
+  return block("sign", `M${number} – ${mit.title}. Acknowledged (Yes / No)`, "template", { fields });
 }
 
 function leadSign(): Block {
   const fields: SignField[] = [
-    { name: "lead_signature", label: "Agency Lead signature", kind: "signature", lines: 4 },
-    { name: "lead_name", label: "Name", kind: "text", lines: 1 },
-    { name: "lead_title", label: "Title (printed role)", kind: "text", lines: 1 },
-    { name: "lead_agency", label: "Agency", kind: "text", lines: 1 },
-    { name: "lead_date", label: "Date", kind: "text", lines: 1 },
+    { name: "lead_name", label: "Name", kind: "text", lines: 1, width: 120, boxed: true },
+    { name: "lead_title", label: "Title (printed role)", kind: "text", lines: 1, width: 140, boxed: true },
+    { name: "lead_date", label: "Date", kind: "date", lines: 1, width: 72, boxed: true },
+    { name: "lead_signature", label: "Agency Lead signature", kind: "signature", lines: 2, boxed: true },
   ];
-  return block("sign", ["Agency Lead sign-off", ...fields.map((field) => field.label)].join("\n"), "template", { fields });
+  return block("sign", "Agency Lead sign-off", "template", { fields });
 }
 
 function answerBlocks(item: { qRefs: string; answerLines: { label: string; statement: string; evidence: string; targetDate: string }[] }): Block[] {
