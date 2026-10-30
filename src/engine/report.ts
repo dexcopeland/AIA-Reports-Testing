@@ -92,7 +92,7 @@ function mitigationSign(mit: LiveMitigation, number: number): Block {
     { name: `date_${number}`, label: "Date", kind: "date", lines: 1, width: 72 },
     { name: `comment_${number}`, label: "Comment", kind: "multiline", lines: 2, boxed: true },
   ];
-  return block("sign", `M${number} – ${mit.title}. Acknowledged (Yes / No)`, "template", { fields });
+  return block("sign", `M${number} – ${mit.title}`, "template", { fields });
 }
 
 function leadSign(): Block {
@@ -613,7 +613,7 @@ export function selfCheck(blocks: Block[], result: Evaluation, answers: Answers)
     { id: "b7", ok: Boolean(b7Block) && words(b7Block?.text ?? "") <= 150, detail: `${words(b7Block?.text ?? "")} words.` },
     { id: "tables", ok: !textValue.includes("| ---"), detail: "No table markup in the body." },
     { id: "timing", ok: badTiming.length === 0, detail: badTiming.map((item) => item.id).join(", ") || "Timings match deployment status." },
-    { id: "section9", ok: (textValue.match(/Acknowledged \(Yes \/ No\)/g) ?? []).length === result.mitigations.length, detail: "One acknowledgment block per mitigation." },
+    { id: "section9", ok: blocks.filter((item) => item.type === "sign" && item.fields?.some((field) => field.kind === "choice" && field.label === "Yes") && item.fields?.some((field) => field.kind === "choice" && field.label === "No")).length === result.mitigations.length, detail: "One Yes/No acknowledgment per mitigation." },
     { id: "q25-followup", ok: !result.followups.some((item) => item.q === 25), detail: "No Q25 follow-up." },
     { id: "cap", ok: !result.wellAnswered || result.mitigations.length <= 3, detail: `${result.mitigations.length} mitigations; well answered: ${result.wellAnswered}.` },
     { id: "tags", ok: !textValue.includes("[P1] Implementation Guidance") && !/\[P2\] Responsible AI Policy(?! Implementation)/.test(textValue), detail: "P1 and P2 tags match their names." },

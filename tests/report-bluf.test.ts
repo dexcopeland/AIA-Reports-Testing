@@ -106,7 +106,8 @@ describe("sign-off boxes", () => {
     const body = report.blocks.map((block) => block.text).join("\n");
     expect(body).not.toContain("________");
     expect(body).not.toContain("Our plan and target date");
-    expect((body.match(/Acknowledged \(Yes \/ No\)/g) ?? []).length).toBe(acknowledgments.length);
+    expect(body).not.toContain("Acknowledged (Yes / No)");
+    expect(acknowledgments.every((row) => /^M\d+ – /.test(row.text))).toBe(true);
     expect(report.checks.find((check) => check.id === "section9")?.ok).toBe(true);
   });
 });

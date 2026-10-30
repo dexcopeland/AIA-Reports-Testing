@@ -80,9 +80,15 @@ describe("PDF report", () => {
     const parser = new PDFParse({ data: bytes });
     const text = await parser.getText();
     await parser.destroy();
+    let seenSection9 = false;
     const section9 = (text.pages ?? []).filter((page) => {
       const body = "text" in page ? String(page.text) : "";
-      return body.includes("Acknowledged (Yes / No)") || body.includes("Agency Lead signature");
+      if (body.includes("9. Agency Lead acknowledgment")) seenSection9 = true;
+      const row = seenSection9 && /M\d+ –/.test(body) && body.includes("Yes") && body.includes("Date");
+      const sign = seenSection9 && body.includes("Agency Lead signature");
+      const keep = seenSection9 && (body.includes("9. Agency Lead acknowledgment") || row || sign);
+      if (seenSection9 && body.includes("10. Sources")) seenSection9 = false;
+      return keep;
     });
     expect(section9.length).toBeGreaterThan(0);
     expect(section9.length).toBeLessThanOrEqual(3);
@@ -90,7 +96,7 @@ describe("PDF report", () => {
     expect(flat).toContain("Bottom line up front");
     expect(flat).toContain("The outcome is high-risk routing.");
     expect(flat).toContain("Follow-up steps for the agency");
-    expect(flat).toContain("Acknowledged (Yes / No)");
+    expect(flat).not.toContain("Acknowledged (Yes / No)");
     expect(flat).toContain("Agency Lead signature");
     const steps = report.blocks.filter((block) => block.type === "step");
     expect(steps.length).toBeGreaterThan(0);

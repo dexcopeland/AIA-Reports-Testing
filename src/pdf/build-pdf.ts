@@ -126,17 +126,8 @@ function marker(name: string, width: number): PdfContent {
 
 function choiceMark(field: SignField): PdfContent[] {
   return [
-    { width: "auto", text: field.label, fontSize: 11, margin: [4, 2, 2, 0] },
-    {
-      width: 14,
-      stack: [
-        { text: " ", id: `fld_${field.name}`, fontSize: 9, margin: [0, 1, 0, 0] },
-        {
-          canvas: [{ type: "rect", x: 0, y: 0, w: 11, h: 11, lineWidth: 0.8, lineColor: `#${REPORT_STYLE.navy}` }],
-          relativePosition: { x: 0, y: -12 },
-        },
-      ],
-    },
+    { width: "auto", text: field.label, fontSize: 11, margin: [6, 1, 3, 0] },
+    { width: 12, text: " ", id: `fld_${field.name}`, fontSize: 11, margin: [0, 1, 2, 0] },
   ];
 }
 

@@ -74,15 +74,16 @@ function appearance(doc: PdfKitDoc, content: string): PdfRef {
   const stream = doc.ref({
     Type: "XObject",
     Subtype: "Form",
-    BBox: [0, 0, 12, 12],
+    BBox: [0, 0, BOX, BOX],
   });
   stream.end(content);
   return stream;
 }
 
 const NAVY = "0.039 0.192 0.380";
-const BOX_OFF = `q ${NAVY} RG 0.8 w 0.6 0.6 10.8 10.8 re S Q`;
-const BOX_ON = `${BOX_OFF} q ${NAVY} rg 2.6 2.6 6.8 6.8 re f Q`;
+const BOX = 11;
+const BOX_OFF = `q ${NAVY} RG 0.9 w 0.6 0.6 ${BOX - 1.2} ${BOX - 1.2} re S Q`;
+const BOX_ON = `${BOX_OFF} q ${NAVY} RG 1.35 w 2.3 4.5 m 4.3 2.4 l 8.6 8.1 l S Q`;
 
 function radioParent(doc: PdfKitDoc, groups: Map<string, PdfRef>, group: string): PdfRef {
   const existing = groups.get(group);
@@ -112,8 +113,9 @@ function addChoice(doc: PdfKitDoc, field: SignField, x: number, y: number, group
   widget.Subtype = "Widget";
   widget.F = 4;
   widget.AS = "Off";
+  widget.MK = { BC: [0.039, 0.192, 0.38], BG: [1, 1, 1] };
   widget.AP = { N: { [onState]: on, Off: off } };
-  doc.annotate(x, y, 12, 12, widget);
+  doc.annotate(x, y, BOX, BOX, widget);
   const annotRef = doc.page.annotations[doc.page.annotations.length - 1];
   doc._addToParent(annotRef);
 }
@@ -123,7 +125,8 @@ function fieldBox(field: SignField, doc: PdfKitDoc, spot: FieldSpot): { width: n
   const baseline = height - spot.y;
   switch (field.kind) {
     case "choice":
-      return { width: 12, height: 12, top: Math.max(36, baseline - 10) };
+      // The named destination sits on the ascender line. The box hangs from that line down to the text baseline.
+      return { width: BOX, height: BOX, top: Math.max(36, baseline) };
     case "date":
       return { width: field.width ?? 72, height: 14, top: Math.max(36, baseline - 11) };
     case "text":
@@ -168,6 +171,8 @@ function place(doc: PdfKitDoc, field: SignField, spot: FieldSpot, groups: Map<st
 export function addAcroFormFields(doc: PdfKitDoc, fields: SignField[]): void {
   if (fields.length === 0) return;
   doc.initForm();
+  const form = doc._root.data.AcroForm?.data as { NeedAppearances?: boolean } | undefined;
+  if (form) form.NeedAppearances = false;
   const placed = spots(doc);
   const groups = new Map<string, PdfRef>();
   const off = appearance(doc, BOX_OFF);
