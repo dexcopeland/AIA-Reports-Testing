@@ -59,4 +59,33 @@ describe("PDF report", () => {
     const missing = warnings.find((warning) => warning.character === "✓");
     expect(missing?.questions).toContain("Q8");
   });
+
+  it("adds fillable comment, name and signature fields and resolves internal links", async () => {
+    const scenario = SCENARIOS.find((item) => item.id === "S02");
+    expect(scenario).toBeTruthy();
+    const report = buildReport(buildScenario(scenario!));
+    const { bytes } = await reportToPdfBytes(report);
+    const raw = Buffer.from(bytes).toString("latin1");
+    expect(raw).toContain("/FT /Tx");
+    expect(raw).toContain("/FT /Sig");
+    expect(raw).toContain("(lead_signature)");
+    expect(raw).toContain("(lead_name)");
+    expect(raw).toContain("(comment_1)");
+    expect(raw).toContain("/Ff 4096");
+    const parser = new PDFParse({ data: bytes });
+    const text = await parser.getText();
+    await parser.destroy();
+    const flat = text.text.replace(/\s+/g, " ");
+    expect(flat).toContain("Bottom line up front");
+    expect(flat).toContain("The outcome is high-risk routing.");
+    expect(flat).toContain("Follow-up steps for the agency");
+    expect(flat).toContain("Acknowledged (Yes / No)");
+    expect(flat).toContain("Agency Lead signature");
+    const steps = report.blocks.filter((block) => block.type === "step");
+    expect(steps.length).toBeGreaterThan(0);
+    for (const step of steps) {
+      expect(step.link).toBeTruthy();
+      expect(raw).toContain(`(${step.link})`);
+    }
+  });
 });

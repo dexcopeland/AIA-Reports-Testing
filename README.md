@@ -12,13 +12,15 @@ It follows the shape of Canada's [AIA tool](https://github.com/canada-ca/aia-eia
 2. Start a new assessment, or load an example. Examples are fictional and labeled.
 3. Answer section by section. Later questions appear only when they apply. Statement sets run from weakest to strongest, plus "We don't know / not determined yet." A planned line asks for a target date. The strongest line can ask for one line of evidence.
 4. The browser saves the draft on this computer. Use **Save JSON file** to download a copy. The file includes `schema_version`, `form_version` and `rules_version`.
-5. Read the on-screen draft. After Q25 is confirmed, download a Word file or a PDF. Both are built from the same report. The Word file uses Times New Roman. The PDF embeds Liberation Serif (metric-compatible, SIL Open Font License) and uses DejaVu Serif for characters Liberation Serif does not have. If a character is in neither font, the download says so and names the question. The PDF is US Letter with 1 inch margins, a "Page X of Y" footer, Section 9 and the appendix starting on new pages, and shaded answer paragraphs. The report body has no tables.
+5. Read the on-screen draft. After Q25 is confirmed, download a Word file or a PDF. Both are built from the same report. The Word file uses Times New Roman. The PDF embeds Liberation Serif (metric-compatible, SIL Open Font License) and uses DejaVu Serif for characters Liberation Serif does not have. If a character is in neither font, the download says so and names the question. The PDF is US Letter with 1 inch margins, a "Page X of Y" footer, Section 9 and the appendix starting on new pages, and shaded answer paragraphs. The narrative is prose. Section 9 uses bordered boxes for comments, acknowledgments and the Agency Lead sign-off. In the PDF those boxes are fillable form fields, including a signature field.
 
 Keep the JSON file in agency storage. Do not put resident data in it. The questions ask about the AI system, not about a person's case file.
 
 The Agency Lead email, if you enter one, stays in the JSON file and is left out of the report.
 
 ## What the report covers
+
+A bottom line up front comes before the ten sections. It states the outcome, the High-risk level, and the single most important reason in a few plain sentences, then lists follow-up steps. Each step links to the check or section it comes from. If nothing needs follow-up, the report says so in one sentence.
 
 Ten sections, in the same order as the current report writer:
 

@@ -6,13 +6,24 @@ import type { AnswerFile } from "../content/types";
 import type { Answers } from "./answers";
 import { many, text } from "./answers";
 import { evaluate, levelSafeguard, optionLabel } from "./evaluate";
+import { buildBluf } from "./bluf";
 import type { Evaluation, LiveMitigation } from "./model";
 import { dataLevel, deployment, priorAssessment, processingPlace, procurementApplicable, selectedGroups, statusConflict, threatApplies, vendorInvolved } from "./visibility";
 
+export interface SignField {
+  name: string;
+  label: string;
+  kind: "text" | "multiline" | "signature";
+  lines: number;
+}
+
 export interface Block {
-  type: "h1" | "h2" | "h3" | "p" | "label" | "field" | "note" | "qa" | "break" | "bullet" | "sub";
+  type: "h1" | "h2" | "h3" | "p" | "label" | "field" | "note" | "qa" | "break" | "bullet" | "sub" | "step" | "sign";
   text: string;
   source: "template" | "answer" | "slot";
+  anchor?: string;
+  link?: string;
+  fields?: SignField[];
 }
 
 export interface ReportDoc {
@@ -49,8 +60,43 @@ const QUESTIONS: { n: number; section: string; text: string; rp?: string }[] = [
   { n: 25, section: "Section 7: Attestation", text: "I confirm these answers are accurate to the best of my knowledge, and I understand this form is not approval." },
 ];
 
-function block(type: Block["type"], text: string, source: Block["source"]): Block {
-  return { type, text, source };
+function block(type: Block["type"], text: string, source: Block["source"], extra?: Pick<Block, "anchor" | "link" | "fields">): Block {
+  return { type, text, source, ...extra };
+}
+
+function sectionAnchor(text: string): string | undefined {
+  if (text === "Bottom line up front") return "sec_bluf";
+  if (text.startsWith("Appendix:")) return "sec_appendix";
+  const match = /^(\d+)\./.exec(text);
+  return match ? `sec_${match[1]}` : undefined;
+}
+
+function labelAnchor(text: string): string | undefined {
+  const check = /^((?:C|RP)\d+)\s/.exec(text);
+  if (check) return `check_${check[1]}`;
+  const mitigation = /^M(\d+)\s/.exec(text);
+  if (mitigation) return `mit_${mitigation[1]}`;
+  return undefined;
+}
+
+function mitigationSign(mit: LiveMitigation, number: number): Block {
+  const fields: SignField[] = [
+    { name: `ack_${number}`, label: "Acknowledged (Yes / No)", kind: "text", lines: 1 },
+    { name: `plan_${number}`, label: "Our plan and target date", kind: "multiline", lines: 3 },
+    { name: `comment_${number}`, label: "Comment", kind: "multiline", lines: 4 },
+  ];
+  return block("sign", [`M${number} – ${mit.title}`, ...fields.map((field) => field.label)].join("\n"), "template", { fields });
+}
+
+function leadSign(): Block {
+  const fields: SignField[] = [
+    { name: "lead_signature", label: "Agency Lead signature", kind: "signature", lines: 4 },
+    { name: "lead_name", label: "Name", kind: "text", lines: 1 },
+    { name: "lead_title", label: "Title (printed role)", kind: "text", lines: 1 },
+    { name: "lead_agency", label: "Agency", kind: "text", lines: 1 },
+    { name: "lead_date", label: "Date", kind: "text", lines: 1 },
+  ];
+  return block("sign", ["Agency Lead sign-off", ...fields.map((field) => field.label)].join("\n"), "template", { fields });
 }
 
 function answerBlocks(item: { qRefs: string; answerLines: { label: string; statement: string; evidence: string; targetDate: string }[] }): Block[] {
@@ -325,6 +371,13 @@ export function buildReport(file: AnswerFile): ReportDoc {
   blocks.push(block("p", `Intake reference (Q1): ${text(answers, "q1_intake") || FIXED.noIntake}`, "answer"));
   blocks.push(block("p", `AI system (Q4): ${system}`, "answer"));
 
+  blocks.push(block("h2", "Bottom line up front", "template"));
+  const bluf = buildBluf(result);
+  for (const sentence of bluf.sentences) blocks.push(block("p", sentence, "slot"));
+  blocks.push(block("h3", "Follow-up steps for the agency", "template"));
+  if (bluf.steps.length === 0) blocks.push(block("p", "No follow-up step is open.", "template"));
+  else for (const step of bluf.steps) blocks.push(block("step", step.text, "slot", { link: step.link }));
+
   blocks.push(block("h2", "1. Summary", "template"));
   if (text(answers, "q1_intake") === "") blocks.push(block("p", FIXED.noIntake, "template"));
   blocks.push(block("p", summaryText(result, answers), "slot"));
@@ -454,14 +507,11 @@ export function buildReport(file: AnswerFile): ReportDoc {
   blocks.push(block("break", "section-9", "template"));
   blocks.push(block("h2", "9. Agency Lead acknowledgment", "template"));
   result.mitigations.forEach((mit, index) => {
-    blocks.push(block("label", `M${index + 1} – ${mit.title}`, "template"));
-    blocks.push(block("field", "Acknowledged (Yes / No): ________", "template"));
-    blocks.push(block("field", "Our plan and target date: ________________________", "template"));
-    blocks.push(block("field", "Comment: ________________________", "template"));
+    blocks.push(mitigationSign(mit, index + 1));
   });
   blocks.push(block("p", FIXED.accuracy, "template"));
   blocks.push(block("p", FIXED.acknowledge, "template"));
-  blocks.push(block("p", "Agency Lead signature ____ Printed role ____ Agency ____ Date ____", "template"));
+  blocks.push(leadSign());
   blocks.push(block("p", FIXED.leadNote, "template"));
 
   blocks.push(block("h2", "10. Sources", "template"));
@@ -485,6 +535,11 @@ export function buildReport(file: AnswerFile): ReportDoc {
     blocks.push(block("label", `Q${question.n}. ${question.text}`, "template"));
     if (question.rp) blocks.push(block("note", `Recommended practice (${question.rp}): good practice, not a State rule`, "template"));
     blocks.push(block("qa", appendixAnswer(answers, question.n), "answer"));
+  }
+
+  for (const item of blocks) {
+    if (item.type === "h2" && !item.anchor) item.anchor = sectionAnchor(item.text);
+    if (item.type === "label" && !item.anchor) item.anchor = labelAnchor(item.text);
   }
 
   return { blocks, systemName: system, checks: selfCheck(blocks, result, answers) };
@@ -530,6 +585,18 @@ export function selfCheck(blocks: Block[], result: Evaluation, answers: Answers)
     return false;
   });
   const unsourced = blocks.filter((item) => item.type !== "break" && !item.source);
+  const blufStart = blocks.findIndex((item) => item.text === "Bottom line up front");
+  const summaryAt = blocks.findIndex((item) => item.text === "1. Summary");
+  const blufSlice = blufStart >= 0 && summaryAt > blufStart ? blocks.slice(blufStart, summaryAt) : [];
+  const followAt = blufSlice.findIndex((item) => item.text === "Follow-up steps for the agency");
+  const takeawayText = blufSlice.slice(0, Math.max(followAt, 0)).filter((item) => item.type === "p").map((item) => item.text).join(" ");
+  const takeawaySentences = takeawayText.split(/(?<=[.!?])\s+/).filter(Boolean);
+  const stepBlocks = blufSlice.filter((item) => item.type === "step");
+  const nothingOpen = blufSlice.some((item) => item.text === "No follow-up step is open.");
+  const anchors = new Set(blocks.flatMap((item) => item.anchor ? [item.anchor] : []));
+  const brokenLinks = stepBlocks.filter((item) => !item.link || !anchors.has(item.link));
+  const stepPeriods = stepBlocks.filter((item) => (item.text.match(/[.!?]/g) ?? []).length !== 1);
+  const firstHeading = blocks.findIndex((item) => item.type === "h2");
   return [
     { id: "sourced", ok: unsourced.length === 0, detail: "Every block has a template, answer or slot source." },
     { id: "banned", ok: bannedHit.length === 0, detail: bannedHit.join(", ") || "No banned words." },
@@ -544,6 +611,9 @@ export function selfCheck(blocks: Block[], result: Evaluation, answers: Answers)
     { id: "q25-followup", ok: !result.followups.some((item) => item.q === 25), detail: "No Q25 follow-up." },
     { id: "cap", ok: !result.wellAnswered || result.mitigations.length <= 3, detail: `${result.mitigations.length} mitigations; well answered: ${result.wellAnswered}.` },
     { id: "tags", ok: !textValue.includes("[P1] Implementation Guidance") && !/\[P2\] Responsible AI Policy(?! Implementation)/.test(textValue), detail: "P1 and P2 tags match their names." },
+    { id: "bluf", ok: blufStart === firstHeading && followAt > 0 && takeawaySentences.length >= 2 && takeawaySentences.length <= 4 && takeawayText.includes("The risk level is High-risk.") && takeawayText.includes("The outcome is"), detail: `${takeawaySentences.length} sentences.` },
+    { id: "follow-steps", ok: (stepBlocks.length > 0) !== nothingOpen && stepPeriods.length === 0, detail: stepBlocks.length ? `${stepBlocks.length} steps.` : "No follow-up step is open." },
+    { id: "links", ok: brokenLinks.length === 0, detail: brokenLinks.map((item) => item.link ?? item.text).join(", ") || "Follow-up steps link to a section or check." },
   ];
 }
 

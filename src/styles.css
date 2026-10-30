@@ -201,6 +201,14 @@ textarea { min-height: 8rem; resize: vertical; }
 }
 .r-bullet::before { content: "• "; }
 .r-sub { margin: 0 0 0.35rem 1.7rem; }
+.r-steps { margin: 0.2rem 0 0.7rem; padding-left: 1.4rem; }
+.r-steps a { color: var(--navy); }
+.sign-box { border: 1px solid var(--navy); margin: 0.8rem 0 1rem; padding: 0.15rem 0.7rem 0.7rem; }
+.sign-field { margin-top: 0.55rem; }
+.sign-label { font-weight: 700; color: var(--navy); margin: 0 0 0.25rem; }
+.sign-write { border: 1px solid #1b4f8a; background: var(--shade); min-height: 1.8rem; }
+.sign-multiline { min-height: 4.2rem; }
+.sign-signature { min-height: 4.8rem; }
 .r-qa {
   background: var(--shade);
   border-left: 4px solid #1b4f8a;

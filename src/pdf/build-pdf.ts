@@ -1,7 +1,8 @@
 import pdfMake from "pdfmake/build/pdfmake.js";
 import pdfFonts from "pdfmake/build/vfs_fonts.js";
-import type { Block, ReportDoc } from "../engine/report";
+import type { Block, ReportDoc, SignField } from "../engine/report";
 import { REPORT_STYLE } from "../report/style";
+import { addAcroFormFields, collectPdf } from "./form-fields";
 import { familyCoverage, glyphWarnings, openFont, pdfText, type GlyphFont, type GlyphWarning } from "./glyphs";
 
 type PdfContent = Record<string, unknown>;
@@ -87,6 +88,68 @@ function paint(text: string, faces: LoadedFaces, missing: Set<string>): string |
   return pdfText(text, faces.primary, faces.fallback, REPORT_STYLE.pdfFamily, REPORT_STYLE.fallbackFamily, missing);
 }
 
+function withId(node: PdfContent, anchor: string | undefined): PdfContent {
+  if (!anchor) return node;
+  return { ...node, id: anchor };
+}
+
+function linked(text: string, link: string | undefined, faces: LoadedFaces, missing: Set<string>): PdfContent {
+  const painted = paint(text, faces, missing);
+  const style = { color: `#${REPORT_STYLE.rule}`, decoration: "underline", linkToDestination: link };
+  if (typeof painted === "string") return { text: painted, ...style };
+  return { text: painted.map((run) => ({ ...run, ...style })) };
+}
+
+function signBox(block: Block, faces: LoadedFaces, missing: Set<string>): PdfContent[] {
+  const title = block.text.split("\n")[0] ?? "";
+  const fields = block.fields ?? [];
+  const row = (field: SignField): PdfContent[] => [{
+    stack: [
+      {
+        text: paint(field.label, faces, missing),
+        bold: true,
+        fontSize: REPORT_STYLE.bodyPt,
+        color: `#${REPORT_STYLE.navy}`,
+        margin: [8, 6, 8, 2],
+      },
+      {
+        text: " ",
+        id: `fld_${field.name}`,
+        fontSize: REPORT_STYLE.bodyPt,
+        margin: [8, 2, 8, field.lines * 16],
+      },
+    ],
+    fillColor: `#${REPORT_STYLE.shade}`,
+  }];
+  return [
+    {
+      text: paint(title, faces, missing),
+      bold: true,
+      fontSize: REPORT_STYLE.bodyPt,
+      color: `#${REPORT_STYLE.navy}`,
+      margin: [0, 10, 0, 4],
+    },
+    {
+      table: {
+        widths: ["*"],
+        dontBreakRows: true,
+        body: fields.map(row),
+      },
+      layout: {
+        hLineColor: () => `#${REPORT_STYLE.navy}`,
+        vLineColor: () => `#${REPORT_STYLE.navy}`,
+        hLineWidth: () => 1,
+        vLineWidth: () => 1,
+        paddingLeft: () => 0,
+        paddingRight: () => 0,
+        paddingTop: () => 0,
+        paddingBottom: () => 0,
+      },
+      margin: [0, 0, 0, 8],
+    },
+  ];
+}
+
 function blockContent(block: Block, faces: LoadedFaces, missing: Set<string>): PdfContent | PdfContent[] {
   if (block.type === "break") return { text: "", pageBreak: "before" };
   if (block.type === "h1") {
@@ -105,32 +168,33 @@ function blockContent(block: Block, faces: LoadedFaces, missing: Set<string>): P
     ];
   }
   if (block.type === "h2") {
-    return {
+    return withId({
       text: paint(block.text, faces, missing),
       fontSize: REPORT_STYLE.headingPt,
       bold: true,
       color: `#${REPORT_STYLE.navy}`,
       margin: [0, 14, 0, 6],
-    };
+    }, block.anchor);
   }
   if (block.type === "h3") {
-    return {
+    return withId({
       text: paint(block.text, faces, missing),
       fontSize: REPORT_STYLE.subheadPt,
       bold: true,
       color: `#${REPORT_STYLE.navy}`,
       margin: [0, 10, 0, 4],
-    };
+    }, block.anchor);
   }
   if (block.type === "label") {
-    return {
+    return withId({
       text: paint(block.text, faces, missing),
       fontSize: REPORT_STYLE.bodyPt,
       bold: true,
       color: `#${REPORT_STYLE.navy}`,
       margin: [0, 8, 0, 2],
-    };
+    }, block.anchor);
   }
+  if (block.type === "sign") return signBox(block, faces, missing);
   if (block.type === "note") {
     return { text: paint(block.text, faces, missing), fontSize: REPORT_STYLE.notePt, color: `#${REPORT_STYLE.muted}`, margin: [0, 0, 0, 4] };
   }
@@ -160,6 +224,17 @@ function blocksToPdf(blocks: Block[], faces: LoadedFaces, missing: Set<string>):
   const content: PdfContent[] = [];
   for (let index = 0; index < blocks.length; index += 1) {
     const block = blocks[index];
+    if (block.type === "step") {
+      const items: PdfContent[] = [];
+      while (blocks[index]?.type === "step") {
+        const step = blocks[index];
+        items.push(linked(step.text, step.link, faces, missing));
+        index += 1;
+      }
+      index -= 1;
+      content.push({ ol: items, margin: [0, 2, 0, 6] });
+      continue;
+    }
     if (block.type !== "bullet") {
       const piece = blockContent(block, faces, missing);
       if (Array.isArray(piece)) content.push(...piece);
@@ -212,9 +287,12 @@ export interface PdfResult {
 export async function reportToPdfBytes(doc: ReportDoc): Promise<PdfResult> {
   const faces = await ensureFonts();
   const missing = new Set<string>();
-  const pdf = pdfMake.createPdf(reportDefinition(doc, faces, missing));
-  const buffer = await pdf.getBuffer();
-  return { bytes: new Uint8Array(buffer), warnings: glyphWarnings(doc.blocks, [...missing]) };
+  const pdf = pdfMake.createPdf(reportDefinition(doc, faces, missing), { bufferPages: true });
+  const kit = await pdf.getStream() as Parameters<typeof addAcroFormFields>[0];
+  const fields = doc.blocks.flatMap((block) => block.fields ?? []);
+  addAcroFormFields(kit, fields);
+  const bytes = await collectPdf(kit);
+  return { bytes, warnings: glyphWarnings(doc.blocks, [...missing]) };
 }
 
 export async function reportToPdfBlob(doc: ReportDoc): Promise<{ blob: Blob; warnings: GlyphWarning[] }> {
