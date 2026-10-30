@@ -1,7 +1,8 @@
 import pdfMake from "pdfmake/build/pdfmake.js";
 import pdfFonts from "pdfmake/build/vfs_fonts.js";
-import type { Block, ReportDoc } from "../engine/report";
+import type { Block, ReportDoc, SignField } from "../engine/report";
 import { REPORT_STYLE } from "../report/style";
+import { addAcroFormFields, collectPdf } from "./form-fields";
 import { familyCoverage, glyphWarnings, openFont, pdfText, type GlyphFont, type GlyphWarning } from "./glyphs";
 
 type PdfContent = Record<string, unknown>;
@@ -87,6 +88,130 @@ function paint(text: string, faces: LoadedFaces, missing: Set<string>): string |
   return pdfText(text, faces.primary, faces.fallback, REPORT_STYLE.pdfFamily, REPORT_STYLE.fallbackFamily, missing);
 }
 
+function withId(node: PdfContent, anchor: string | undefined): PdfContent {
+  if (!anchor) return node;
+  return { ...node, id: anchor };
+}
+
+function linked(text: string, link: string | undefined, faces: LoadedFaces, missing: Set<string>): PdfContent {
+  const painted = paint(text, faces, missing);
+  const style = { color: `#${REPORT_STYLE.rule}`, decoration: "underline", linkToDestination: link };
+  if (typeof painted === "string") return { text: painted, ...style };
+  return { text: painted.map((run) => ({ ...run, ...style })) };
+}
+
+const thinBox = {
+  hLineColor: () => `#${REPORT_STYLE.navy}`,
+  vLineColor: () => `#${REPORT_STYLE.navy}`,
+  hLineWidth: () => 0.6,
+  vLineWidth: () => 0.6,
+  paddingLeft: () => 0,
+  paddingRight: () => 0,
+  paddingTop: () => 0,
+  paddingBottom: () => 0,
+};
+
+function marker(name: string, width: number): PdfContent {
+  return {
+    width,
+    stack: [
+      { text: " ", id: `fld_${name}`, fontSize: 11, margin: [1, 1, 0, 0] },
+      {
+        canvas: [{ type: "line", x1: 0, y1: 0, x2: Math.max(12, width - 6), y2: 0, lineWidth: 0.6, lineColor: `#${REPORT_STYLE.navy}` }],
+        relativePosition: { x: 1, y: -1 },
+      },
+    ],
+  };
+}
+
+function choiceMark(field: SignField): PdfContent[] {
+  return [
+    { width: "auto", text: field.label, fontSize: 11, margin: [6, 1, 3, 0] },
+    { width: 12, text: " ", id: `fld_${field.name}`, fontSize: 11, margin: [0, 1, 2, 0] },
+  ];
+}
+
+function commentBox(field: SignField, faces: LoadedFaces, missing: Set<string>): PdfContent {
+  return {
+    table: {
+      widths: ["*"],
+      dontBreakRows: true,
+      body: [[{
+        stack: [
+          {
+            text: paint(field.label, faces, missing),
+            bold: true,
+            fontSize: 11,
+            color: `#${REPORT_STYLE.navy}`,
+            margin: [4, 3, 4, 0],
+          },
+          { text: " ", id: `fld_${field.name}`, fontSize: 11, margin: [4, 0, 4, field.lines * 11] },
+        ],
+        fillColor: `#${REPORT_STYLE.shade}`,
+      }]],
+    },
+    layout: thinBox,
+    margin: [0, 1, 0, 2],
+  };
+}
+
+function acknowledgmentRow(block: Block, fields: SignField[], faces: LoadedFaces, missing: Set<string>): PdfContent {
+  const date = fields.find((field) => field.kind === "date");
+  const choices = fields.filter((field) => field.kind === "choice");
+  return {
+    columns: [
+      { width: "*", text: paint(block.text, faces, missing), fontSize: 11, margin: [0, 1, 4, 0] },
+      ...choices.flatMap((field) => choiceMark(field)),
+      ...(date ? [{ width: "auto", text: "Date", bold: true, fontSize: 11, margin: [6, 2, 2, 0] } satisfies PdfContent, marker(date.name, date.width ?? 72)] : []),
+    ],
+    columnGap: 2,
+    margin: [0, 6, 0, 1],
+  };
+}
+
+function signatureBox(fields: SignField[], faces: LoadedFaces, missing: Set<string>): PdfContent {
+  const lineFields = fields.filter((field) => field.kind === "text" || field.kind === "date");
+  const signature = fields.find((field) => field.kind === "signature");
+  const columns: PdfContent[] = lineFields.flatMap((field) => [
+    { width: "auto", text: field.kind === "text" && field.label.startsWith("Title") ? "Title" : field.label, bold: true, fontSize: 11, margin: [4, 4, 3, 0] },
+    marker(field.name, field.width ?? 90),
+  ]);
+  const stack: PdfContent[] = [{ columns, columnGap: 2, margin: [0, 2, 0, 0] }];
+  if (signature) {
+    stack.push({
+      text: paint(signature.label, faces, missing),
+      bold: true,
+      fontSize: 11,
+      color: `#${REPORT_STYLE.navy}`,
+      margin: [4, 3, 4, 0],
+    });
+    stack.push({ text: " ", id: `fld_${signature.name}`, fontSize: 11, margin: [4, 0, 4, 20] });
+  }
+  return {
+    table: {
+      widths: ["*"],
+      dontBreakRows: true,
+      body: [[{ stack, fillColor: `#${REPORT_STYLE.shade}` }]],
+    },
+    layout: thinBox,
+    margin: [0, 4, 0, 2],
+  };
+}
+
+function signBox(block: Block, faces: LoadedFaces, missing: Set<string>): PdfContent[] {
+  const fields = block.fields ?? [];
+  const loose = fields.filter((field) => !field.boxed);
+  const boxed = fields.filter((field) => field.boxed);
+  const stack: PdfContent[] = [];
+  if (loose.length > 0) stack.push(acknowledgmentRow(block, loose, faces, missing));
+  if (loose.length > 0) {
+    for (const field of boxed) stack.push(commentBox(field, faces, missing));
+  } else if (boxed.length > 0) {
+    stack.push(signatureBox(boxed, faces, missing));
+  }
+  return [{ unbreakable: true, stack, margin: [0, 2, 0, 1] }];
+}
+
 function blockContent(block: Block, faces: LoadedFaces, missing: Set<string>): PdfContent | PdfContent[] {
   if (block.type === "break") return { text: "", pageBreak: "before" };
   if (block.type === "h1") {
@@ -105,32 +230,33 @@ function blockContent(block: Block, faces: LoadedFaces, missing: Set<string>): P
     ];
   }
   if (block.type === "h2") {
-    return {
+    return withId({
       text: paint(block.text, faces, missing),
       fontSize: REPORT_STYLE.headingPt,
       bold: true,
       color: `#${REPORT_STYLE.navy}`,
       margin: [0, 14, 0, 6],
-    };
+    }, block.anchor);
   }
   if (block.type === "h3") {
-    return {
+    return withId({
       text: paint(block.text, faces, missing),
       fontSize: REPORT_STYLE.subheadPt,
       bold: true,
       color: `#${REPORT_STYLE.navy}`,
       margin: [0, 10, 0, 4],
-    };
+    }, block.anchor);
   }
   if (block.type === "label") {
-    return {
+    return withId({
       text: paint(block.text, faces, missing),
       fontSize: REPORT_STYLE.bodyPt,
       bold: true,
       color: `#${REPORT_STYLE.navy}`,
       margin: [0, 8, 0, 2],
-    };
+    }, block.anchor);
   }
+  if (block.type === "sign") return signBox(block, faces, missing);
   if (block.type === "note") {
     return { text: paint(block.text, faces, missing), fontSize: REPORT_STYLE.notePt, color: `#${REPORT_STYLE.muted}`, margin: [0, 0, 0, 4] };
   }
@@ -160,6 +286,17 @@ function blocksToPdf(blocks: Block[], faces: LoadedFaces, missing: Set<string>):
   const content: PdfContent[] = [];
   for (let index = 0; index < blocks.length; index += 1) {
     const block = blocks[index];
+    if (block.type === "step") {
+      const items: PdfContent[] = [];
+      while (blocks[index]?.type === "step") {
+        const step = blocks[index];
+        items.push(linked(step.text, step.link, faces, missing));
+        index += 1;
+      }
+      index -= 1;
+      content.push({ ol: items, margin: [0, 2, 0, 6] });
+      continue;
+    }
     if (block.type !== "bullet") {
       const piece = blockContent(block, faces, missing);
       if (Array.isArray(piece)) content.push(...piece);
@@ -212,9 +349,12 @@ export interface PdfResult {
 export async function reportToPdfBytes(doc: ReportDoc): Promise<PdfResult> {
   const faces = await ensureFonts();
   const missing = new Set<string>();
-  const pdf = pdfMake.createPdf(reportDefinition(doc, faces, missing));
-  const buffer = await pdf.getBuffer();
-  return { bytes: new Uint8Array(buffer), warnings: glyphWarnings(doc.blocks, [...missing]) };
+  const pdf = pdfMake.createPdf(reportDefinition(doc, faces, missing), { bufferPages: true });
+  const kit = await pdf.getStream() as Parameters<typeof addAcroFormFields>[0];
+  const fields = doc.blocks.flatMap((block) => block.fields ?? []);
+  addAcroFormFields(kit, fields);
+  const bytes = await collectPdf(kit);
+  return { bytes, warnings: glyphWarnings(doc.blocks, [...missing]) };
 }
 
 export async function reportToPdfBlob(doc: ReportDoc): Promise<{ blob: Blob; warnings: GlyphWarning[] }> {

@@ -59,4 +59,50 @@ describe("PDF report", () => {
     const missing = warnings.find((warning) => warning.character === "✓");
     expect(missing?.questions).toContain("Q8");
   });
+
+  it("adds fillable comment, name and signature fields and resolves internal links", async () => {
+    const scenario = SCENARIOS.find((item) => item.id === "S02");
+    expect(scenario).toBeTruthy();
+    const report = buildReport(buildScenario(scenario!));
+    const { bytes } = await reportToPdfBytes(report);
+    const raw = Buffer.from(bytes).toString("latin1");
+    expect(raw).toContain("/FT /Tx");
+    expect(raw).toContain("/FT /Sig");
+    expect(raw).toContain("/FT /Btn");
+    expect(raw).toContain("(lead_signature)");
+    expect(raw).toContain("(lead_name)");
+    expect(raw).toContain("(lead_date)");
+    expect(raw).toContain("(comment_1)");
+    expect(raw).toContain("(date_1)");
+    expect(raw).toContain("(ack_1)");
+    expect(raw).toContain("/Ff 4096");
+    expect(raw).toContain("/Ff 49152");
+    const parser = new PDFParse({ data: bytes });
+    const text = await parser.getText();
+    await parser.destroy();
+    let seenSection9 = false;
+    const section9 = (text.pages ?? []).filter((page) => {
+      const body = "text" in page ? String(page.text) : "";
+      if (body.includes("9. Agency Lead acknowledgment")) seenSection9 = true;
+      const row = seenSection9 && /M\d+ –/.test(body) && body.includes("Yes") && body.includes("Date");
+      const sign = seenSection9 && body.includes("Agency Lead signature");
+      const keep = seenSection9 && (body.includes("9. Agency Lead acknowledgment") || row || sign);
+      if (seenSection9 && body.includes("10. Sources")) seenSection9 = false;
+      return keep;
+    });
+    expect(section9.length).toBeGreaterThan(0);
+    expect(section9.length).toBeLessThanOrEqual(3);
+    const flat = text.text.replace(/\s+/g, " ");
+    expect(flat).toContain("Bottom line up front");
+    expect(flat).toContain("The outcome is high-risk routing.");
+    expect(flat).toContain("Follow-up steps for the agency");
+    expect(flat).not.toContain("Acknowledged (Yes / No)");
+    expect(flat).toContain("Agency Lead signature");
+    const steps = report.blocks.filter((block) => block.type === "step");
+    expect(steps.length).toBeGreaterThan(0);
+    for (const step of steps) {
+      expect(step.link).toBeTruthy();
+      expect(raw).toContain(`(${step.link})`);
+    }
+  });
 });

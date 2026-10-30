@@ -7,7 +7,7 @@ import { SCENARIOS } from "../src/scenarios/catalog";
 
 const outDir = process.env.AIA_PAGES ?? "/opt/cursor/artifacts";
 mkdirSync(outDir, { recursive: true });
-const scenario = SCENARIOS.find((item) => item.id === "S01");
+const scenario = SCENARIOS.find((item) => item.id === (process.env.AIA_SCENARIO ?? "S01"));
 if (!scenario) throw new Error("S01 missing");
 const report = buildReport(buildScenario(scenario));
 const { bytes } = await reportToPdfBytes(report);
@@ -25,6 +25,8 @@ pages.forEach((page, index) => {
   const pageText = "text" in page ? String(page.text) : "";
   const number = "num" in page ? Number(page.num) : index + 1;
   if (number === 1) addName(number, "pdf-page-1.png");
+  if (pageText.includes("Bottom line up front")) addName(number, "pdf-bluf.png");
+  if (pageText.includes("Agency Lead signature") || pageText.includes("Agency Lead sign-off")) addName(number, "pdf-signoff.png");
   if (pageText.includes("C9 –")) addName(number, "pdf-c9.png");
   if (pageText.includes("RP1 –")) addName(number, "pdf-rp1.png");
   if (pageText.includes("RP2 –") || pageText.includes("RP3 –")) addName(number, `pdf-rp-page-${number}.png`);
