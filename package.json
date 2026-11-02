@@ -10,6 +10,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "validate": "tsx scripts/validate-scenarios.ts",
+    "examples": "tsx scripts/emit-examples.ts",
     "rules-index": "tsx scripts/emit-rules-index.ts",
     "smoke": "node scripts/smoke-ui.mjs",
     "typecheck": "tsc --noEmit"

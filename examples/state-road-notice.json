@@ -1,0 +1,119 @@
+{
+  "schema_version": "1.0.0",
+  "form_version": "v2-structured-1.0.0",
+  "rules_version": "1.2.0",
+  "saved_at": "2026-11-02T00:00:00.000Z",
+  "example": true,
+  "example_label": "Example data. Fictional agency and AI system. Not a real assessment.",
+  "answers": {
+    "response_id": "EXAMPLE-state-road-notice",
+    "q1_intake": "EXAMPLE-HR-2026-state-road-notice",
+    "q2_agency": "Maryland Route Notice Desk (fictional)",
+    "q2_unit": "Traffic notice unit (fictional)",
+    "q2_role": "Agency Lead",
+    "q3_is_lead": "yes",
+    "q4_name": "Road-closure Notice Drafter (fictional)",
+    "q5_changes": "State staff connected the drafter to the public notice template. No vendor and no outside model.",
+    "q7b_prohibited": [
+      "none"
+    ],
+    "q9_other": "",
+    "q15_same_place": "yes",
+    "q20_types": [
+      "safety_harm",
+      "wrong_decision"
+    ],
+    "q23_monitor": "program manager",
+    "q23_incident": "security specialist",
+    "q23_reassess": "Agency Lead",
+    "q25_confirm": [
+      "confirm"
+    ],
+    "q5_builder": "state_built",
+    "q6_capabilities": [
+      "generates_text"
+    ],
+    "q6_design_facts": [
+      "no_personal_info",
+      "outputs_not_passed"
+    ],
+    "q6_method": "rules_plus_model",
+    "q6_hosting": "state_data_center",
+    "q6_description": "The drafter turns a closure record into a plain-language notice for the public web page. It runs in the state data center. A traffic supervisor edits the notice before it is posted. Fictional system.",
+    "q7_purpose": "Today a traffic supervisor writes each closure notice by hand. The drafter proposes the text so posting is faster. The supervisor still approves every notice. Fictional purpose.",
+    "q8_areas": [
+      "safety"
+    ],
+    "q8_target": "places_or_groups",
+    "q8_how": "A wrong notice could send drivers toward a closed road or away from an open one.",
+    "q9_groups": [
+      "general_public"
+    ],
+    "q9_rel__general_public": "affected_in_general",
+    "q10_role": "recommends",
+    "q11_reviewer": "traffic supervisor",
+    "q12_outside": "yes",
+    "q13_level": "L1",
+    "q14_data_types": [
+      "public_data"
+    ],
+    "q14_overlays": [
+      "none"
+    ],
+    "q14_sources": "Public road-closure records from the traffic notice unit.",
+    "q17_status": "live",
+    "q19_start": "2026-01-20",
+    "q19_prior": "yes",
+    "q20_harm": "A draft notice could name the wrong detour. Drivers would lose time or enter a work zone. The traffic supervisor can stop a notice before it posts.",
+    "st11a": "every_written",
+    "st11a__evidence": "Notice control file RN-07 record for 11a, tested 12 March 2026, owner: traffic supervisor. The record supports the selected statement.",
+    "st11b": "both",
+    "st11b__evidence": "Notice control file RN-07 record for 11b, tested 12 March 2026, owner: traffic supervisor. The record supports the selected statement.",
+    "st11c": "every",
+    "st11c__evidence": "Notice control file RN-07 record for 11c, tested 12 March 2026, owner: traffic supervisor. The record supports the selected statement.",
+    "st11d": "full",
+    "st11d__evidence": "Notice control file RN-07 record for 11d, tested 12 March 2026, owner: traffic supervisor. The record supports the selected statement.",
+    "st12a": "at_decision",
+    "st12a__evidence": "Notice control file RN-07 record for 12a, tested 12 March 2026, owner: traffic supervisor. The record supports the selected statement.",
+    "st12b": "set_path",
+    "st12b__evidence": "Notice control file RN-07 record for 12b, tested 12 March 2026, owner: traffic supervisor. The record supports the selected statement.",
+    "st12c": "reviewed",
+    "st12c__evidence": "Notice control file RN-07 record for 12c, tested 12 March 2026, owner: traffic supervisor. The record supports the selected statement.",
+    "st12e__general_public": "fits",
+    "st14a": "informal",
+    "st14b": "logged",
+    "st14b__evidence": "Notice control file RN-07 record for 14b, tested 12 March 2026, owner: traffic supervisor. The record supports the selected statement.",
+    "st15b": "controls",
+    "st15b__evidence": "Notice control file RN-07 record for 15b, tested 12 March 2026, owner: traffic supervisor. The record supports the selected statement.",
+    "st15d": "on_schedule",
+    "st20a": "partial_list",
+    "st21a": "recorded",
+    "st21a__evidence": "Notice control file RN-07 record for 21a, tested 12 March 2026, owner: traffic supervisor. The record supports the selected statement.",
+    "st21b": "planned",
+    "st21b__date": "2026-11-15",
+    "st21c": "complaints",
+    "st21d": "full",
+    "st21d__evidence": "Notice control file RN-07 record for 21d, tested 12 March 2026, owner: traffic supervisor. The record supports the selected statement.",
+    "st21e": "both",
+    "st21e__evidence": "Notice control file RN-07 record for 21e, tested 12 March 2026, owner: traffic supervisor. The record supports the selected statement.",
+    "st22__prompt_injection": "all",
+    "st22__prompt_injection__evidence": "Notice control file RN-07 record for prompt_injection (22), tested 12 March 2026, owner: traffic supervisor. The record supports the selected statement.",
+    "st22__poisoned_data": "all",
+    "st22__poisoned_data__evidence": "Notice control file RN-07 record for poisoned_data (22), tested 12 March 2026, owner: traffic supervisor. The record supports the selected statement.",
+    "st22__model_theft": "all",
+    "st22__model_theft__evidence": "Notice control file RN-07 record for model_theft (22), tested 12 March 2026, owner: traffic supervisor. The record supports the selected statement.",
+    "st22__output_leakage": "all",
+    "st22__output_leakage__evidence": "Notice control file RN-07 record for output_leakage (22), tested 12 March 2026, owner: traffic supervisor. The record supports the selected statement.",
+    "st22__unsafe_output_handling": "all",
+    "st22__unsafe_output_handling__evidence": "Notice control file RN-07 record for unsafe_output_handling (22), tested 12 March 2026, owner: traffic supervisor. The record supports the selected statement.",
+    "st22f": "tested",
+    "st22f__evidence": "Notice control file RN-07 record for 22f, tested 12 March 2026, owner: traffic supervisor. The record supports the selected statement.",
+    "st23a": "yearly",
+    "st23a__evidence": "Notice control file RN-07 record for 23a, tested 12 March 2026, owner: traffic supervisor. The record supports the selected statement.",
+    "st23b": "set",
+    "st23b__evidence": "Notice control file RN-07 record for 23b, tested 12 March 2026, owner: traffic supervisor. The record supports the selected statement.",
+    "st23c": "told",
+    "st24a": "all_four",
+    "st24b": "full"
+  }
+}

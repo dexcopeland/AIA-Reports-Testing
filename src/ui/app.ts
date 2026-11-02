@@ -1,13 +1,14 @@
 import { SECTIONS, visibleFields, type Field, type FormSection } from "../content/form";
 import { CONTRACT_TERMS, GROUPS, RELATIONS, STATEMENT_BY_ID, THREATS } from "../content/statements";
 import { displayedSamePlace, threatApplies } from "../engine/visibility";
-import { FORM_VERSION, RULES_VERSION, SCHEMA_VERSION, type AnswerFile, type AnswerValue } from "../content/types";
+import { FORM_VERSION, RULES_VERSION, SCHEMA_VERSION, type AnswerValue } from "../content/types";
 import type { Answers } from "../engine/answers";
 import { many, text } from "../engine/answers";
 import { buildReport } from "../engine/report";
 import { downloadBlob, reportToDocxBlob } from "../docx/build-docx";
 import { reportToPdfBlob } from "../pdf/build-pdf";
 import { renderReport } from "./report-view";
+import { exampleIndex, loadExampleFile } from "../examples/load";
 import { autoload, autosave, clearAutosave, downloadJson, emptyFile, normalizeFile } from "./storage";
 
 const ROLE_WORDS = ["officer", "lead", "manager", "supervisor", "director", "analyst", "specialist", "coordinator", "chief", "admin", "counsel", "owner"];
@@ -20,8 +21,10 @@ export function mount(root: Element): void {
   let sectionIndex = 0;
   let saveNote = "Nothing is stored on a server.";
   let formError = "";
+  let dirty = false;
 
   const redraw = (opts?: { restoreId?: string }) => {
+    renderChrome();
     root.replaceChildren();
     if (screen === "home") root.append(renderHome());
     else if (screen === "form") root.append(renderForm());
@@ -30,6 +33,7 @@ export function mount(root: Element): void {
       const next = root.querySelector(`[id="${CSS.escape(opts.restoreId)}"]`);
       if (next instanceof HTMLElement) next.focus();
     }
+    requestAnimationFrame(syncHeaderOffset);
   };
 
   const touch = () => {
@@ -43,40 +47,51 @@ export function mount(root: Element): void {
     if (live) live.textContent = saveNote;
   };
 
+  const syncSaveButton = () => {
+    const save = document.querySelector("#save-draft");
+    if (save instanceof HTMLButtonElement) save.disabled = Object.keys(file.answers).length === 0;
+  };
+
   const setAnswer = (key: string, value: AnswerValue) => {
     file.answers[key] = value;
     file.example = false;
     touch();
+    dirty = true;
+    syncSaveButton();
   };
 
   function renderHome(): HTMLElement {
     const box = document.createElement("div");
     const saved = autoload();
-    box.append(el("h2", "Start an assessment"));
+    const heading = el("h2", "Start an assessment");
+    heading.id = "section-heading";
+    heading.tabIndex = -1;
+    box.append(heading);
     box.append(el("p", "Work section by section. You can save a JSON file and load it later on this computer. The draft report is for DoIT AI Governance review."));
     const actions = document.createElement("div");
     actions.className = "row";
     actions.append(button("Start a new assessment", () => {
       file = emptyFile();
       clearAutosave();
+      dirty = false;
       sectionIndex = 0;
+      saveNote = "Nothing is stored on a server.";
       screen = "form";
       redraw();
+      focusHeading();
     }));
     if (saved && Object.keys(saved.answers).length > 0) {
       actions.append(button("Continue saved draft", () => {
         file = saved;
+        dirty = false;
+        sectionIndex = 0;
         screen = "form";
         redraw();
+        focusHeading();
       }, "secondary"));
     }
-    actions.append(button("Load an example", () => {
-      file = exampleFile();
-      touch();
-      screen = "form";
-      redraw();
-    }, "secondary"));
     box.append(actions);
+    box.append(renderExamplePicker());
     box.append(loadControl());
     return box;
   }
@@ -84,38 +99,6 @@ export function mount(root: Element): void {
   function renderForm(): HTMLElement {
     const box = document.createElement("div");
     const section = SECTIONS[sectionIndex];
-    const done = SECTIONS.filter((item) => missing(item, file.answers).length === 0).length;
-    const progress = document.createElement("div");
-    progress.className = "no-print";
-    const bar = document.createElement("progress");
-    bar.max = SECTIONS.length;
-    bar.value = sectionIndex + 1;
-    bar.setAttribute("aria-valuemin", "1");
-    bar.setAttribute("aria-valuemax", String(SECTIONS.length));
-    bar.setAttribute("aria-valuenow", String(sectionIndex + 1));
-    bar.setAttribute("aria-valuetext", `Section ${sectionIndex + 1} of ${SECTIONS.length}. ${done} sections have no blank required answers.`);
-    progress.append(bar);
-    const nav = document.createElement("ol");
-    nav.className = "steps";
-    nav.setAttribute("aria-label", "Sections");
-    SECTIONS.forEach((item, index) => {
-      const li = document.createElement("li");
-      const b = document.createElement("button");
-      b.type = "button";
-      b.textContent = `${index + 1}. ${item.title.replace("Section ", "").replace(/^\d+: /, "")}`;
-      if (index === sectionIndex) b.setAttribute("aria-current", "step");
-      b.addEventListener("click", () => {
-        sectionIndex = index;
-        formError = "";
-        redraw();
-        focusHeading();
-      });
-      li.append(b);
-      nav.append(li);
-    });
-    progress.append(nav);
-    box.append(progress);
-
     const card = document.createElement("div");
     card.className = "card";
     const heading = el("h2", section.title);
@@ -141,7 +124,6 @@ export function mount(root: Element): void {
     actions.className = "row";
     if (sectionIndex > 0) actions.append(button("Back", () => { sectionIndex -= 1; formError = ""; redraw(); focusHeading(); }, "secondary"));
     actions.append(button(sectionIndex === SECTIONS.length - 1 ? "Review and create draft" : "Save and continue", () => goNext()));
-    actions.append(button("Save JSON file", () => { touch(); downloadJson(file); }, "secondary"));
     form.append(actions);
     card.append(form);
     const status = el("p", saveNote);
@@ -196,8 +178,7 @@ export function mount(root: Element): void {
     }
     const actions = document.createElement("div");
     actions.className = "row no-print";
-    actions.append(button("Back to answers", () => { screen = "form"; redraw(); }, "secondary"));
-    actions.append(button("Save JSON file", () => downloadJson(file), "secondary"));
+    actions.append(button("Back to answers", () => { screen = "form"; redraw(); focusHeading(); }, "secondary"));
     const exportNote = el("p", "");
     exportNote.className = "status";
     exportNote.setAttribute("aria-live", "polite");
@@ -510,6 +491,8 @@ export function mount(root: Element): void {
         try {
           file = normalizeFile(JSON.parse(String(reader.result)));
           touch();
+          dirty = false;
+          sectionIndex = 0;
           screen = "form";
           message.textContent = "File loaded.";
           redraw();
@@ -543,10 +526,206 @@ export function mount(root: Element): void {
     if (heading instanceof HTMLElement) heading.focus();
   }
 
+  function saveDraft(): void {
+    touch();
+    downloadJson(file);
+    dirty = false;
+    saveNote = "Draft file downloaded.";
+    const pageStatus = root.querySelector("#save-status");
+    if (pageStatus) pageStatus.textContent = saveNote;
+    const headerStatus = document.querySelector("#header-save-status");
+    if (headerStatus) headerStatus.textContent = saveNote;
+  }
+
+  function finishHome(message?: string): void {
+    screen = "home";
+    formError = "";
+    redraw();
+    if (message) {
+      const headerStatus = document.querySelector("#header-save-status");
+      if (headerStatus) headerStatus.textContent = message;
+    }
+    focusHeading();
+  }
+
+  function requestHome(): void {
+    if (screen !== "home" && dirty) {
+      const dialog = document.querySelector("#leave-dialog");
+      if (dialog instanceof HTMLDialogElement && !dialog.open) dialog.showModal();
+      return;
+    }
+    finishHome();
+  }
+
+  function renderChrome(): void {
+    const actions = document.querySelector("#header-actions");
+    const progress = document.querySelector("#header-progress");
+    if (!(actions instanceof HTMLElement) || !(progress instanceof HTMLElement)) return;
+    actions.replaceChildren();
+    const home = button("Home", requestHome, "secondary");
+    home.id = "go-home";
+    if (screen === "home") home.disabled = true;
+    const save = button("Save draft", () => {
+      saveDraft();
+    });
+    save.id = "save-draft";
+    save.disabled = Object.keys(file.answers).length === 0;
+    const live = document.createElement("p");
+    live.id = "header-save-status";
+    live.className = "visually-hidden";
+    live.setAttribute("aria-live", "polite");
+    actions.append(home, save, live);
+    renderProgress(progress);
+  }
+
+  function renderProgress(host: HTMLElement): void {
+    host.replaceChildren();
+    if (screen === "home") {
+      host.hidden = true;
+      return;
+    }
+    host.hidden = false;
+    const wrap = document.createElement("div");
+    wrap.className = "wrap";
+    const done = SECTIONS.filter((item) => missing(item, file.answers).length === 0).length;
+    const shown = screen === "report" ? SECTIONS.length : sectionIndex + 1;
+    const bar = document.createElement("progress");
+    bar.max = SECTIONS.length;
+    bar.value = shown;
+    bar.setAttribute("aria-valuemin", "1");
+    bar.setAttribute("aria-valuemax", String(SECTIONS.length));
+    bar.setAttribute("aria-valuenow", String(shown));
+    bar.setAttribute("aria-valuetext", screen === "report"
+      ? `Draft report. ${done} sections have no blank required answers.`
+      : `Section ${sectionIndex + 1} of ${SECTIONS.length}. ${done} sections have no blank required answers.`);
+    const nav = document.createElement("ol");
+    nav.className = "steps";
+    nav.setAttribute("aria-label", "Sections");
+    SECTIONS.forEach((item, index) => {
+      const li = document.createElement("li");
+      const step = document.createElement("button");
+      step.type = "button";
+      step.textContent = `${index + 1}. ${item.title.replace("Section ", "").replace(/^\d+: /, "")}`;
+      if (screen === "form" && index === sectionIndex) step.setAttribute("aria-current", "step");
+      step.addEventListener("click", () => {
+        sectionIndex = index;
+        formError = "";
+        screen = "form";
+        redraw();
+        focusHeading();
+      });
+      li.append(step);
+      nav.append(li);
+    });
+    if (screen === "report") {
+      const li = document.createElement("li");
+      const step = document.createElement("button");
+      step.type = "button";
+      step.textContent = "Report";
+      step.setAttribute("aria-current", "step");
+      li.append(step);
+      nav.append(li);
+    }
+    wrap.append(bar, nav);
+    host.append(wrap);
+    requestAnimationFrame(() => {
+      const current = nav.querySelector("[aria-current='step']");
+      if (current instanceof HTMLElement) nav.scrollLeft = Math.max(0, current.offsetLeft - 8);
+    });
+  }
+
+  function renderExamplePicker(): HTMLElement {
+    const card = document.createElement("div");
+    card.className = "card example-picker";
+    const label = document.createElement("label");
+    label.htmlFor = "example-select";
+    label.textContent = "Load an example";
+    const select = document.createElement("select");
+    select.id = "example-select";
+    select.name = "example";
+    select.className = "example-select";
+    const rich = CSS.supports("appearance", "base-select");
+    const placeholder = document.createElement("option");
+    placeholder.value = "";
+    placeholder.textContent = "Choose an example";
+    placeholder.disabled = true;
+    placeholder.selected = true;
+    select.append(placeholder);
+    for (const group of exampleIndex.groups) {
+      const optgroup = document.createElement("optgroup");
+      optgroup.label = group.label;
+      for (const item of group.examples) {
+        const option = document.createElement("option");
+        option.value = item.id;
+        if (rich) {
+          const title = document.createElement("span");
+          title.className = "opt-title";
+          title.textContent = item.title;
+          const desc = document.createElement("span");
+          desc.className = "opt-desc";
+          desc.textContent = item.description;
+          option.append(title, desc);
+          option.setAttribute("aria-label", `${item.title}. ${item.description}`);
+        } else {
+          option.textContent = `${item.title} — ${item.description}`;
+        }
+        optgroup.append(option);
+      }
+      select.append(optgroup);
+    }
+    if (rich) {
+      const trigger = document.createElement("button");
+      trigger.type = "button";
+      trigger.append(document.createElement("selectedcontent"));
+      select.prepend(trigger);
+    }
+    const blurb = document.createElement("p");
+    blurb.id = "example-description";
+    blurb.className = "help";
+    blurb.setAttribute("aria-live", "polite");
+    select.setAttribute("aria-describedby", "example-description");
+    const load = button("Load this example", () => {
+      const entry = exampleIndex.groups.flatMap((group) => group.examples).find((item) => item.id === select.value);
+      if (!entry) return;
+      file = loadExampleFile(entry.file);
+      touch();
+      dirty = false;
+      sectionIndex = 0;
+      formError = "";
+      saveNote = "Example loaded. Saved in this browser.";
+      screen = "form";
+      redraw();
+      focusHeading();
+    });
+    load.id = "load-example";
+    load.disabled = true;
+    select.addEventListener("change", () => {
+      const entry = exampleIndex.groups.flatMap((group) => group.examples).find((item) => item.id === select.value);
+      blurb.textContent = entry?.description ?? "";
+      load.disabled = !entry;
+    });
+    card.append(label, select, blurb, load);
+    return card;
+  }
+
+  const leaveDialog = document.querySelector("#leave-dialog");
+  if (leaveDialog instanceof HTMLDialogElement) {
+    leaveDialog.addEventListener("close", () => {
+      const choice = leaveDialog.returnValue;
+      leaveDialog.returnValue = "";
+      if (choice === "save") {
+        saveDraft();
+        finishHome("Draft file downloaded.");
+        return;
+      }
+      if (choice === "leave") finishHome();
+    });
+  }
+
   redraw();
 }
 
-function missing(section: FormSection, answers: Answers): string[] {
+export function missing(section: FormSection, answers: Answers): string[] {
   const blanks: string[] = [];
   for (const field of visibleFields(section, answers)) {
     if (!field.required || field.type === "info") continue;
@@ -616,103 +795,9 @@ function button(label: string, onClick: () => void, kind?: "secondary"): HTMLBut
   return node;
 }
 
-function exampleFile(): AnswerFile {
-  const answers: Answers = {
-    response_id: "EXAMPLE-S01",
-    q1_intake: "EXAMPLE-HR-2026-S01",
-    q2_agency: "Maryland Department of Small Business Standards (fictional)",
-    q2_unit: "Grant outreach unit (fictional)",
-    q2_role: "Agency Lead",
-    q3_is_lead: "yes",
-    q4_name: "OutreachMap Grant Outreach Ranker (fictional)",
-    q5_builder: "vendor_product",
-    q5_vendor: "Example Vendor (fictional)",
-    q5_product: "OutreachMap",
-    q5_version: "1.0-example",
-    q5_changes: "None",
-    q6_capabilities: ["ranks"],
-    q6_design_facts: ["no_free_text_input", "no_personal_info", "public_inputs_only"],
-    q6_method: "statistical",
-    q6_hosting: "state_data_center",
-    q6_description: "Example: ranks ZIP codes for grant outreach from public census data. Staff decide where to send outreach. Fictional system.",
-    q7_purpose: "Example: help staff choose ZIP codes for small-business grant outreach. Today staff pick counties by hand. Fictional purpose.",
-    q7b_prohibited: ["none"],
-    q8_areas: ["benefits_services"],
-    q8_target: "places_or_groups",
-    q8_how: "It ranks places for outreach. It does not decide a grant.",
-    q9_groups: ["businesses"],
-    q9_rel__businesses: "affected_in_general",
-    q10_role: "recommends",
-    q11_reviewer: "Grants outreach manager",
-    q12_outside: "yes",
-    q13_level: "L1",
-    q14_data_types: ["public_data"],
-    q14_overlays: ["none"],
-    q14_sources: "Public census tables (example).",
-    q15_where: "state_data_center",
-    q16_assurances: ["soc2"],
-    q16_cert_scope: "yes",
-    q17_status: "live",
-    q18_procured: "before_2026_02_01",
-    q19_start: "2025-09-01",
-    q19_prior: "yes",
-    q20_harm: "Example: a low rank could steer outreach away from a community that was underserved in the source data. The cost falls on those businesses.",
-    q20_types: ["bias_harm", "missed_service"],
-    q23_monitor: "Program manager",
-    q23_incident: "Agency information security",
-    q23_reassess: "Agency Lead",
-    q25_confirm: ["confirm"],
-  };
-  const evidence = "Example agency file shows the control for this fictional assessment.";
-  const strong: Record<string, string> = {
-    st11a: "every_written",
-    st11b: "both",
-    st11c: "every",
-    st11d: "full",
-    st12a: "at_decision",
-    st12b: "set_path",
-    st12c: "reviewed",
-    st12e__businesses: "fits",
-    st14a: "scheduled",
-    st14b: "logged",
-    st15b: "controls",
-    st15d: "on_schedule",
-    st16a: "banned",
-    st16b__responsibilities: "signed",
-    st16b__model_change_notice: "signed",
-    st16b__incident_notice: "signed",
-    st20a: "written",
-    st21a: "recorded",
-    st21b: "audited",
-    st21c: "threshold",
-    st21d: "full",
-    st21e: "both",
-    st22__prompt_injection: "does_not_apply",
-    st22__poisoned_data: "all",
-    st22__model_theft: "all",
-    st22__output_leakage: "does_not_apply",
-    st22__unsafe_output_handling: "all",
-    st22f: "tested",
-    st23a: "yearly",
-    st23b: "set",
-    st23c: "told",
-    st24a: "all_four",
-    st24b: "full",
-  };
-  Object.assign(answers, strong);
-  for (const key of Object.keys(strong)) {
-    const defId = key.startsWith("st22__") ? "22" : key.startsWith("st16b__") ? "16b" : key.startsWith("st12e__") ? "12e" : key.replace(/^st/, "");
-    const def = STATEMENT_BY_ID[defId];
-    const choice = def?.choices.find((item) => item.value === strong[key]);
-    if (choice?.asks === "evidence") answers[`${key}__evidence`] = evidence;
+function syncHeaderOffset(): void {
+  const header = document.querySelector("#site-header");
+  if (header instanceof HTMLElement) {
+    document.documentElement.style.setProperty("--sticky-header-height", `${header.offsetHeight}px`);
   }
-  return {
-    schema_version: SCHEMA_VERSION,
-    form_version: FORM_VERSION,
-    rules_version: RULES_VERSION,
-    saved_at: new Date().toISOString(),
-    example: true,
-    example_label: "Example data. Fictional agency and AI system, shaped like synthetic scenario S01. Not a real assessment.",
-    answers,
-  };
 }

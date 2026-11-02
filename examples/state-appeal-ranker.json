@@ -1,0 +1,106 @@
+{
+  "schema_version": "1.0.0",
+  "form_version": "v2-structured-1.0.0",
+  "rules_version": "1.2.0",
+  "saved_at": "2026-11-02T00:00:00.000Z",
+  "example": true,
+  "example_label": "Example data. Fictional agency and AI system. Not a real assessment.",
+  "answers": {
+    "response_id": "EXAMPLE-state-appeal-ranker",
+    "q1_intake": "",
+    "q2_agency": "Maryland Appeals Ranking Unit (fictional)",
+    "q2_unit": "Appeals intake unit (fictional)",
+    "q2_role": "Agency Lead",
+    "q3_is_lead": "yes",
+    "q4_name": "Benefits Appeal Ranker (fictional)",
+    "q5_changes": "Not recorded.",
+    "q7b_prohibited": [
+      "none"
+    ],
+    "q9_other": "",
+    "q15_same_place": "no",
+    "q20_types": [
+      "unknown"
+    ],
+    "q23_monitor": "",
+    "q23_incident": "",
+    "q23_reassess": "",
+    "q25_confirm": [
+      "confirm"
+    ],
+    "q5_builder": "state_built",
+    "q6_capabilities": [
+      "unknown"
+    ],
+    "q6_design_facts": [
+      "none_of_these"
+    ],
+    "q6_method": "unknown",
+    "q6_hosting": "unknown",
+    "q6_description": "It ranks appeals.",
+    "q7_purpose": "Faster appeals.",
+    "q8_areas": [
+      "benefits_services",
+      "money_legal_rights"
+    ],
+    "q8_target": "individuals",
+    "q8_how": "",
+    "q9_groups": [
+      "low_income",
+      "disabilities"
+    ],
+    "q9_rel__low_income": "acted_on_individually",
+    "q9_rel__disabilities": "acted_on_individually",
+    "q10_role": "decides",
+    "q11_reviewer": "Unknown",
+    "q12_outside": "yes",
+    "q13_level": "unknown",
+    "q14_data_types": [
+      "personal_info"
+    ],
+    "q14_overlays": [
+      "unknown"
+    ],
+    "q14_sources": "",
+    "q15_where": "unknown",
+    "q17_status": "planning",
+    "q19_start": "2025-11-01",
+    "q19_prior": "no",
+    "q20_harm": "The office has not written what could go wrong.",
+    "st11a": "every_written",
+    "st11a__evidence": "done",
+    "st11b": "unknown",
+    "st11c": "unknown",
+    "st11d": "unknown",
+    "st12a": "unknown",
+    "st12b": "unknown",
+    "st12c": "unknown",
+    "st12e__low_income": "unknown",
+    "st12e__disabilities": "unknown",
+    "st14a": "unknown",
+    "st14b": "unknown",
+    "st15a": "unknown",
+    "st15b": "controls",
+    "st15b__evidence": "see above",
+    "st15c": "unknown",
+    "st15d": "unknown",
+    "st20a": "unknown",
+    "st21a": "recorded",
+    "st21a__evidence": "",
+    "st21b": "unknown",
+    "st21c": "unknown",
+    "st21d": "unknown",
+    "st21e": "unknown",
+    "st22__prompt_injection": "unknown",
+    "st22__poisoned_data": "unknown",
+    "st22__model_theft": "unknown",
+    "st22__output_leakage": "unknown",
+    "st22__unsafe_output_handling": "unknown",
+    "st22f": "unknown",
+    "st23a": "unknown",
+    "st23b": "unknown",
+    "st23c": "unknown",
+    "st24a": "unknown",
+    "st24b": "unknown"
+  }
+}

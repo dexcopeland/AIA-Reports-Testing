@@ -71,13 +71,25 @@ function reason(result: Evaluation): string {
   return "The single most important reason is that intake found this system High-risk, so yearly monitoring stays in place.";
 }
 
+/** Rights or safety under § 3.5-801. Benefits is inside the rights area list. */
+function humanImpact(result: Evaluation): boolean {
+  return result.area.rights || result.area.safety;
+}
+
 function outcomeSentence(result: Evaluation): string {
   const checks = [...result.criteria, ...result.rp];
   const failed = checks.some((item) => actionKind(item.status) === "fail");
   const partial = checks.some((item) => actionKind(item.status) === "partial");
   const openMitigation = result.mitigations.some((item) => item.id !== "M-ONGOING");
-  const highRisk = result.prohibited || failed || result.statusConflict || Boolean(result.priorDeployment);
-  const conditions = partial || openMitigation || result.speech || result.crossChecks.length > 0 || !result.attestation || result.followups.length > 0;
+  // High-risk routing follows a prohibited use, a deployment fact, or an open
+  // safeguard on a rights- or safety-impacting use. A Gap or Not yet on a use
+  // that is neither does not, by itself, decide High. G1–G7 are reported from
+  // those same impact answers and are not a second High switch.
+  const highRisk = result.prohibited
+    || result.statusConflict
+    || Boolean(result.priorDeployment)
+    || (failed && humanImpact(result));
+  const conditions = failed || partial || openMitigation || result.speech || result.crossChecks.length > 0 || !result.attestation || result.followups.length > 0;
   if (highRisk) return "The outcome is high-risk routing.";
   if (conditions) return "The outcome is ready only with conditions.";
   return "The outcome is that the coded safeguards are in place, and this draft does not authorize use.";

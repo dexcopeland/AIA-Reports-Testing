@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { APPROVAL_BANNED } from "../src/content/rules";
+import { buildBluf } from "../src/engine/bluf";
+import { evaluate } from "../src/engine/evaluate";
 import { buildReport } from "../src/engine/report";
+import { loadExampleFile } from "../src/examples/load";
 import { buildScenario } from "../src/scenarios/build";
 import { SCENARIOS } from "../src/scenarios/catalog";
 
@@ -56,6 +59,25 @@ describe("bottom line up front", () => {
     const anchors = new Set(report.blocks.map((block) => block.anchor).filter(Boolean));
     for (const step of steps) expect(anchors.has(step.link)).toBe(true);
     expect(bluf.some((block) => block.text === "No follow-up step is open.")).toBe(false);
+  });
+
+  it("keeps a non-rights, non-safety use with open safeguards off high-risk routing", () => {
+    for (const id of ["state-park-schedule", "vendor-library-forecast"]) {
+      const file = loadExampleFile(`${id}.json`);
+      const result = evaluate(file);
+      expect(result.area.rights).toBe(false);
+      expect(result.area.safety).toBe(false);
+      expect(result.prohibited).toBe(false);
+      expect(result.criteria.some((item) => item.status === "Gap") || result.rp.some((item) => item.status === "Not yet")).toBe(true);
+      expect(buildBluf(result).sentences[0]).toBe("The outcome is ready only with conditions.");
+      expect(buildBluf(result).steps.length).toBeGreaterThan(0);
+
+      const impacted = structuredClone(file);
+      impacted.answers = { ...file.answers, q8_areas: ["benefits_services"] };
+      const routed = evaluate(impacted);
+      expect(routed.area.rights).toBe(true);
+      expect(buildBluf(routed).sentences[0]).toBe("The outcome is high-risk routing.");
+    }
   });
 
   it("uses high-risk routing for a prohibited use without approval language", () => {

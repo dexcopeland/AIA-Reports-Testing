@@ -1,0 +1,114 @@
+{
+  "schema_version": "1.0.0",
+  "form_version": "v2-structured-1.0.0",
+  "rules_version": "1.2.0",
+  "saved_at": "2026-11-02T00:00:00.000Z",
+  "example": true,
+  "example_label": "Example data. Fictional agency and AI system. Not a real assessment.",
+  "answers": {
+    "response_id": "EXAMPLE-vendor-license-score",
+    "q1_intake": "",
+    "q2_agency": "Maryland Trade License Review Desk (fictional)",
+    "q2_unit": "License review unit (fictional)",
+    "q2_role": "Agency Lead",
+    "q3_is_lead": "yes",
+    "q4_name": "Occupational License Score (fictional)",
+    "q5_changes": "Not recorded.",
+    "q7b_prohibited": [
+      "unknown"
+    ],
+    "q9_other": "",
+    "q15_same_place": "no",
+    "q20_types": [
+      "unknown"
+    ],
+    "q23_monitor": "",
+    "q23_incident": "",
+    "q23_reassess": "",
+    "q25_confirm": [
+      "confirm"
+    ],
+    "q5_builder": "vendor_product",
+    "q5_vendor": "Lantern Permit Software (fictional)",
+    "q5_product": "LicenseMark",
+    "q5_version": "unknown",
+    "q6_capabilities": [
+      "unknown"
+    ],
+    "q6_design_facts": [
+      "none_of_these"
+    ],
+    "q6_method": "unknown",
+    "q6_hosting": "unknown",
+    "q6_description": "It scores license files.",
+    "q7_purpose": "Faster licensing.",
+    "q8_areas": [
+      "money_legal_rights",
+      "jobs"
+    ],
+    "q8_target": "individuals",
+    "q8_how": "",
+    "q9_groups": [
+      "general_public"
+    ],
+    "q9_rel__general_public": "acted_on_individually",
+    "q10_role": "decides",
+    "q11_reviewer": "Unknown",
+    "q12_outside": "yes",
+    "q13_level": "unknown",
+    "q14_data_types": [
+      "payment",
+      "personal_info"
+    ],
+    "q14_overlays": [
+      "unknown"
+    ],
+    "q14_sources": "",
+    "q15_where": "unknown",
+    "q16_assurances": [
+      "unknown"
+    ],
+    "q17_status": "live",
+    "q18_procured": "unknown",
+    "q19_start": "2024-09-01",
+    "q19_prior": "unknown",
+    "q20_harm": "Not written down.",
+    "st11a": "none",
+    "st11b": "unknown",
+    "st11c": "unknown",
+    "st11d": "unknown",
+    "st12a": "unknown",
+    "st12b": "unknown",
+    "st12c": "unknown",
+    "st12e__general_public": "unknown",
+    "st14a": "unknown",
+    "st14b": "unknown",
+    "st15a": "unknown",
+    "st15b": "unknown",
+    "st15c": "unknown",
+    "st15d": "unknown",
+    "st16a": "banned",
+    "st16a__evidence": "done",
+    "st16b__responsibilities": "unknown",
+    "st16b__model_change_notice": "unknown",
+    "st16b__incident_notice": "unknown",
+    "st20a": "unknown",
+    "st21a": "unknown",
+    "st21b": "audited",
+    "st21b__evidence": "ok",
+    "st21c": "unknown",
+    "st21d": "unknown",
+    "st21e": "unknown",
+    "st22__prompt_injection": "unknown",
+    "st22__poisoned_data": "unknown",
+    "st22__model_theft": "unknown",
+    "st22__output_leakage": "unknown",
+    "st22__unsafe_output_handling": "unknown",
+    "st22f": "unknown",
+    "st23a": "unknown",
+    "st23b": "unknown",
+    "st23c": "unknown",
+    "st24a": "unknown",
+    "st24b": "unknown"
+  }
+}
