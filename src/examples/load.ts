@@ -26,5 +26,6 @@ const modules = import.meta.glob("../../examples/*.json", { eager: true, import:
 export function loadExampleFile(fileName: string): AnswerFile {
   const key = Object.keys(modules).find((item) => item.endsWith(`/${fileName}`));
   if (!key) throw new Error(`Missing example file ${fileName}.`);
-  return normalizeFile(modules[key]);
+  // The JSON import is cached. Copy it before normalizeFile shares the answers object.
+  return normalizeFile(structuredClone(modules[key]));
 }
