@@ -75,7 +75,7 @@ describe("loadable examples", () => {
       expect(rows[2].c1).toBe("Impact: No");
       expect(rows[2].c2).toBe("Impact: No");
       expect(rows[2].c3).toBe("Impact: No");
-      expect(rows[2].outcome).toContain("high-risk routing");
+      expect(rows[2].outcome).toContain("ready only with conditions");
       expect(rows[4].outcome).toContain("high-risk routing");
       expect(new Set(rows.map((row) => row.reason)).size).toBe(rows.length);
       expect(rows[0].c1 === "Impact: Yes" || rows[0].c2 === "Impact: Yes" || rows[0].c3 === "Impact: Yes").toBe(true);
