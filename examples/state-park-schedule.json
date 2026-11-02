@@ -1,0 +1,122 @@
+{
+  "schema_version": "1.0.0",
+  "form_version": "v2-structured-1.0.0",
+  "rules_version": "1.2.0",
+  "saved_at": "2026-11-02T00:00:00.000Z",
+  "example": true,
+  "example_label": "Example data. Fictional agency and AI system. Not a real assessment.",
+  "answers": {
+    "response_id": "EXAMPLE-state-park-schedule",
+    "q1_intake": "EXAMPLE-HR-2026-state-park-schedule",
+    "q2_agency": "Maryland Civic Grounds Office (fictional)",
+    "q2_unit": "Park maintenance unit (fictional)",
+    "q2_role": "Agency Lead",
+    "q3_is_lead": "yes",
+    "q4_name": "Park Mowing Schedule Helper (fictional)",
+    "q5_changes": "State staff loaded public park maps. No vendor and no outside model.",
+    "q7b_prohibited": [
+      "none"
+    ],
+    "q9_other": "",
+    "q15_same_place": "yes",
+    "q20_types": [
+      "missed_service"
+    ],
+    "q23_monitor": "program manager",
+    "q23_incident": "security specialist",
+    "q23_reassess": "Agency Lead",
+    "q25_confirm": [
+      "confirm"
+    ],
+    "q5_builder": "state_built",
+    "q6_capabilities": [
+      "ranks",
+      "predicts"
+    ],
+    "q6_design_facts": [
+      "no_free_text_input",
+      "no_personal_info",
+      "outputs_not_passed"
+    ],
+    "q6_method": "statistical",
+    "q6_hosting": "agency_network",
+    "q6_description": "The helper forecasts how long mowing will take on each park map and suggests a weekly order for crews. It runs on the agency network. A crew coordinator sets the real schedule. Fictional system.",
+    "q7_purpose": "Crew leads now build the weekly mowing order on a whiteboard. The helper proposes an order from acreage and season. It does not serve or deny a resident. Fictional purpose.",
+    "q8_areas": [
+      "regulatory_inspection"
+    ],
+    "q8_target": "places_or_groups",
+    "q8_how": "It orders park maps for routine grounds checks. It does not decide a case.",
+    "q9_groups": [
+      "state_employees",
+      "general_public"
+    ],
+    "q9_rel__state_employees": "uses_system",
+    "q9_rel__general_public": "affected_in_general",
+    "q10_role": "recommends",
+    "q11_reviewer": "crew coordinator",
+    "q12_outside": "yes",
+    "q13_level": "L2",
+    "q14_data_types": [
+      "internal_data"
+    ],
+    "q14_overlays": [
+      "none"
+    ],
+    "q14_sources": "Park boundary maps and crew schedules held by the park maintenance unit.",
+    "q17_status": "live",
+    "q19_start": "2025-08-04",
+    "q19_prior": "yes",
+    "q20_harm": "A bad forecast could send a crew to a small park first and leave a larger park late. The cost is staff time and a messier public park, not a decision about a person.",
+    "st11a": "every_written",
+    "st11a__evidence": "Grounds control file PG-03 record for 11a, tested 12 March 2026, owner: crew coordinator. The record supports the selected statement.",
+    "st11b": "both",
+    "st11b__evidence": "Grounds control file PG-03 record for 11b, tested 12 March 2026, owner: crew coordinator. The record supports the selected statement.",
+    "st11c": "every",
+    "st11c__evidence": "Grounds control file PG-03 record for 11c, tested 12 March 2026, owner: crew coordinator. The record supports the selected statement.",
+    "st11d": "full",
+    "st11d__evidence": "Grounds control file PG-03 record for 11d, tested 12 March 2026, owner: crew coordinator. The record supports the selected statement.",
+    "st12a": "at_decision",
+    "st12a__evidence": "Grounds control file PG-03 record for 12a, tested 12 March 2026, owner: crew coordinator. The record supports the selected statement.",
+    "st12b": "set_path",
+    "st12b__evidence": "Grounds control file PG-03 record for 12b, tested 12 March 2026, owner: crew coordinator. The record supports the selected statement.",
+    "st12c": "reviewed",
+    "st12c__evidence": "Grounds control file PG-03 record for 12c, tested 12 March 2026, owner: crew coordinator. The record supports the selected statement.",
+    "st12e__state_employees": "fits",
+    "st12e__general_public": "fits",
+    "st14a": "scheduled",
+    "st14a__evidence": "Grounds control file PG-03 record for 14a, tested 12 March 2026, owner: crew coordinator. The record supports the selected statement.",
+    "st14b": "logged",
+    "st14b__evidence": "Grounds control file PG-03 record for 14b, tested 12 March 2026, owner: crew coordinator. The record supports the selected statement.",
+    "st15a": "one",
+    "st15b": "controls",
+    "st15b__evidence": "Grounds control file PG-03 record for 15b, tested 12 March 2026, owner: crew coordinator. The record supports the selected statement.",
+    "st15d": "on_schedule",
+    "st20a": "written",
+    "st21a": "recorded",
+    "st21a__evidence": "Grounds control file PG-03 record for 21a, tested 12 March 2026, owner: crew coordinator. The record supports the selected statement.",
+    "st21b": "none",
+    "st21c": "none",
+    "st21d": "full",
+    "st21d__evidence": "Grounds control file PG-03 record for 21d, tested 12 March 2026, owner: crew coordinator. The record supports the selected statement.",
+    "st21e": "both",
+    "st21e__evidence": "Grounds control file PG-03 record for 21e, tested 12 March 2026, owner: crew coordinator. The record supports the selected statement.",
+    "st22__prompt_injection": "all",
+    "st22__prompt_injection__evidence": "Grounds control file PG-03 record for prompt_injection (22), tested 12 March 2026, owner: crew coordinator. The record supports the selected statement.",
+    "st22__poisoned_data": "all",
+    "st22__poisoned_data__evidence": "Grounds control file PG-03 record for poisoned_data (22), tested 12 March 2026, owner: crew coordinator. The record supports the selected statement.",
+    "st22__model_theft": "all",
+    "st22__model_theft__evidence": "Grounds control file PG-03 record for model_theft (22), tested 12 March 2026, owner: crew coordinator. The record supports the selected statement.",
+    "st22__output_leakage": "all",
+    "st22__output_leakage__evidence": "Grounds control file PG-03 record for output_leakage (22), tested 12 March 2026, owner: crew coordinator. The record supports the selected statement.",
+    "st22__unsafe_output_handling": "all",
+    "st22__unsafe_output_handling__evidence": "Grounds control file PG-03 record for unsafe_output_handling (22), tested 12 March 2026, owner: crew coordinator. The record supports the selected statement.",
+    "st22f": "none",
+    "st23a": "yearly",
+    "st23a__evidence": "Grounds control file PG-03 record for 23a, tested 12 March 2026, owner: crew coordinator. The record supports the selected statement.",
+    "st23b": "none",
+    "st23c": "told",
+    "st24a": "all_four",
+    "st24b": "none"
+  }
+}

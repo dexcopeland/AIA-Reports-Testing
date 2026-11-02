@@ -9,12 +9,25 @@
   </head>
   <body>
     <a class="skip" href="#main">Skip to content</a>
-    <header class="site">
-      <div class="wrap">
-        <h1>Algorithmic Impact Assessment</h1>
-        <p>A draft for Maryland agencies. You answer in this browser. The report is built with fixed rules. Nothing is sent to a server.</p>
+    <header class="site" id="site-header">
+      <div class="wrap header-bar">
+        <div class="header-title">
+          <h1>Algorithmic Impact Assessment</h1>
+          <p class="header-lede">A draft for Maryland agencies. You answer in this browser. The report is built with fixed rules. Nothing is sent to a server.</p>
+        </div>
+        <div class="header-actions" id="header-actions"></div>
       </div>
+      <div class="header-progress" id="header-progress" hidden></div>
     </header>
+    <dialog id="leave-dialog" aria-labelledby="leave-title" aria-describedby="leave-desc">
+      <h2 id="leave-title">Save a draft before going home?</h2>
+      <p id="leave-desc">This assessment has changes since the last saved draft. You can download the draft first. The copy in this browser stays either way.</p>
+      <form method="dialog" class="row">
+        <button type="submit" value="save">Save draft</button>
+        <button type="submit" value="leave" class="secondary">Leave without saving</button>
+        <button type="submit" value="stay" autofocus class="secondary">Stay</button>
+      </form>
+    </dialog>
     <div class="banner">
       <div class="wrap">Draft for DoIT AI Governance review. This tool does not approve an AI system.</div>
     </div>

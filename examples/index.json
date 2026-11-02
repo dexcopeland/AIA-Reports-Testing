@@ -1,0 +1,76 @@
+{
+  "groups": [
+    {
+      "id": "state",
+      "label": "Built by the State",
+      "examples": [
+        {
+          "id": "state-subsidy-review",
+          "title": "Child-care subsidy review desk (state-built system)",
+          "description": "Staff use a state-built score to order child-care subsidy files before a supervisor decides.",
+          "file": "state-subsidy-review.json"
+        },
+        {
+          "id": "state-road-notice",
+          "title": "Road-closure notice drafter (state-built system)",
+          "description": "A state-built drafter proposes road-closure notices that a traffic supervisor edits before posting.",
+          "file": "state-road-notice.json"
+        },
+        {
+          "id": "state-park-schedule",
+          "title": "Park mowing schedule helper (state-built system)",
+          "description": "Crew leads use a state-built forecast of mowing time. It does not decide a service for a person.",
+          "file": "state-park-schedule.json"
+        },
+        {
+          "id": "state-visit-window",
+          "title": "Visitation window suggester (state-built system)",
+          "description": "A state-built scheduler, calling an outside model, suggests visitation windows for a custody supervisor to accept or change.",
+          "file": "state-visit-window.json"
+        },
+        {
+          "id": "state-appeal-ranker",
+          "title": "Benefits appeal ranker (state-built system)",
+          "description": "Appeal files are ranked by a state-built tool. The saved answers say planning, while a start date is already filled in, and most safeguards are blank.",
+          "file": "state-appeal-ranker.json"
+        }
+      ]
+    },
+    {
+      "id": "vendor",
+      "label": "A vendor product",
+      "examples": [
+        {
+          "id": "vendor-eligibility-triage",
+          "title": "Benefits eligibility triage (vendor product)",
+          "description": "Eligibility staff review a vendor score before any benefit file moves forward.",
+          "file": "vendor-eligibility-triage.json"
+        },
+        {
+          "id": "vendor-injury-summary",
+          "title": "Workplace injury summary assistant (vendor product)",
+          "description": "An agency-extended vendor assistant drafts injury summaries that a safety reviewer checks.",
+          "file": "vendor-injury-summary.json"
+        },
+        {
+          "id": "vendor-library-forecast",
+          "title": "Library hold-time forecast (vendor product)",
+          "description": "Branch leads see a vendor forecast of how long a hold might take. No case decision is made.",
+          "file": "vendor-library-forecast.json"
+        },
+        {
+          "id": "vendor-waitlist",
+          "title": "Rental assistance waitlist sorter (vendor product)",
+          "description": "A vendor product sorts rental-assistance applicants. Review covers a sample, and several controls are still open.",
+          "file": "vendor-waitlist.json"
+        },
+        {
+          "id": "vendor-license-score",
+          "title": "Occupational license score (vendor product)",
+          "description": "A vendor score can hold up a license file. Review, data level, and procurement timing are not determined.",
+          "file": "vendor-license-score.json"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,126 @@
+{
+  "schema_version": "1.0.0",
+  "form_version": "v2-structured-1.0.0",
+  "rules_version": "1.2.0",
+  "saved_at": "2026-11-02T00:00:00.000Z",
+  "example": true,
+  "example_label": "Example data. Fictional agency and AI system. Not a real assessment.",
+  "answers": {
+    "response_id": "EXAMPLE-state-visit-window",
+    "q1_intake": "EXAMPLE-HR-2026-state-visit-window",
+    "q2_agency": "Maryland Custody Scheduling Desk (fictional)",
+    "q2_unit": "Visitation unit (fictional)",
+    "q2_role": "Agency Lead",
+    "q3_is_lead": "yes",
+    "q4_name": "Visitation Window Suggester (fictional)",
+    "q5_changes": "State staff added the visitation form. The text comes from an outside hosted model.",
+    "q7b_prohibited": [
+      "none"
+    ],
+    "q9_other": "",
+    "q15_same_place": "yes",
+    "q20_types": [
+      "rights_harm",
+      "wrong_decision"
+    ],
+    "q23_monitor": "program manager",
+    "q23_incident": "security specialist",
+    "q23_reassess": "Agency Lead",
+    "q25_confirm": [
+      "confirm"
+    ],
+    "q5_builder": "state_built_outside_model",
+    "q5_vendor": "Summit Hosted Models (fictional)",
+    "q5_product": "VisitDraft API",
+    "q5_version": "2026.2-example",
+    "q6_capabilities": [
+      "generates_text",
+      "ranks"
+    ],
+    "q6_design_facts": [
+      "outputs_not_passed"
+    ],
+    "q6_method": "llm",
+    "q6_hosting": "vendor_cloud",
+    "q6_description": "The suggester reads a visitation request and proposes a window. It calls an outside hosted model and runs from that vendor cloud. A custody supervisor can accept or change the window. Fictional system.",
+    "q7_purpose": "Supervisors now pick windows from a shared calendar. The suggester proposes one so the queue moves faster. The supervisor is supposed to decide. Fictional purpose.",
+    "q8_areas": [
+      "policing_corrections_supervision",
+      "safety"
+    ],
+    "q8_target": "individuals",
+    "q8_how": "A suggested window can decide when a family visit happens.",
+    "q9_groups": [
+      "incarcerated",
+      "general_public"
+    ],
+    "q9_rel__incarcerated": "acted_on_individually",
+    "q9_rel__general_public": "acted_on_individually",
+    "q10_role": "decides",
+    "q11_reviewer": "custody supervisor",
+    "q12_outside": "yes",
+    "q13_level": "L4",
+    "q14_data_types": [
+      "criminal_justice"
+    ],
+    "q14_overlays": [
+      "CJIS"
+    ],
+    "q14_sources": "Visitation requests held by the visitation unit.",
+    "q16_assurances": [
+      "none"
+    ],
+    "q17_status": "live",
+    "q18_procured": "on_or_after_2026_02_01",
+    "q19_start": "2026-05-01",
+    "q19_prior": "no",
+    "q20_harm": "A wrong window could block a visit or crowd a room. Families and incarcerated people bear that cost. Several controls are still open.",
+    "st11a": "sample",
+    "st11b": "cannot",
+    "st11c": "none",
+    "st11d": "none",
+    "st12a": "none",
+    "st12b": "general",
+    "st12c": "none",
+    "st12e__incarcerated": "fits",
+    "st12e__general_public": "fits",
+    "st14a": "scheduled",
+    "st14a__evidence": "Custody control file VS-19 record for 14a, tested 12 March 2026, owner: custody supervisor. The record supports the selected statement.",
+    "st14b": "logged",
+    "st14b__evidence": "Custody control file VS-19 record for 14b, tested 12 March 2026, owner: custody supervisor. The record supports the selected statement.",
+    "st15a": "agency_only",
+    "st15b": "controls",
+    "st15b__evidence": "Custody control file VS-19 record for 15b, tested 12 March 2026, owner: custody supervisor. The record supports the selected statement.",
+    "st15c": "pta_progress",
+    "st15d": "on_schedule",
+    "st16a": "silent",
+    "st16b__responsibilities": "absent",
+    "st16b__model_change_notice": "absent",
+    "st16b__incident_notice": "absent",
+    "st20a": "talked",
+    "st21a": "vendor_only",
+    "st21b": "none",
+    "st21c": "none",
+    "st21d": "full",
+    "st21d__evidence": "Custody control file VS-19 record for 21d, tested 12 March 2026, owner: custody supervisor. The record supports the selected statement.",
+    "st21e": "both",
+    "st21e__evidence": "Custody control file VS-19 record for 21e, tested 12 March 2026, owner: custody supervisor. The record supports the selected statement.",
+    "st22__prompt_injection": "all",
+    "st22__prompt_injection__evidence": "Custody control file VS-19 record for prompt_injection (22), tested 12 March 2026, owner: custody supervisor. The record supports the selected statement.",
+    "st22__poisoned_data": "all",
+    "st22__poisoned_data__evidence": "Custody control file VS-19 record for poisoned_data (22), tested 12 March 2026, owner: custody supervisor. The record supports the selected statement.",
+    "st22__model_theft": "all",
+    "st22__model_theft__evidence": "Custody control file VS-19 record for model_theft (22), tested 12 March 2026, owner: custody supervisor. The record supports the selected statement.",
+    "st22__output_leakage": "all",
+    "st22__output_leakage__evidence": "Custody control file VS-19 record for output_leakage (22), tested 12 March 2026, owner: custody supervisor. The record supports the selected statement.",
+    "st22__unsafe_output_handling": "all",
+    "st22__unsafe_output_handling__evidence": "Custody control file VS-19 record for unsafe_output_handling (22), tested 12 March 2026, owner: custody supervisor. The record supports the selected statement.",
+    "st22f": "none",
+    "st23a": "none",
+    "st23b": "set",
+    "st23b__evidence": "Custody control file VS-19 record for 23b, tested 12 March 2026, owner: custody supervisor. The record supports the selected statement.",
+    "st23c": "told",
+    "st24a": "none",
+    "st24b": "none"
+  }
+}

@@ -24,13 +24,29 @@ const title = await page.title();
 if (!title.includes("Algorithmic Impact Assessment")) failures.push(`Unexpected title: ${title}`);
 await page.screenshot({ path: `${outDir}/01-home.png` });
 
-await page.click("button::-p-text(Load an example)");
+const sticky = await page.$eval("#site-header", (node) => getComputedStyle(node).position);
+if (sticky !== "sticky") failures.push(`Header is ${sticky}, expected sticky.`);
+const saveCount = await page.$$eval("header button", (nodes) => nodes.filter((node) => node.textContent === "Save draft").length);
+if (saveCount !== 1) failures.push(`Expected one Save draft button, found ${saveCount}.`);
+const saveInHeader = await page.$eval("#save-draft", (node) => Boolean(node.closest("header")));
+if (!saveInHeader) failures.push("Save draft is not in the header.");
+
+await page.select("#example-select", "vendor-eligibility-triage");
+await page.waitForFunction(() => {
+  const button = document.querySelector("#load-example");
+  return button instanceof HTMLButtonElement && !button.disabled;
+});
+const blurb = await page.$eval("#example-description", (node) => node.textContent);
+if (!blurb?.includes("Eligibility staff")) failures.push(`Example description missing: ${blurb}`);
+await page.click("#load-example");
 await page.waitForSelector("#section-heading");
 const section = await page.$eval("#section-heading", (node) => node.textContent);
 if (!section?.includes("About this request")) failures.push(`Unexpected section: ${section}`);
 
 const agency = await page.$eval("#q2_agency", (node) => node.value);
 if (!agency.includes("fictional")) failures.push("Example agency was not loaded.");
+const headerStuck = await page.$eval("#header-progress", (node) => !node.hidden && node.querySelector("progress") !== null);
+if (!headerStuck) failures.push("Progress is not in the sticky header.");
 await page.screenshot({ path: `${outDir}/02-example-section.png` });
 
 await page.click('button[aria-current="step"]');
@@ -49,7 +65,7 @@ if (!confirmed) failures.push("Example Q25 was not confirmed.");
 await page.click("button::-p-text(Review and create draft)");
 await page.waitForSelector("#report");
 const reportText = await page.$eval("#report", (node) => node.innerText);
-if (!reportText.includes("OutreachMap Grant Outreach Ranker (fictional)")) failures.push("Report title missing the example system.");
+if (!reportText.includes("Benefits Eligibility Triage (fictional)")) failures.push("Report title missing the example system.");
 if (!reportText.includes("Draft for DoIT AI Governance review.")) failures.push("Draft banner missing.");
 if (!reportText.includes("1 July 2027")) failures.push("Deadline missing from the example report.");
 if (reportText.includes("agency.lead@")) failures.push("An email leaked into the report.");

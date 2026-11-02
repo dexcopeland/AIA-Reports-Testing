@@ -9,7 +9,7 @@ It follows the shape of Canada's [AIA tool](https://github.com/canada-ca/aia-eia
 ## What an agency does
 
 1. Open the GitHub Pages site (or run it locally).
-2. Start a new assessment, or load an example. Examples are fictional and labeled.
+2. Start a new assessment, continue a saved draft, or load an example. The example list has ten fictional drafts, grouped as **Built by the State** and **A vendor product**. Each one is a saved-draft JSON file. The report is scored from those answers.
 3. Answer section by section. Later questions appear only when they apply. Statement sets run from weakest to strongest, plus "We don't know / not determined yet." A planned line asks for a target date. The strongest line can ask for one line of evidence.
 4. The browser saves the draft on this computer. Use **Save JSON file** to download a copy. The file includes `schema_version`, `form_version` and `rules_version`.
 5. Read the on-screen draft. After Q25 is confirmed, download a Word file or a PDF. Both are built from the same report. The Word file uses Times New Roman. The PDF embeds Liberation Serif (metric-compatible, SIL Open Font License) and uses DejaVu Serif for characters Liberation Serif does not have. If a character is in neither font, the download says so and names the question. The PDF is US Letter with 1 inch margins, a "Page X of Y" footer, Section 9 and the appendix starting on new pages, and shaded answer paragraphs. The narrative is prose. In Section 9, each acknowledgment is a Yes/No pair with a short date. Comments and the Agency Lead signature stay in bordered boxes. In the PDF the Yes/No pair is a radio group, comments and dates are text fields, and the signature is a signature field.
@@ -54,6 +54,7 @@ Edit the data modules, not the page layout, unless the layout is what you mean t
 | Form fields, help text, show/hide | `src/content/form.ts` |
 | Which rule is still a proposal | `content/RULES.md` and `proposed: true` in the modules |
 | Finding sentences (What we found) | `content/findings.json` |
+| Example drafts | `examples/*.json` and `examples/index.json` |
 | Report assembly | `src/engine/report.ts` |
 | Word and PDF layout tokens | `src/report/style.ts` |
 | Scoring | `src/engine/evaluate.ts` |
@@ -77,7 +78,8 @@ Open the URL Vite prints (http://localhost:5173). `npm run build` writes the sta
 - `npm test` runs the engine unit tests and checks synthetic scenarios S01–S24.
 - `npm run validate` rewrites `docs/scenario-validation.md`.
 - `npm run rules-index` rewrites `content/rules-index.json`.
-- With `npm run preview` already running, `npm run smoke` drives Chrome through the example assessment, the draft report and the Word download. It needs Chrome and `puppeteer-core`.
+- With `npm run preview` already running, `npm run smoke` drives Chrome through an example assessment, the draft report and the Word download. It needs Chrome and `puppeteer-core`.
+- `npm run examples` rewrites `examples/` from `src/examples/catalog.ts`. The dropdown loads those JSON files.
 
 The scenario answers are coded conversions of the prose scenarios. They are fictional and labeled example data. On the checks this version runs (required gates, forbidden gates, deadline date, prohibited-use flag, prior-deployment fact, status conflict, mitigation count range), all 24 match. Three scenarios also set an extra gate the key treats as arguable or possible: S06 adds G1, S12 adds G1, S24 adds G4. Those notes are in the validation file. They are not counted as failures.
 

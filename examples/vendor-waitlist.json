@@ -1,0 +1,128 @@
+{
+  "schema_version": "1.0.0",
+  "form_version": "v2-structured-1.0.0",
+  "rules_version": "1.2.0",
+  "saved_at": "2026-11-02T00:00:00.000Z",
+  "example": true,
+  "example_label": "Example data. Fictional agency and AI system. Not a real assessment.",
+  "answers": {
+    "response_id": "EXAMPLE-vendor-waitlist",
+    "q1_intake": "EXAMPLE-HR-2026-vendor-waitlist",
+    "q2_agency": "Maryland Rent Aid Sorting Office (fictional)",
+    "q2_unit": "Rental aid unit (fictional)",
+    "q2_role": "Agency Lead",
+    "q3_is_lead": "yes",
+    "q4_name": "Rental Assistance Waitlist Sorter (fictional)",
+    "q5_changes": "None.",
+    "q7b_prohibited": [
+      "none"
+    ],
+    "q9_other": "",
+    "q15_same_place": "yes",
+    "q20_types": [
+      "missed_service",
+      "bias_harm",
+      "wrong_decision"
+    ],
+    "q23_monitor": "program manager",
+    "q23_incident": "security specialist",
+    "q23_reassess": "Agency Lead",
+    "q25_confirm": [
+      "confirm"
+    ],
+    "q5_builder": "vendor_product",
+    "q5_vendor": "Queuebridge Products (fictional)",
+    "q5_product": "RentQueue",
+    "q5_version": "8.0-example",
+    "q6_capabilities": [
+      "ranks"
+    ],
+    "q6_design_facts": [
+      "no_free_text_input"
+    ],
+    "q6_method": "statistical",
+    "q6_hosting": "vendor_cloud",
+    "q6_description": "RentQueue orders rental-assistance applicants. It is a vendor product in the vendor cloud. Staff are supposed to review the order. Fictional system.",
+    "q7_purpose": "The unit wants a faster waitlist than a spreadsheet. The product sorts applicants. How staff use that sort is only partly written down. Fictional purpose.",
+    "q8_areas": [
+      "housing"
+    ],
+    "q8_target": "individuals",
+    "q8_how": "The sort can move an applicant up or down the rental-assistance waitlist.",
+    "q9_groups": [
+      "low_income",
+      "disabilities"
+    ],
+    "q9_rel__low_income": "acted_on_individually",
+    "q9_rel__disabilities": "acted_on_individually",
+    "q10_role": "recommends",
+    "q11_reviewer": "housing specialist",
+    "q12_outside": "yes",
+    "q13_level": "L3",
+    "q14_data_types": [
+      "personal_info"
+    ],
+    "q14_overlays": [
+      "none"
+    ],
+    "q14_sources": "Rental-assistance applications.",
+    "q16_assurances": [
+      "none"
+    ],
+    "q17_status": "live",
+    "q18_procured": "on_or_after_2026_02_01",
+    "q19_start": "2026-04-01",
+    "q19_prior": "no",
+    "q20_harm": "A wrong rank could delay housing help for a household. The household bears the cost. The office has not finished the review, notice, or contract controls.",
+    "st11a": "sample",
+    "st11b": "both",
+    "st11b__evidence": "Rent aid file RA-30 record for 11b, tested 12 March 2026, owner: housing specialist. The record supports the selected statement.",
+    "st11c": "every",
+    "st11c__evidence": "Rent aid file RA-30 record for 11c, tested 12 March 2026, owner: housing specialist. The record supports the selected statement.",
+    "st11d": "full",
+    "st11d__evidence": "Rent aid file RA-30 record for 11d, tested 12 March 2026, owner: housing specialist. The record supports the selected statement.",
+    "st12a": "general",
+    "st12b": "set_path",
+    "st12b__evidence": "Rent aid file RA-30 record for 12b, tested 12 March 2026, owner: housing specialist. The record supports the selected statement.",
+    "st12c": "none",
+    "st12e__low_income": "shut_out",
+    "st12e__disabilities": "hard",
+    "st14a": "scheduled",
+    "st14a__evidence": "Rent aid file RA-30 record for 14a, tested 12 March 2026, owner: housing specialist. The record supports the selected statement.",
+    "st14b": "logged",
+    "st14b__evidence": "Rent aid file RA-30 record for 14b, tested 12 March 2026, owner: housing specialist. The record supports the selected statement.",
+    "st15a": "everywhere",
+    "st15a__evidence": "Rent aid file RA-30 record for 15a, tested 12 March 2026, owner: housing specialist. The record supports the selected statement.",
+    "st15b": "controls",
+    "st15b__evidence": "Rent aid file RA-30 record for 15b, tested 12 March 2026, owner: housing specialist. The record supports the selected statement.",
+    "st15c": "done",
+    "st15c__evidence": "Rent aid file RA-30 record for 15c, tested 12 March 2026, owner: housing specialist. The record supports the selected statement.",
+    "st15d": "on_schedule",
+    "st16a": "silent",
+    "st16b__responsibilities": "absent",
+    "st16b__model_change_notice": "absent",
+    "st16b__incident_notice": "absent",
+    "st20a": "written",
+    "st21a": "vendor_only",
+    "st21b": "vendor_claim",
+    "st21c": "threshold",
+    "st21c__evidence": "Rent aid file RA-30 record for 21c, tested 12 March 2026, owner: housing specialist. The record supports the selected statement.",
+    "st21d": "none",
+    "st21e": "both",
+    "st21e__evidence": "Rent aid file RA-30 record for 21e, tested 12 March 2026, owner: housing specialist. The record supports the selected statement.",
+    "st22__prompt_injection": "all",
+    "st22__prompt_injection__evidence": "Rent aid file RA-30 record for prompt_injection (22), tested 12 March 2026, owner: housing specialist. The record supports the selected statement.",
+    "st22__poisoned_data": "none",
+    "st22__model_theft": "none",
+    "st22__output_leakage": "none",
+    "st22__unsafe_output_handling": "all",
+    "st22__unsafe_output_handling__evidence": "Rent aid file RA-30 record for unsafe_output_handling (22), tested 12 March 2026, owner: housing specialist. The record supports the selected statement.",
+    "st22f": "none",
+    "st23a": "named_only",
+    "st23b": "set",
+    "st23b__evidence": "Rent aid file RA-30 record for 23b, tested 12 March 2026, owner: housing specialist. The record supports the selected statement.",
+    "st23c": "told",
+    "st24a": "all_four",
+    "st24b": "full"
+  }
+}
