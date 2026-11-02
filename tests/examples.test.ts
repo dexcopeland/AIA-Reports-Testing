@@ -29,6 +29,17 @@ describe("loadable examples", () => {
     expect(listed).toHaveLength(10);
   });
 
+  it("reloads a fresh copy after an example is edited", () => {
+    const first = loadExampleFile("state-park-schedule.json");
+    const originalUnit = first.answers.q2_unit;
+    first.answers.q2_unit = "edited unit";
+    first.example = false;
+    const second = loadExampleFile("state-park-schedule.json");
+    expect(second.answers.q2_unit).toBe(originalUnit);
+    expect(second.example).toBe(true);
+    expect(first.answers.q2_unit).toBe("edited unit");
+  });
+
   it("loads each saved draft through the same normalizer as Continue a saved draft", () => {
     for (const spec of EXAMPLES) {
       const saved = JSON.parse(readFileSync(new URL(`../examples/${spec.id}.json`, import.meta.url), "utf8")) as unknown;
