@@ -47,11 +47,17 @@ export function mount(root: Element): void {
     if (live) live.textContent = saveNote;
   };
 
+  const syncSaveButton = () => {
+    const save = document.querySelector("#save-draft");
+    if (save instanceof HTMLButtonElement) save.disabled = Object.keys(file.answers).length === 0;
+  };
+
   const setAnswer = (key: string, value: AnswerValue) => {
     file.answers[key] = value;
     file.example = false;
     touch();
     dirty = true;
+    syncSaveButton();
   };
 
   function renderHome(): HTMLElement {
