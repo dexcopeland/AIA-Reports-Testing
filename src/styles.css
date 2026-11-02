@@ -321,6 +321,47 @@ textarea { min-height: 8rem; resize: vertical; }
   box-shadow: 0 1px 2px rgb(10 49 97 / 0.06);
 }
 
+.example-select > button {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 600;
+  text-align: start;
+  cursor: pointer;
+}
+
+.example-select selectedcontent,
+.example-select selectedcontent .opt-title {
+  color: var(--ink);
+  background: transparent;
+}
+
+.example-select:hover {
+  border-color: var(--navy);
+  background: var(--shade);
+}
+
+.example-select:hover > button,
+.example-select:hover selectedcontent,
+.example-select:hover selectedcontent .opt-title,
+.example-select:focus-visible > button,
+.example-select:focus-visible selectedcontent,
+.example-select:focus-within > button,
+.example-select:focus-within selectedcontent {
+  color: var(--ink);
+  background: transparent;
+}
+
+.example-select > button:focus-visible { outline: none; }
+
 .example-select::picker-icon { color: var(--navy); }
 
 .example-select::picker(select) {
@@ -346,17 +387,23 @@ textarea { min-height: 8rem; resize: vertical; }
   text-wrap: pretty;
 }
 
-.example-select option:hover,
-.example-select option:focus {
+.example-select option:hover:not(:checked),
+.example-select option:focus:not(:checked),
+.example-select option:focus-visible:not(:checked) {
   background: var(--shade);
+  color: var(--ink);
 }
 
-.example-select option:checked {
+.example-select option:checked,
+.example-select option:checked:hover,
+.example-select option:checked:focus,
+.example-select option:checked:focus-visible {
   background: var(--navy);
   color: #fff;
 }
 
-.example-select option:checked .opt-desc { color: #e7eef6; }
+.example-select option:checked .opt-desc,
+.example-select option:checked:hover .opt-desc { color: #e7eef6; }
 
 .example-select option::checkmark { color: currentColor; }
 
