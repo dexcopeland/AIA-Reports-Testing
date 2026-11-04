@@ -100,7 +100,11 @@ describe("bottom line up front", () => {
     for (const phrase of APPROVAL_BANNED) expect(body).not.toContain(phrase);
     expect(body).not.toContain("________");
     const steps = report.blocks.filter((block) => block.type === "step");
-    expect(steps.some((step) => step.text.toLowerCase().includes("prohibited"))).toBe(true);
+    const stop = steps.find((step) => step.text.toLowerCase().includes("prohibited"));
+    expect(stop?.text).toContain("(Evidence, Prohibited use).");
+    expect(stop?.text).not.toContain("Evidence, M");
+    const evidence = report.documents.find((item) => item.key === "evidence");
+    expect(evidence?.blocks.some((block) => block.text === "Prohibited use" && block.anchor === "prohibited")).toBe(true);
     expect(steps.every((step) => step.link && report.blocks.some((block) => block.anchor === step.link))).toBe(true);
   });
 });

@@ -364,12 +364,19 @@ function evidencePointer(ids: string[]): string {
   return `Evidence, ${joinIds(usable)}`;
 }
 
+function pointerForMitigation(mit: LiveMitigation | undefined): string {
+  if (mit?.id === "M-PROHIBITED") return "Evidence, Prohibited use";
+  const covered = mit ? evidencePointer(mit.covers) : "";
+  return covered || "Evidence, Other facts used with the gates";
+}
+
 function stepPointer(step: FollowStep, result: Evaluation): string {
   if (step.link.startsWith("check_")) return `Evidence, ${step.link.slice("check_".length)}`;
   if (step.link.startsWith("mit_")) {
     const mitigation = result.mitigations[Number(step.link.slice("mit_".length)) - 1];
-    return evidencePointer(mitigation?.covers ?? []) || `Evidence, M${step.link.slice("mit_".length)}`;
+    return pointerForMitigation(mitigation);
   }
+  if (step.link === "sec_4" && result.prohibited && /prohibited/i.test(step.text)) return "Evidence, Prohibited use";
   if (step.link === "sec_4") return "Evidence, Gates";
   if (step.link === "sec_9") return "Executive Summary, Agency Lead acknowledgment";
   if (step.link === "sec_1") return "Executive Summary, the AI system";
@@ -507,7 +514,7 @@ function buildExecutive(file: AnswerFile, result: Evaluation, answers: Answers, 
     blocks.push(block("h3", timing, "template"));
     for (const mit of group) {
       const number = result.mitigations.indexOf(mit) + 1;
-      const pointer = evidencePointer(mit.covers) || `Evidence, M${number}`;
+      const pointer = pointerForMitigation(mit);
       blocks.push(block("label", `M${number} – ${mit.title}`, "template"));
       const action = /[.!?]$/.test(mit.action.trim()) ? mit.action.trim() : `${mit.action.trim()}.`;
       blocks.push(block("p", `${riskLine(mit)} The recommended mitigation is: ${action} The owner is ${mit.owner}. See ${pointer}.`, "slot"));
@@ -537,10 +544,12 @@ function buildEvidence(file: AnswerFile, result: Evaluation, answers: Answers, s
     blocks.push(block("field", `What was checked: ${gate.checked}`, "template"));
     blocks.push(block("field", hit ? `Result: Set. ${hit.because}` : "Result: Not set. The answers do not meet this gate.", "slot"));
   }
-  blocks.push(block("h2", "Other facts used with the gates", "template"));
+  blocks.push(block("h2", "Other facts used with the gates", "template", { anchor: "sec_facts" }));
+  blocks.push(block("label", "Prohibited use", "template", { anchor: "prohibited" }));
+  blocks.push(block("field", "What was checked: Whether a prohibited use in the Responsible AI Policy applies.", "template"));
   if (result.prohibited) {
-    blocks.push(block("p", `Prohibited use: ${result.prohibitedLabels.join("; ")}. The Responsible AI Policy lists this use [P1].`, "slot"));
-  } else blocks.push(block("p", "Prohibited use: none selected.", "template"));
+    blocks.push(block("field", `Result: Set. ${result.prohibitedLabels.join("; ")}. The Responsible AI Policy lists this use [P1].`, "slot"));
+  } else blocks.push(block("field", "Result: Not set. None selected.", "template"));
   if (result.speech) blocks.push(block("p", "This use touches speech, assembly or religion. It needs named legal authority; refer to agency counsel.", "template"));
   const levelLine = dataLevel(answers) === "unknown"
     ? "Data level: Unknown (not assigned). A missing data level is itself a gap. The privacy track is open (PTA; PIA if the State Chief Privacy Officer directs) [P4]."
