@@ -177,7 +177,7 @@ export function FormScreen({
               {sectionIndex > 0 ? (
                 <Button type="button" variant="outline" className={touchTarget} onClick={onBack}>Back</Button>
               ) : null}
-              <Button type="submit" className={touchTarget}>{last ? "Review and create draft" : "Save and continue"}</Button>
+              <Button type="button" className={touchTarget} onClick={onNext}>{last ? "Review and create draft" : "Save and continue"}</Button>
             </div>
           </form>
           <p id="save-status" className="mt-3 min-h-6" aria-live="polite">{saveNote}</p>
