@@ -49,6 +49,25 @@ export function FieldControl({
   return unexpected;
 }
 
+function QuestionLegend({
+  id,
+  children,
+  help,
+  helpLabel,
+}: {
+  id: string;
+  children: string;
+  help?: string;
+  helpLabel?: string;
+}) {
+  return (
+    <FieldLegend id={id} className="flex items-center gap-1 text-base font-semibold">
+      <span>{children}</span>
+      {help ? <HelpTip label={helpLabel ?? children} text={help} /> : null}
+    </FieldLegend>
+  );
+}
+
 function requiredSuffix(field: FormField): string {
   return field.required ? " (required)" : "";
 }
@@ -121,18 +140,17 @@ function RadioField({
   onAnswer: (key: string, value: AnswerValue) => void;
 }) {
   const helpId = `${field.id}-help`;
+  const legendId = `${field.id}-legend`;
   const selected = field.id === "q15_same_place" ? displayedSamePlace(answers) : text(answers, field.id);
   const legend = (field.legend?.(answers) ?? field.label) + requiredSuffix(field);
   return (
     <FieldSet className="gap-2">
-      <div className="flex items-center gap-1">
-        <FieldLegend className="text-base font-semibold">{legend}</FieldLegend>
-        {field.help ? <HelpTip label={field.label} text={field.help} /> : null}
-      </div>
+      <QuestionLegend id={legendId} help={field.help} helpLabel={field.label}>{legend}</QuestionLegend>
       {field.help ? <FieldDescription id={helpId}>{field.help}</FieldDescription> : null}
       <RadioGroup
         name={field.id}
         value={selected}
+        aria-labelledby={legendId}
         aria-describedby={field.help ? helpId : undefined}
         onValueChange={(value) => onAnswer(field.id, value)}
       >
@@ -160,13 +178,11 @@ function CheckField({
   onAnswer: (key: string, value: AnswerValue) => void;
 }) {
   const helpId = `${field.id}-help`;
+  const legendId = `${field.id}-legend`;
   const picked = many(answers, field.id);
   return (
     <FieldSet className="gap-2">
-      <div className="flex items-center gap-1">
-        <FieldLegend className="text-base font-semibold">{field.label + requiredSuffix(field)}</FieldLegend>
-        {field.help ? <HelpTip label={field.label} text={field.help} /> : null}
-      </div>
+      <QuestionLegend id={legendId} help={field.help} helpLabel={field.label}>{field.label + requiredSuffix(field)}</QuestionLegend>
       {field.help ? <FieldDescription id={helpId}>{field.help}</FieldDescription> : null}
       <FieldGroup className="gap-2" data-slot="checkbox-group">
         {(field.options ?? []).map((option) => {
@@ -200,13 +216,11 @@ function GroupsField({
   onAnswer: (key: string, value: AnswerValue) => void;
 }) {
   const helpId = `${field.id}-help`;
+  const legendId = `${field.id}-legend`;
   const picked = many(answers, field.id);
   return (
     <FieldSet className="gap-3">
-      <div className="flex items-center gap-1">
-        <FieldLegend className="text-base font-semibold">{`${field.label} (required)`}</FieldLegend>
-        {field.help ? <HelpTip label={field.label} text={field.help} /> : null}
-      </div>
+      <QuestionLegend id={legendId} help={field.help} helpLabel={field.label}>{`${field.label} (required)`}</QuestionLegend>
       {field.help ? <FieldDescription id={helpId}>{field.help}</FieldDescription> : null}
       {(field.options ?? []).map((option) => {
         const id = `${field.id}-${option.id}`;
@@ -225,10 +239,11 @@ function GroupsField({
             </Field>
             {checked ? (
               <FieldSet className="ml-6 gap-2 border-l border-border pl-3">
-                <FieldLegend className="text-base font-semibold">{`How is ${option.label} affected?`}</FieldLegend>
+                <QuestionLegend id={`q9_rel__${option.id}-legend`}>{`How is ${option.label} affected?`}</QuestionLegend>
                 <RadioGroup
                   name={`q9_rel__${option.id}`}
                   value={text(answers, `q9_rel__${option.id}`)}
+                  aria-labelledby={`q9_rel__${option.id}-legend`}
                   onValueChange={(value) => onAnswer(`q9_rel__${option.id}`, value)}
                 >
                   {relationOptions().map((relation) => {
@@ -269,18 +284,17 @@ function StatementField({
         const choice = def.choices.find((item) => item.value === selected);
         const helpId = `${instance.key}-help`;
         const hintId = `${instance.key}-hint`;
+        const legendId = `${instance.key}-legend`;
         const hint = "Pick the statement closest to today, from weakest to strongest. Planned asks for a date. The strongest line can ask for one line of evidence.";
         return (
           <FieldSet key={instance.key} className="gap-2">
-            <div className="flex items-center gap-1">
-              <FieldLegend className="text-base font-semibold">{instance.title}</FieldLegend>
-              {field.help && index === 0 ? <HelpTip label={instance.title} text={field.help} /> : null}
-            </div>
+            <QuestionLegend id={legendId} help={index === 0 ? field.help : undefined} helpLabel={instance.title}>{instance.title}</QuestionLegend>
             {field.help && index === 0 ? <FieldDescription id={helpId}>{field.help}</FieldDescription> : null}
             <FieldDescription id={hintId}>{hint}</FieldDescription>
             <RadioGroup
               name={instance.key}
               value={selected}
+              aria-labelledby={legendId}
               aria-describedby={field.help && index === 0 ? `${helpId} ${hintId}` : hintId}
               onValueChange={(value) => onAnswer(instance.key, value)}
             >
