@@ -69,7 +69,7 @@ export const SECTIONS: FormSection[] = [
       { id: "q2_agency", legacyQ: 2, type: "short", label: "Agency", required: true, help: "The agency that owns this AI system.", autocomplete: "organization" },
       { id: "q2_unit", legacyQ: 2, type: "short", label: "Unit", required: true, help: "The office or unit inside the agency." },
       { id: "q2_role", legacyQ: 2, type: "short", label: "Your role", required: true, role: true, help: "A role, such as program manager. Do not write a person's name." },
-      { id: "q3_is_lead", legacyQ: 3, type: "radio", label: "Are you the Agency Lead who will acknowledge the report?", required: true, options: YES_NO, help: "The Agency Lead signs Section 9 even if someone else fills in this form." },
+      { id: "q3_is_lead", legacyQ: 3, type: "radio", label: "Are you the Agency Lead who will acknowledge the report?", required: true, options: YES_NO, help: "The Agency Lead signs the acknowledgment in the executive summary even if someone else fills in this form." },
       { id: "q3_lead_role", legacyQ: 3, type: "short", label: "Agency Lead role", required: true, role: true, show: leadNo, help: "Role only. The report does not name a person." },
       { id: "q3_email", legacyQ: 3, type: "email", label: "Agency Lead email", required: true, show: leadNo, autocomplete: "email", spellcheck: false, help: "Used only if your agency later chooses to contact the Agency Lead. It is saved in the answers file and is never written into the report." },
     ],

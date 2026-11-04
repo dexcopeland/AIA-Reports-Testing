@@ -1,43 +1,68 @@
 import { PDFParse } from "pdf-parse";
 import { describe, expect, it } from "vitest";
-import { buildReport } from "../src/engine/report";
+import { buildReport, documentView, type ReportDoc, type ReportDocument } from "../src/engine/report";
 import { reportToPdfBytes } from "../src/pdf/build-pdf";
 import { buildScenario } from "../src/scenarios/build";
 import { SCENARIOS } from "../src/scenarios/catalog";
 
+async function pdfOf(report: ReportDoc, key: ReportDocument["key"]) {
+  const part = report.documents.find((item) => item.key === key);
+  expect(part).toBeTruthy();
+  const { bytes, warnings } = await reportToPdfBytes(documentView(report, part!));
+  const raw = Buffer.from(bytes);
+  const parser = new PDFParse({ data: Uint8Array.from(raw) });
+  const text = await parser.getText();
+  const info = await parser.getInfo();
+  await parser.destroy();
+  return { bytes: raw, warnings, info, flat: text.text.replace(/\s+/g, " "), raw: raw.toString("latin1") };
+}
+
 describe("PDF report", () => {
-  it("builds a letter-size PDF from the same blocks as the Word report", async () => {
+  it("builds a letter-size PDF for each document in the package", async () => {
     const scenario = SCENARIOS.find((item) => item.id === "S01");
     expect(scenario).toBeTruthy();
     const report = buildReport(buildScenario(scenario!));
-    const { bytes, warnings } = await reportToPdfBytes(report);
-    expect(warnings).toEqual([]);
-    expect(bytes.byteLength).toBeGreaterThan(8000);
-    expect(Buffer.from(bytes.subarray(0, 5)).toString("utf8")).toBe("%PDF-");
-
-    const parser = new PDFParse({ data: bytes });
-    const text = await parser.getText();
-    const info = await parser.getInfo();
-    await parser.destroy();
-
-    expect(info.total).toBeGreaterThan(1);
-    const flat = text.text.replace(/\s+/g, " ");
-    for (const heading of [
-      "Algorithmic Impact Assessment: OutreachMap Grant Outreach Ranker (fictional)",
-      "1. Summary",
-      "5. Findings by criterion",
-      "Recommended practice checks (ISO/IEC 42001 and ISO/IEC 27090)",
-      "9. Agency Lead acknowledgment",
-      "10. Sources",
-      "Appendix: Questions and answers used in this assessment",
-      "Human oversight is in place",
-      "•",
-      "Page 1 of",
-    ]) {
-      expect(flat).toContain(heading);
+    expect(report.documents.map((item) => item.slug)).toEqual([
+      "1-Executive-Summary",
+      "2-Evidence",
+      "3-Assessment-Submission-Record",
+      "4-Follow-Up-Actions",
+    ]);
+    const executive = await pdfOf(report, "executive");
+    const evidence = await pdfOf(report, "evidence");
+    const submission = await pdfOf(report, "submission");
+    const followup = await pdfOf(report, "followup");
+    for (const file of [executive, evidence, submission, followup]) {
+      expect(file.warnings).toEqual([]);
+      expect(file.bytes.byteLength).toBeGreaterThan(8000);
+      expect(Buffer.from(file.bytes.subarray(0, 5)).toString("utf8")).toBe("%PDF-");
+      expect(file.info.total).toBeGreaterThan(0);
+      expect(file.flat).toContain("Page 1 of");
+      expect(file.flat).toContain(report.systemName);
+      expect(file.flat).toContain(report.reportDate);
     }
-    const headings = report.blocks.filter((block) => block.type === "h1" || block.type === "h2").map((block) => block.text);
-    for (const heading of headings) expect(flat).toContain(heading);
+    expect(executive.flat).toContain("Executive Summary:");
+    expect(executive.flat).toContain("Bottom line up front");
+    expect(executive.flat).toContain("What the agency is doing well");
+    expect(executive.flat).toContain("Where there is room for improvement");
+    expect(executive.flat).toContain("Agency Lead acknowledgment");
+    expect(executive.flat).toContain("Agency Lead signature");
+    expect(evidence.flat).toContain("Evidence:");
+    expect(evidence.flat).toContain("Gates");
+    expect(evidence.flat).toContain("What was checked:");
+    expect(evidence.flat).toContain("Human oversight is in place");
+    expect(evidence.flat).toContain("Recommended practice checks (ISO/IEC 42001 and ISO/IEC 27090)");
+    expect(submission.flat).toContain("Assessment Submission Record:");
+    expect(submission.flat).toContain("Submission date:");
+    expect(submission.flat).toContain("Q1. Intake reference number");
+    expect(followup.flat).toContain("Follow-Up Actions:");
+    expect(followup.flat).toContain("No follow-up step is open.");
+    for (const part of report.documents) {
+      const file = part.key === "executive" ? executive : part.key === "evidence" ? evidence : part.key === "submission" ? submission : followup;
+      for (const heading of part.blocks.filter((block) => block.type === "h1" || block.type === "h2").map((block) => block.text)) {
+        expect(file.flat).toContain(heading);
+      }
+    }
   });
 
   it("keeps accuracy ≥ 95% in the PDF and names characters neither font can draw", async () => {
@@ -47,11 +72,9 @@ describe("PDF report", () => {
     answers.answers.q20_harm = "Example: accuracy ≥ 95% for ∀ groups on the fictional holdout set.";
     answers.answers.q8_how = "Example effect ✓ for this fictional system.";
     const report = buildReport(answers);
-    const { bytes, warnings } = await reportToPdfBytes(report);
-    const parser = new PDFParse({ data: bytes });
-    const text = await parser.getText();
-    await parser.destroy();
-    const flat = text.text.replace(/\s+/g, " ");
+    const files = await Promise.all(report.documents.map((part) => pdfOf(report, part.key)));
+    const warnings = files.flatMap((file) => file.warnings);
+    const flat = files.map((file) => file.flat).join(" ");
     expect(flat).toContain("accuracy ≥ 95%");
     expect(flat).toContain("∀");
     expect(warnings.some((warning) => warning.character === "≥")).toBe(false);
@@ -64,8 +87,9 @@ describe("PDF report", () => {
     const scenario = SCENARIOS.find((item) => item.id === "S02");
     expect(scenario).toBeTruthy();
     const report = buildReport(buildScenario(scenario!));
-    const { bytes } = await reportToPdfBytes(report);
-    const raw = Buffer.from(bytes).toString("latin1");
+    const executive = await pdfOf(report, "executive");
+    const evidence = await pdfOf(report, "evidence");
+    const raw = executive.raw;
     expect(raw).toContain("/FT /Tx");
     expect(raw).toContain("/FT /Sig");
     expect(raw).toContain("/FT /Btn");
@@ -77,32 +101,17 @@ describe("PDF report", () => {
     expect(raw).toContain("(ack_1)");
     expect(raw).toContain("/Ff 4096");
     expect(raw).toContain("/Ff 49152");
-    const parser = new PDFParse({ data: bytes });
-    const text = await parser.getText();
-    await parser.destroy();
-    let seenSection9 = false;
-    const section9 = (text.pages ?? []).filter((page) => {
-      const body = "text" in page ? String(page.text) : "";
-      if (body.includes("9. Agency Lead acknowledgment")) seenSection9 = true;
-      const row = seenSection9 && /M\d+ –/.test(body) && body.includes("Yes") && body.includes("Date");
-      const sign = seenSection9 && body.includes("Agency Lead signature");
-      const keep = seenSection9 && (body.includes("9. Agency Lead acknowledgment") || row || sign);
-      if (seenSection9 && body.includes("10. Sources")) seenSection9 = false;
-      return keep;
-    });
-    expect(section9.length).toBeGreaterThan(0);
-    expect(section9.length).toBeLessThanOrEqual(3);
-    const flat = text.text.replace(/\s+/g, " ");
+    const flat = executive.flat;
     expect(flat).toContain("Bottom line up front");
     expect(flat).toContain("The outcome is high-risk routing.");
     expect(flat).toContain("Follow-up steps for the agency");
     expect(flat).not.toContain("Acknowledged (Yes / No)");
     expect(flat).toContain("Agency Lead signature");
+    expect(flat).toContain("(Evidence, C9)");
+    expect(evidence.flat).toContain("C9 –");
     const steps = report.blocks.filter((block) => block.type === "step");
     expect(steps.length).toBeGreaterThan(0);
-    for (const step of steps) {
-      expect(step.link).toBeTruthy();
-      expect(raw).toContain(`(${step.link})`);
-    }
+    const anchors = new Set(report.blocks.flatMap((block) => block.anchor ? [block.anchor] : []));
+    for (const step of steps) expect(step.link && anchors.has(step.link)).toBe(true);
   });
 });

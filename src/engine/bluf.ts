@@ -138,7 +138,7 @@ export function buildBluf(result: Evaluation): BlufCopy {
   if (result.speech) {
     add("Get named legal authority for this speech, assembly or religion use in Section 4.", "sec_4");
   }
-  if (!result.attestation) add("Confirm the attestation and sign Section 9.", "sec_9");
+  if (!result.attestation) add("Confirm the attestation and sign the Agency Lead acknowledgment.", "sec_9");
 
   for (const item of result.followups) {
     const mapped = FOLLOW_STEPS[item.q];

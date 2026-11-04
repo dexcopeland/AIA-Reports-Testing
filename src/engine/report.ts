@@ -5,9 +5,11 @@ import { GROUPS, RELATIONS, STATEMENT_BY_ID, THREATS } from "../content/statemen
 import type { AnswerFile } from "../content/types";
 import type { Answers } from "./answers";
 import { many, text } from "./answers";
+import { formatIsoDate, reportDateFromSaved } from "./dates";
 import { evaluate, levelSafeguard, optionLabel } from "./evaluate";
-import { buildBluf } from "./bluf";
+import { buildBluf, type FollowStep } from "./bluf";
 import type { Evaluation, LiveMitigation } from "./model";
+import { ackFor } from "./signoff";
 import { dataLevel, deployment, priorAssessment, processingPlace, procurementApplicable, selectedGroups, statusConflict, threatApplies, vendorInvolved } from "./visibility";
 
 export interface SignField {
@@ -21,6 +23,10 @@ export interface SignField {
   width?: number;
   /** Drawn inside a bordered box. Acknowledgments leave this unset. */
   boxed?: boolean;
+  /** Prefilled text. Empty means the PDF and Word file keep a blank fillable field. */
+  value?: string;
+  /** True when this Yes/No choice is the one the agency selected. */
+  selected?: boolean;
 }
 
 export interface Block {
@@ -30,12 +36,33 @@ export interface Block {
   anchor?: string;
   link?: string;
   fields?: SignField[];
+  /** Mitigation id, or "lead" for the Agency Lead block. */
+  signId?: string;
+  /** Owner and due date lines that sit under a follow-up step. */
+  aside?: string;
+}
+
+export interface ReportDocument {
+  key: "executive" | "evidence" | "submission" | "followup";
+  title: string;
+  slug: string;
+  blocks: Block[];
 }
 
 export interface ReportDoc {
   blocks: Block[];
+  documents: ReportDocument[];
   systemName: string;
+  reportDate: string;
   checks: { id: string; ok: boolean; detail: string }[];
+}
+
+/** One document from the package, with the shared running header fields. */
+export interface ReportView {
+  blocks: Block[];
+  systemName: string;
+  documentTitle: string;
+  reportDate: string;
 }
 
 const QUESTIONS: { n: number; section: string; text: string; rp?: string }[] = [
@@ -66,7 +93,7 @@ const QUESTIONS: { n: number; section: string; text: string; rp?: string }[] = [
   { n: 25, section: "Section 7: Attestation", text: "I confirm these answers are accurate to the best of my knowledge, and I understand this form is not approval." },
 ];
 
-function block(type: Block["type"], text: string, source: Block["source"], extra?: Pick<Block, "anchor" | "link" | "fields">): Block {
+function block(type: Block["type"], text: string, source: Block["source"], extra?: Pick<Block, "anchor" | "link" | "fields" | "signId" | "aside">): Block {
   return { type, text, source, ...extra };
 }
 
@@ -85,24 +112,27 @@ function labelAnchor(text: string): string | undefined {
   return undefined;
 }
 
-function mitigationSign(mit: LiveMitigation, number: number): Block {
+function mitigationSign(file: AnswerFile, mit: LiveMitigation, number: number): Block {
+  const ack = ackFor(file, mit.id);
+  const choice = ack?.choice === "yes" || ack?.choice === "no" ? ack.choice : "";
   const fields: SignField[] = [
-    { name: `ack_${number}_yes`, label: "Yes", kind: "choice", lines: 1, group: `ack_${number}`, width: 12 },
-    { name: `ack_${number}_no`, label: "No", kind: "choice", lines: 1, group: `ack_${number}`, width: 12 },
-    { name: `date_${number}`, label: "Date", kind: "date", lines: 1, width: 72 },
-    { name: `comment_${number}`, label: "Comment", kind: "multiline", lines: 2, boxed: true },
+    { name: `ack_${number}_yes`, label: "Yes", kind: "choice", lines: 1, group: `ack_${number}`, width: 12, selected: choice === "yes" },
+    { name: `ack_${number}_no`, label: "No", kind: "choice", lines: 1, group: `ack_${number}`, width: 12, selected: choice === "no" },
+    { name: `date_${number}`, label: "Date", kind: "date", lines: 1, width: 72, value: ack?.date ?? "" },
+    { name: `comment_${number}`, label: "Comment", kind: "multiline", lines: 2, boxed: true, value: ack?.comment ?? "" },
   ];
-  return block("sign", `M${number} – ${mit.title}`, "template", { fields });
+  return block("sign", `M${number} – ${mit.title}`, "template", { fields, signId: mit.id });
 }
 
-function leadSign(): Block {
+function leadSign(file: AnswerFile): Block {
+  const signoff = file.signoff;
   const fields: SignField[] = [
-    { name: "lead_name", label: "Name", kind: "text", lines: 1, width: 120, boxed: true },
-    { name: "lead_title", label: "Title (printed role)", kind: "text", lines: 1, width: 140, boxed: true },
-    { name: "lead_date", label: "Date", kind: "date", lines: 1, width: 72, boxed: true },
+    { name: "lead_name", label: "Name", kind: "text", lines: 1, width: 180, boxed: true, value: signoff?.lead_name ?? "" },
+    { name: "lead_title", label: "Title (printed role)", kind: "text", lines: 1, width: 180, boxed: true, value: signoff?.lead_title ?? "" },
+    { name: "lead_date", label: "Date", kind: "date", lines: 1, width: 120, boxed: true, value: signoff?.lead_date ?? "" },
     { name: "lead_signature", label: "Agency Lead signature", kind: "signature", lines: 2, boxed: true },
   ];
-  return block("sign", "Agency Lead sign-off", "template", { fields });
+  return block("sign", "Agency Lead sign-off", "template", { fields, signId: "lead" });
 }
 
 function answerBlocks(item: { qRefs: string; answerLines: { label: string; statement: string; evidence: string; targetDate: string }[] }): Block[] {
@@ -302,30 +332,6 @@ function riskLine(mit: LiveMitigation): string {
   return mit.rpOnly ? `Recommended practice: ${body}` : body;
 }
 
-function gather(mit: LiveMitigation): string {
-  if (mit.id === "M-NOTRAIN" || mit.id === "M-CONTRACT") return "The signed contract clause, or the draft clause and the target award date.";
-  if (mit.id === "M-ENCRYPT") return "A short confirmation from agency information security that encryption and access limits are in place.";
-  if (mit.id === "M-PRIVACY") return "The PTA, and the PIA if one was directed.";
-  if (mit.id === "M-BIAS" || mit.id === "M-ACCURACY") return "The test record: data used, criteria, date and result.";
-  if (mit.id === "M-PROHIBITED") return "A record of how the prohibited function was removed or stopped.";
-  return "The record named in the answer, or the target date and the role who will finish the work.";
-}
-
-function doneWhen(mit: LiveMitigation): string {
-  if (mit.id === "M-ONGOING") return "A named role runs the checks at least yearly and after model updates.";
-  if (mit.id === "M-PROHIBITED") return "The prohibited function is removed or stopped, and that fact is recorded.";
-  return "The safeguard is in place, or a dated plan is recorded and owned.";
-}
-
-function inventoryB2(answers: Answers): string {
-  const parts = [labelOf(BUILDERS, text(answers, "q5_builder"))];
-  for (const [label, key] of [["Vendor", "q5_vendor"], ["Product", "q5_product"], ["Version", "q5_version"], ["Agency changes", "q5_changes"]] as const) {
-    const value = text(answers, key);
-    if (value) parts.push(`${label}: ${value}`);
-  }
-  return parts.filter(Boolean).join(". ");
-}
-
 function inventoryB5(answers: Answers): string {
   const status = deployment(answers);
   const start = text(answers, "q19_start");
@@ -334,20 +340,271 @@ function inventoryB5(answers: Answers): string {
   return `Use started ${start || "start date not given"}. Impact assessment before deployment: ${prior}.`;
 }
 
-function summaryText(result: Evaluation, answers: Answers): string {
-  const name = text(answers, "q4_name") || "This AI system";
-  const agency = text(answers, "q2_agency") || "the agency";
-  const purpose = firstSentence(text(answers, "q7_purpose"), "The purpose is described in the agency's answers.");
-  const gaps = result.criteria.filter((item) => item.status === "Gap").map((item) => item.id);
-  const gapSentence = gaps.length ? `Open gaps include ${gaps.join(", ")}.` : "No C4 to C12 item is a Gap.";
-  const mits = result.mitigations.map((item) => item.title).slice(0, 3).join("; ");
-  return [
-    `${name} is a High-risk AI system at ${agency}. ${purpose}`,
-    `The area is ${result.area.label}. ${gapSentence}`,
-    `The main mitigations are: ${mits || "none beyond the items already in place"}.`,
-    "The Agency Lead plans each mitigation and signs Section 9.",
-    result.summaryDeadline,
-  ].join(" ");
+function plainName(name: string): string {
+  if (/^[A-Z][a-z]/.test(name)) return name.charAt(0).toLowerCase() + name.slice(1);
+  return name;
+}
+
+function withPointer(sentence: string, pointer: string): string {
+  const trimmed = sentence.trim();
+  const base = /[.!?]$/.test(trimmed) ? trimmed.slice(0, -1) : trimmed;
+  return `${base} (${pointer}).`;
+}
+
+function joinIds(ids: string[]): string {
+  if (ids.length === 0) return "";
+  if (ids.length === 1) return ids[0];
+  if (ids.length === 2) return `${ids[0]} and ${ids[1]}`;
+  return `${ids.slice(0, -1).join(", ")}, and ${ids[ids.length - 1]}`;
+}
+
+function evidencePointer(ids: string[]): string {
+  const usable = ids.filter((id) => /^(?:C|RP|G)\d+$/.test(id));
+  if (usable.length === 0) return "";
+  return `Evidence, ${joinIds(usable)}`;
+}
+
+function stepPointer(step: FollowStep, result: Evaluation): string {
+  if (step.link.startsWith("check_")) return `Evidence, ${step.link.slice("check_".length)}`;
+  if (step.link.startsWith("mit_")) {
+    const mitigation = result.mitigations[Number(step.link.slice("mit_".length)) - 1];
+    return evidencePointer(mitigation?.covers ?? []) || `Evidence, M${step.link.slice("mit_".length)}`;
+  }
+  if (step.link === "sec_4") return "Evidence, Gates";
+  if (step.link === "sec_9") return "Executive Summary, Agency Lead acknowledgment";
+  if (step.link === "sec_1") return "Executive Summary, the AI system";
+  return "Evidence";
+}
+
+function pointedStep(step: FollowStep, result: Evaluation): string {
+  return withPointer(step.text, stepPointer(step, result));
+}
+
+function mitigationForStep(step: FollowStep, result: Evaluation): LiveMitigation | undefined {
+  if (step.link.startsWith("mit_")) return result.mitigations[Number(step.link.slice("mit_".length)) - 1];
+  if (step.link.startsWith("check_")) {
+    const id = step.link.slice("check_".length);
+    return result.mitigations.find((item) => item.covers.includes(id));
+  }
+  return undefined;
+}
+
+function earliestTarget(result: Evaluation, mitigationId: string): string {
+  const dates = result.items
+    .filter((item) => item.mitigation === mitigationId && item.targetDate)
+    .map((item) => item.targetDate)
+    .sort();
+  return dates[0] ?? "";
+}
+
+function stepOwner(step: FollowStep, result: Evaluation): string {
+  const mitigation = mitigationForStep(step, result);
+  if (mitigation) return mitigation.owner;
+  if (step.link === "sec_1" || step.link === "sec_4" || step.link === "sec_9") return "Agency Lead";
+  return "";
+}
+
+function stepDue(file: AnswerFile, step: FollowStep, result: Evaluation): string {
+  const mitigation = mitigationForStep(step, result);
+  if (!mitigation) return "";
+  const chosen = ackFor(file, mitigation.id)?.date ?? "";
+  return formatIsoDate(chosen || earliestTarget(result, mitigation.id));
+}
+
+const GATE_CHECKS: { id: string; name: string; checked: string }[] = [
+  { id: "G1", name: "benefits, health, housing, financial or legal rights, or employment", checked: "Whether Q8 names benefits, health, housing, money or legal rights, or jobs." },
+  { id: "G2", name: "safety", checked: "Whether Q8 names safety or critical infrastructure." },
+  { id: "G3", name: "law enforcement, investigation, identification or automated tickets", checked: "Whether Q8 names law enforcement, investigation, identification, or automated tickets. Regulatory inspection alone does not set this gate." },
+  { id: "G4", name: "decides or acts without meaningful human review", checked: "Whether the output decides or acts without a person approving each one, review is missing or only a sample, or an information-only answer still sends output to other systems that act on it." },
+  { id: "G5", name: "targeting places or groups", checked: "Whether Q8 says the output picks places, areas, or groups." },
+  { id: "G6", name: "record matching with possible adverse action", checked: "Whether Q6 matches records and Q8 names an area where that match can lead to action." },
+  { id: "G7", name: "decision role or impact unknown", checked: "Whether Q8 or Q10 is unknown." },
+];
+
+function findingBlocks(item: { id: string; name: string; status: string; found: string; qRefs: string; answerLines: { label: string; statement: string; evidence: string; targetDate: string }[] }, checked: string): Block[] {
+  const lines: Block[] = [
+    block("label", `${item.id} – ${item.name}: ${item.status}`, "template"),
+    block("field", `What was checked: ${checked}`, "template"),
+    block("field", `Result: ${item.status}.`, "slot"),
+    block("field", `What we found: ${item.found}`, "slot"),
+    ...answerBlocks(item),
+  ];
+  return lines;
+}
+
+function sourceBlocks(blocks: Block[]): Block[] {
+  const cited = citedIds(blocks);
+  const lines: Block[] = [];
+  for (const source of SOURCES) {
+    if (!cited.has(source.id)) continue;
+    const url = source.url ? `: ${source.url}` : "";
+    lines.push(block("p", `[${source.id}] ${source.name}${url}`, "template"));
+  }
+  if (lines.length === 0) return [];
+  return [block("h2", "Sources", "template"), ...lines];
+}
+
+function statusSentence(item: { id: string; name: string; found: string }): string {
+  const found = firstSentence(item.found, `${item.id}, ${plainName(item.name)}, is recorded in the answers.`);
+  return withPointer(found, `Evidence, ${item.id}`);
+}
+
+function banner(file: AnswerFile, blocks: Block[]): void {
+  blocks.push(block("note", FIXED.draftBanner, "template"));
+  if (file.example) blocks.push(block("note", "Example data. Fictional agency and system.", "template"));
+}
+
+function buildExecutive(file: AnswerFile, result: Evaluation, answers: Answers, system: string): Block[] {
+  const blocks: Block[] = [];
+  blocks.push(block("h1", `Executive Summary: ${system}`, "template"));
+  banner(file, blocks);
+  blocks.push(block("p", `Response ID: ${result.responseId}`, "slot"));
+  blocks.push(block("p", `Report date: ${reportDateFromSaved(file.saved_at).label}.`, "slot"));
+  blocks.push(block("h2", "The AI system", "template", { anchor: "sec_1" }));
+  blocks.push(block("p", `AI system (Q4): ${system}`, "answer"));
+  blocks.push(block("p", `Agency: ${[text(answers, "q2_agency"), text(answers, "q2_unit")].filter(Boolean).join(", ") || "No answer provided"}`, "answer"));
+  blocks.push(block("p", `Purpose: ${text(answers, "q7_purpose") || "No answer provided"}`, "answer"));
+  blocks.push(block("p", `Deployment: ${inventoryB5(answers)}`, "answer"));
+  blocks.push(block("p", `Decision role: ${optionLabel("role", text(answers, "q10_role")) || "No answer provided"}`, "answer"));
+  blocks.push(block("p", `Intake reference (Q1): ${text(answers, "q1_intake") || FIXED.noIntake}`, "answer"));
+  const areaNames = many(answers, "q8_areas").map((id) => AREAS.find((area) => area.id === id)?.label ?? id).join(", ") || "no area selected";
+  blocks.push(block("p", `High-risk area: ${areaNames}. This is ${result.area.label}.`, "slot"));
+  blocks.push(block("p", result.summaryDeadline, "template"));
+  blocks.push(block("p", b7Text(result, answers), "slot", { anchor: "b7" }));
+  if (!result.attestation) blocks.push(block("p", "Q25 was not confirmed. The executive summary still needs the Agency Lead's signature.", "template"));
+
+  blocks.push(block("h2", "Bottom line up front", "template"));
+  const bluf = buildBluf(result);
+  for (const sentence of bluf.sentences) blocks.push(block("p", sentence, "slot"));
+  blocks.push(block("h3", "Follow-up steps for the agency", "template"));
+  if (bluf.steps.length === 0) blocks.push(block("p", "No follow-up step is open.", "template"));
+  else {
+    for (const step of bluf.steps) blocks.push(block("step", pointedStep(step, result), "slot", { link: step.link }));
+    blocks.push(block("p", "The owner and due date, where the assessment records one, are in Follow-Up Actions.", "template"));
+  }
+
+  const checks = [...result.criteria, ...result.rp];
+  const well = checks.filter((item) => item.status === "Met" || item.status === "In place");
+  const improve = checks.filter((item) => item.status === "Partial" || item.status === "Gap" || item.status === "Partly in place" || item.status === "Not yet");
+  const skipped = checks.filter((item) => item.status === "Not applicable");
+  blocks.push(block("h2", "What the agency is doing well", "template"));
+  if (well.length === 0) blocks.push(block("p", "No coded safeguard is fully in place.", "template"));
+  else for (const item of well) blocks.push(block("p", statusSentence(item), "slot"));
+  blocks.push(block("h2", "Where there is room for improvement", "template"));
+  if (improve.length === 0) blocks.push(block("p", "No coded safeguard is open or only partly in place.", "template"));
+  else for (const item of improve) blocks.push(block("p", statusSentence(item), "slot"));
+  if (skipped.length) {
+    const names = skipped.map((item) => `${item.id}, ${plainName(item.name)} (Evidence, ${item.id})`).join("; ");
+    blocks.push(block("p", `These checks do not apply: ${names}.`, "slot"));
+  }
+
+  blocks.push(block("h2", "Risks and recommended mitigations", "template"));
+  blocks.push(block("p", "Each risk is in plain language. The note in parentheses names the Evidence section with the full check.", "template"));
+  const timingGroups = ["Before purchase", "Before use", "Before deployment", "Ongoing"] as const;
+  for (const timing of timingGroups) {
+    const group = result.mitigations.filter((item) => item.timing === timing);
+    if (group.length === 0) continue;
+    blocks.push(block("h3", timing, "template"));
+    for (const mit of group) {
+      const number = result.mitigations.indexOf(mit) + 1;
+      const pointer = evidencePointer(mit.covers) || `Evidence, M${number}`;
+      blocks.push(block("label", `M${number} – ${mit.title}`, "template"));
+      const action = /[.!?]$/.test(mit.action.trim()) ? mit.action.trim() : `${mit.action.trim()}.`;
+      blocks.push(block("p", `${riskLine(mit)} The recommended mitigation is: ${action} The owner is ${mit.owner}. See ${pointer}.`, "slot"));
+      blocks.push(mitigationSign(file, mit, number));
+    }
+  }
+
+  blocks.push(block("h2", "Agency Lead acknowledgment", "template", { anchor: "sec_9" }));
+  blocks.push(block("p", FIXED.accuracy, "template"));
+  blocks.push(block("p", FIXED.acknowledge, "template"));
+  blocks.push(leadSign(file));
+  blocks.push(block("p", FIXED.leadNote, "template"));
+  blocks.push(block("p", "Sign by hand on the printed copy, or in the signature field of the PDF. The name and date above are the ones entered in the assessment.", "template"));
+  blocks.push(...sourceBlocks(blocks));
+  return blocks;
+}
+
+function buildEvidence(file: AnswerFile, result: Evaluation, answers: Answers, system: string): Block[] {
+  const blocks: Block[] = [];
+  blocks.push(block("h1", `Evidence: ${system}`, "template"));
+  banner(file, blocks);
+  blocks.push(block("p", "This is the reference for the executive summary. Each gate and criteria check records what was checked, the result, and the answers that drove it.", "template"));
+  blocks.push(block("h2", "Gates", "template", { anchor: "sec_4" }));
+  for (const gate of GATE_CHECKS) {
+    const hit = result.gates.find((item) => item.id === gate.id);
+    blocks.push(block("label", `${gate.id} – ${gate.name}`, "template", { anchor: `gate_${gate.id}` }));
+    blocks.push(block("field", `What was checked: ${gate.checked}`, "template"));
+    blocks.push(block("field", hit ? `Result: Set. ${hit.because}` : "Result: Not set. The answers do not meet this gate.", "slot"));
+  }
+  blocks.push(block("h2", "Other facts used with the gates", "template"));
+  if (result.prohibited) {
+    blocks.push(block("p", `Prohibited use: ${result.prohibitedLabels.join("; ")}. The Responsible AI Policy lists this use [P1].`, "slot"));
+  } else blocks.push(block("p", "Prohibited use: none selected.", "template"));
+  if (result.speech) blocks.push(block("p", "This use touches speech, assembly or religion. It needs named legal authority; refer to agency counsel.", "template"));
+  const levelLine = dataLevel(answers) === "unknown"
+    ? "Data level: Unknown (not assigned). A missing data level is itself a gap. The privacy track is open (PTA; PIA if the State Chief Privacy Officer directs) [P4]."
+    : `Data level and safeguards: ${levelSafeguard(dataLevel(answers))}`;
+  blocks.push(block("p", levelLine, "template"));
+  if (result.suggestedLevel) blocks.push(block("p", `The data described in Q14 suggests at least ${result.suggestedLevel}. Apply that level's safeguards until the agency confirms the level [P3].`, "slot"));
+  if (result.overlays.length) blocks.push(block("p", `${result.overlays.join(", ")} applies, so the stricter of State policy and that overlay applies [P3].`, "slot"));
+  if (result.privacyTrack && dataLevel(answers) !== "unknown") blocks.push(block("p", "The privacy track is open: PTA, and a PIA if the State Chief Privacy Officer directs [P4].", "template"));
+  for (const check of result.crossChecks) blocks.push(block("p", check.message, "slot"));
+  if (result.priorDeployment) blocks.push(block("p", result.priorDeployment, "slot"));
+  blocks.push(block("p", result.deadlineLine, "template"));
+
+  blocks.push(block("h2", "Criteria", "template"));
+  for (const item of result.criteria) {
+    const kind = item.id === "C1" || item.id === "C2" || item.id === "C3" ? "whether this impact is present" : "the safeguard statements and evidence for this criterion";
+    blocks.push(...findingBlocks(item, `${item.name}: ${kind}.`));
+  }
+  blocks.push(block("h3", "Recommended practice checks (ISO/IEC 42001 and ISO/IEC 27090)", "template"));
+  blocks.push(block("p", "These checks are recommendations. They are not Maryland law and not DoIT policy.", "template"));
+  for (const item of result.rp) {
+    const aligned = RP_META.find((row) => row.id === item.id)?.aligned ?? "";
+    blocks.push(...findingBlocks(item, `${item.name}: the recommended-practice statements and any evidence the agency gave.`));
+    blocks.push(block("field", `Aligned to: ${aligned}`, "template"));
+  }
+  blocks.push(...sourceBlocks(blocks));
+  return blocks;
+}
+
+function buildSubmission(file: AnswerFile, result: Evaluation, answers: Answers, system: string): Block[] {
+  const blocks: Block[] = [];
+  const when = reportDateFromSaved(file.saved_at).label;
+  blocks.push(block("h1", `Assessment Submission Record: ${system}`, "template"));
+  banner(file, blocks);
+  blocks.push(block("p", `AI system: ${system}`, "answer"));
+  blocks.push(block("p", `Submission date: ${file.saved_at ? when : "not submitted to DoIT"}.`, "answer"));
+  blocks.push(block("p", FIXED.appendixNote.replace("{id}", result.responseId).replace("{when}", file.saved_at ? when : "not submitted to DoIT"), "template"));
+  let section = "";
+  for (const question of QUESTIONS) {
+    if (question.section !== section) {
+      section = question.section;
+      blocks.push(block("h3", section, "template"));
+    }
+    blocks.push(block("label", `Q${question.n}. ${question.text}`, "template"));
+    if (question.rp) blocks.push(block("note", `Recommended practice (${question.rp}): good practice, not a State rule`, "template"));
+    blocks.push(block("qa", appendixAnswer(answers, question.n), "answer"));
+  }
+  return blocks;
+}
+
+function buildFollowUp(file: AnswerFile, result: Evaluation, system: string): Block[] {
+  const blocks: Block[] = [];
+  const bluf = buildBluf(result);
+  blocks.push(block("h1", `Follow-Up Actions: ${system}`, "template"));
+  banner(file, blocks);
+  blocks.push(block("p", "Each step is one sentence. The owner and due date are shown when this assessment records them. The note in parentheses names the Evidence section.", "template"));
+  blocks.push(block("h2", "Follow-up steps", "template"));
+  if (bluf.steps.length === 0) blocks.push(block("p", "No follow-up step is open.", "template"));
+  for (const step of bluf.steps) {
+    const owner = stepOwner(step, result);
+    const due = stepDue(file, step, result);
+    const aside = [owner ? `Owner: ${owner}.` : "", due ? `Due date: ${due}.` : ""].filter(Boolean).join("\n");
+    blocks.push(block("step", pointedStep(step, result), "slot", { link: step.link, aside: aside || undefined }));
+  }
+  return blocks;
 }
 
 function b7Text(result: Evaluation, answers: Answers): string {
@@ -364,191 +621,42 @@ function b7Text(result: Evaluation, answers: Answers): string {
   return textValue;
 }
 
+export function reportFileStem(systemName: string): string {
+  const safe = systemName.replace(/[^\w.-]+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "").slice(0, 80);
+  return safe || "assessment";
+}
+
+export function documentView(doc: ReportDoc, part: ReportDocument): ReportView {
+  return {
+    blocks: part.blocks,
+    systemName: doc.systemName,
+    documentTitle: part.title,
+    reportDate: doc.reportDate,
+  };
+}
+
 export function buildReport(file: AnswerFile): ReportDoc {
   const answers = file.answers ?? {};
   const result = evaluate(file);
   const system = text(answers, "q4_name") || "Unnamed AI system";
-  const blocks: Block[] = [];
-  const example = file.example ? "Example data. Fictional agency and system." : "";
-  blocks.push(block("h1", `Algorithmic Impact Assessment: ${system}`, "template"));
-  blocks.push(block("note", FIXED.draftBanner, "template"));
-  if (example) blocks.push(block("note", example, "template"));
-  blocks.push(block("p", `Response ID: ${result.responseId}`, "slot"));
-  blocks.push(block("p", `Intake reference (Q1): ${text(answers, "q1_intake") || FIXED.noIntake}`, "answer"));
-  blocks.push(block("p", `AI system (Q4): ${system}`, "answer"));
-
-  blocks.push(block("h2", "Bottom line up front", "template"));
-  const bluf = buildBluf(result);
-  for (const sentence of bluf.sentences) blocks.push(block("p", sentence, "slot"));
-  blocks.push(block("h3", "Follow-up steps for the agency", "template"));
-  if (bluf.steps.length === 0) blocks.push(block("p", "No follow-up step is open.", "template"));
-  else for (const step of bluf.steps) blocks.push(block("step", step.text, "slot", { link: step.link }));
-
-  blocks.push(block("h2", "1. Summary", "template"));
-  if (text(answers, "q1_intake") === "") blocks.push(block("p", FIXED.noIntake, "template"));
-  blocks.push(block("p", summaryText(result, answers), "slot"));
-
-  blocks.push(block("h2", "2. Purpose of this assessment", "template"));
-  for (const paragraph of FIXED.purpose) blocks.push(block("p", paragraph, "template"));
-
-  blocks.push(block("h2", "3. The AI system and inventory record", "template"));
-  const fields: [string, string][] = [
-    ["(b1) Name", system],
-    ["(b2) Developer and version", inventoryB2(answers)],
-    ["(b3) Capabilities", text(answers, "q6_description") || many(answers, "q6_capabilities").map((id) => labelOf(CAPABILITIES, id)).join("; ") || "No answer provided"],
-    ["(b4) Purpose", text(answers, "q7_purpose") || "No answer provided"],
-    ["(b5) Deployment date or status", inventoryB5(answers)],
-    ["(b6) Decision role", optionLabel("role", text(answers, "q10_role")) || "No answer provided"],
-    ["(b7) Inventory summary", "see Section 8"],
-    ["Agency", [text(answers, "q2_agency"), text(answers, "q2_unit")].filter(Boolean).join(", ") || "No answer provided"],
-    ["Intake reference", text(answers, "q1_intake") || FIXED.noIntake],
-    ["Deployment status", labelOf(DEPLOYMENT, deployment(answers)) || "No answer provided"],
-    ...(procurementApplicable(answers) ? [["Procurement date", labelOf(PROCUREMENT, text(answers, "q18_procured")) || "No answer provided"] as [string, string]] : []),
-    ["Submitter role", text(answers, "q2_role") || "No answer provided"],
-    ["Agency Lead role", text(answers, "q3_is_lead") === "yes" ? (text(answers, "q2_role") || "Submitter") : (text(answers, "q3_lead_role") || "Not named")],
+  const documents: ReportDocument[] = [
+    { key: "executive", title: "Executive Summary", slug: "1-Executive-Summary", blocks: buildExecutive(file, result, answers, system) },
+    { key: "evidence", title: "Evidence", slug: "2-Evidence", blocks: buildEvidence(file, result, answers, system) },
+    { key: "submission", title: "Assessment Submission Record", slug: "3-Assessment-Submission-Record", blocks: buildSubmission(file, result, answers, system) },
+    { key: "followup", title: "Follow-Up Actions", slug: "4-Follow-Up-Actions", blocks: buildFollowUp(file, result, system) },
   ];
-  for (const [label, value] of fields) blocks.push(block("p", `${label}: ${value}`, "answer"));
-  if (!result.attestation) blocks.push(block("p", "Q25 was not confirmed. Section 9 still needs the Agency Lead's signature.", "template"));
-
-  blocks.push(block("h2", "4. Why this AI system is High-risk", "template"));
-  blocks.push(block("p", "The intake found this AI system High-risk.", "template"));
-  const areaNames = many(answers, "q8_areas").map((id) => AREAS.find((area) => area.id === id)?.label ?? id).join(", ") || "no area selected";
-  blocks.push(block("p", `High-risk area: ${areaNames}. This is ${result.area.label} (SF&P § 3.5-801) [S1].`, "slot"));
-  if (text(answers, "q8_how")) blocks.push(block("p", `How the agency describes the effect: ${text(answers, "q8_how")}`, "answer"));
-  if (result.gates.length === 0) blocks.push(block("p", "No risk gate was set from the coded answers.", "template"));
-  for (const item of result.gates) blocks.push(block("p", `${item.id}: ${item.name}. ${item.because}`, "slot"));
-  if (result.speech) blocks.push(block("p", "This use touches speech, assembly or religion. It needs named legal authority; refer to agency counsel.", "template"));
-  const levelLine = dataLevel(answers) === "unknown"
-    ? "Data level: Unknown (not assigned). A missing data level is itself a gap. The privacy track is open (PTA; PIA if the State Chief Privacy Officer directs) [P4]."
-    : `Data level and safeguards: ${levelSafeguard(dataLevel(answers))}`;
-  blocks.push(block("p", levelLine, "template"));
-  if (result.suggestedLevel) {
-    blocks.push(block("p", `The data described in Q14 suggests at least ${result.suggestedLevel}. Apply that level's safeguards until the agency confirms the level [P3].`, "slot"));
-  }
-  if (result.overlays.length) {
-    blocks.push(block("p", `${result.overlays.join(", ")} applies, so the stricter of State policy and that overlay applies [P3].`, "slot"));
-  }
-  if (result.privacyTrack && dataLevel(answers) !== "unknown") {
-    blocks.push(block("p", "The privacy track is open: PTA, and a PIA if the State Chief Privacy Officer directs [P4].", "template"));
-  }
-  if (result.prohibited) {
-    blocks.push(block("p", `The Responsible AI Policy lists this as a prohibited use [P1]: ${result.prohibitedLabels.join("; ")}. Resolve it before any use. This report does not approve or reject the AI system.`, "slot"));
-  }
-  for (const check of result.crossChecks) blocks.push(block("p", check.message, "slot"));
-  if (result.priorDeployment) blocks.push(block("p", result.priorDeployment, "slot"));
-  blocks.push(block("p", result.deadlineLine, "template"));
-
-  blocks.push(block("h2", "5. Findings by criterion", "template"));
-  for (const item of result.criteria) {
-    blocks.push(block("label", `${item.id} – ${item.name}: ${item.status}`, "template"));
-    blocks.push(block("field", `What we found: ${item.found}`, "slot"));
-    blocks.push(...answerBlocks(item));
-  }
-  blocks.push(block("h3", "Recommended practice checks (ISO/IEC 42001 and ISO/IEC 27090)", "template"));
-  blocks.push(block("p", "These checks are recommendations. They are not Maryland law and not DoIT policy.", "template"));
-  for (const item of result.rp) {
-    const aligned = RP_META.find((row) => row.id === item.id)?.aligned ?? "";
-    blocks.push(block("label", `${item.id} – ${item.name}: ${item.status}`, "template"));
-    blocks.push(block("field", `What we found: ${item.found}`, "slot"));
-    blocks.push(...answerBlocks(item));
-    blocks.push(block("field", `Aligned to: ${aligned}`, "template"));
-  }
-
-  blocks.push(block("h2", "6. Risks and recommended mitigations", "template"));
-  const timingGroups = ["Before purchase", "Before use", "Before deployment", "Ongoing"] as const;
-  for (const timing of timingGroups) {
-    const group = result.mitigations.filter((item) => item.timing === timing);
-    if (group.length === 0) continue;
-    blocks.push(block("h3", timing, "template"));
-    group.forEach((mit, index) => {
-      const number = result.mitigations.indexOf(mit) + 1;
-      blocks.push(block("label", `M${number} – ${mit.title}`, "template"));
-      blocks.push(block("field", `Risk: ${riskLine(mit)}`, "slot"));
-      blocks.push(block("field", `Action: ${mit.action}`, "template"));
-      blocks.push(block("field", `Owner: ${mit.owner}. Source: ${mit.sources.map((id) => `[${id}]`).join(" ")}.`, "template"));
-      blocks.push(block("field", `Remaining risk: ${mit.remaining}`, "template"));
-      void index;
-    });
-  }
-
-  blocks.push(block("h2", "7. Agency Follow-Up", "template"));
-  blocks.push(block("p", FIXED.followupOpener, "template"));
-  let f = 1;
-  const placed = new Set<number>();
-  result.mitigations.forEach((mit, index) => {
-    const number = index + 1;
-    const related = result.followups.filter((item) => item.mitigationId === mit.id);
-    for (const item of related) placed.add(item.q);
-    blocks.push(block("label", `F${f} – ${mit.title}`, "template"));
-    blocks.push(block("field", `For: M${number}${mit.covers.length ? `, ${mit.covers.join(", ")}` : ""}.`, "slot"));
-    blocks.push(block("field", `What to gather: ${gather(mit)}`, "template"));
-    blocks.push(block("field", `Likely owner: ${mit.owner}.`, "template"));
-    const questions = related.map((item) => item.text);
-    questions.push("Who will do the work, and what date will you put in Section 9?");
-    blocks.push(block("field", `Questions to work through: ${questions.map((item, i) => `${i + 1}. ${item}`).join(" ")}`, "slot"));
-    blocks.push(block("field", `Done when: ${doneWhen(mit)}`, "template"));
-    f += 1;
-  });
-  for (const item of result.followups.filter((row) => !placed.has(row.q))) {
-    blocks.push(block("label", `F${f} – Follow-up on Q${item.q}`, "template"));
-    blocks.push(block("field", `For: Q${item.q}.`, "template"));
-    blocks.push(block("field", "What to gather: The missing answer and the record that supports it.", "template"));
-    blocks.push(block("field", "Likely owner: Agency Lead.", "template"));
-    blocks.push(block("field", `Questions to work through: 1. ${item.text}`, "slot"));
-    blocks.push(block("field", "Done when: The answer is recorded and, if it changes a finding, the assessment is updated.", "template"));
-    f += 1;
-  }
-  if (result.confirmFacts.length) {
-    blocks.push(block("label", "Confirm the facts this report relies on", "template"));
-    blocks.push(block("field", `For: ${result.confirmFacts.map((item) => `Q${item.q}`).join(", ")}.`, "slot"));
-    blocks.push(block("field", "What to gather: Your own records that back each fact below.", "template"));
-    blocks.push(block("field", "Likely owner: Agency Lead.", "template"));
-    blocks.push(block("field", `Questions to work through: ${result.confirmFacts.map((item, i) => `${i + 1}. ${item.text}`).join(" ")}`, "answer"));
-    blocks.push(block("field", "Done when: The Agency Lead has checked each fact before signing Section 9. If a fact is wrong or changes, the agency updates its answers and this assessment.", "template"));
-  }
-
-  blocks.push(block("h2", "8. Inventory summary (b7)", "template"));
-  blocks.push(block("p", b7Text(result, answers), "slot"));
-
-  blocks.push(block("break", "section-9", "template"));
-  blocks.push(block("h2", "9. Agency Lead acknowledgment", "template"));
-  result.mitigations.forEach((mit, index) => {
-    blocks.push(mitigationSign(mit, index + 1));
-  });
-  blocks.push(block("p", FIXED.accuracy, "template"));
-  blocks.push(block("p", FIXED.acknowledge, "template"));
-  blocks.push(leadSign());
-  blocks.push(block("p", FIXED.leadNote, "template"));
-
-  blocks.push(block("h2", "10. Sources", "template"));
-  const cited = citedIds(blocks);
-  for (const source of SOURCES) {
-    if (!cited.has(source.id)) continue;
-    const url = source.url ? `: ${source.url}` : "";
-    blocks.push(block("p", `[${source.id}] ${source.name}${url}`, "template"));
-  }
-
-  blocks.push(block("break", "appendix", "template"));
-  blocks.push(block("h2", "Appendix: Questions and answers used in this assessment", "template"));
-  const when = file.saved_at || "not submitted to DoIT";
-  blocks.push(block("p", FIXED.appendixNote.replace("{id}", result.responseId).replace("{when}", when), "template"));
-  let section = "";
-  for (const question of QUESTIONS) {
-    if (question.section !== section) {
-      section = question.section;
-      blocks.push(block("h3", section, "template"));
-    }
-    blocks.push(block("label", `Q${question.n}. ${question.text}`, "template"));
-    if (question.rp) blocks.push(block("note", `Recommended practice (${question.rp}): good practice, not a State rule`, "template"));
-    blocks.push(block("qa", appendixAnswer(answers, question.n), "answer"));
-  }
-
+  const blocks = documents.flatMap((part) => part.blocks);
   for (const item of blocks) {
     if (item.type === "h2" && !item.anchor) item.anchor = sectionAnchor(item.text);
     if (item.type === "label" && !item.anchor) item.anchor = labelAnchor(item.text);
   }
-
-  return { blocks, systemName: system, checks: selfCheck(blocks, result, answers) };
+  return {
+    blocks,
+    documents,
+    systemName: system,
+    reportDate: reportDateFromSaved(file.saved_at).label,
+    checks: selfCheck(blocks, result, answers),
+  };
 }
 
 function citedIds(blocks: Block[]): Set<string> {
@@ -581,8 +689,7 @@ export function selfCheck(blocks: Block[], result: Evaluation, answers: Answers)
   if (/\bApproved\b/.test(textValue)) approval.push("Approved");
   const email = text(answers, "q3_email");
   const ongoing = result.mitigations.filter((item) => item.timing === "Ongoing");
-  const section8Index = blocks.findIndex((item) => item.text.startsWith("8. Inventory"));
-  const b7Block = blocks[section8Index + 1];
+  const b7Block = blocks.find((item) => item.anchor === "b7");
   const live = text(answers, "q17_status") === "live" && !result.statusConflict;
   const planning = (text(answers, "q17_status") === "planning" || text(answers, "q17_status") === "procuring") && !result.statusConflict;
   const badTiming = result.mitigations.filter((item) => {
@@ -592,17 +699,17 @@ export function selfCheck(blocks: Block[], result: Evaluation, answers: Answers)
   });
   const unsourced = blocks.filter((item) => item.type !== "break" && !item.source);
   const blufStart = blocks.findIndex((item) => item.text === "Bottom line up front");
-  const summaryAt = blocks.findIndex((item) => item.text === "1. Summary");
-  const blufSlice = blufStart >= 0 && summaryAt > blufStart ? blocks.slice(blufStart, summaryAt) : [];
+  const nextHeading = blocks.findIndex((item, index) => index > blufStart && item.type === "h2");
+  const blufSlice = blufStart >= 0 && nextHeading > blufStart ? blocks.slice(blufStart, nextHeading) : [];
   const followAt = blufSlice.findIndex((item) => item.text === "Follow-up steps for the agency");
   const takeawayText = blufSlice.slice(0, Math.max(followAt, 0)).filter((item) => item.type === "p").map((item) => item.text).join(" ");
   const takeawaySentences = takeawayText.split(/(?<=[.!?])\s+/).filter(Boolean);
   const stepBlocks = blufSlice.filter((item) => item.type === "step");
   const nothingOpen = blufSlice.some((item) => item.text === "No follow-up step is open.");
   const anchors = new Set(blocks.flatMap((item) => item.anchor ? [item.anchor] : []));
-  const brokenLinks = stepBlocks.filter((item) => !item.link || !anchors.has(item.link));
-  const stepPeriods = stepBlocks.filter((item) => (item.text.match(/[.!?]/g) ?? []).length !== 1);
-  const firstHeading = blocks.findIndex((item) => item.type === "h2");
+  const everyStep = blocks.filter((item) => item.type === "step");
+  const brokenLinks = everyStep.filter((item) => !item.link || !anchors.has(item.link));
+  const stepPeriods = everyStep.filter((item) => (item.text.match(/[.!?]/g) ?? []).length !== 1);
   return [
     { id: "sourced", ok: unsourced.length === 0, detail: "Every block has a template, answer or slot source." },
     { id: "banned", ok: bannedHit.length === 0, detail: bannedHit.join(", ") || "No banned words." },
@@ -617,7 +724,7 @@ export function selfCheck(blocks: Block[], result: Evaluation, answers: Answers)
     { id: "q25-followup", ok: !result.followups.some((item) => item.q === 25), detail: "No Q25 follow-up." },
     { id: "cap", ok: !result.wellAnswered || result.mitigations.length <= 3, detail: `${result.mitigations.length} mitigations; well answered: ${result.wellAnswered}.` },
     { id: "tags", ok: !textValue.includes("[P1] Implementation Guidance") && !/\[P2\] Responsible AI Policy(?! Implementation)/.test(textValue), detail: "P1 and P2 tags match their names." },
-    { id: "bluf", ok: blufStart === firstHeading && followAt > 0 && takeawaySentences.length >= 2 && takeawaySentences.length <= 4 && takeawayText.includes("The risk level is High-risk.") && takeawayText.includes("The outcome is"), detail: `${takeawaySentences.length} sentences.` },
+    { id: "bluf", ok: blufStart > 0 && followAt > 0 && takeawaySentences.length >= 2 && takeawaySentences.length <= 4 && takeawayText.includes("The risk level is High-risk.") && takeawayText.includes("The outcome is"), detail: `${takeawaySentences.length} sentences.` },
     { id: "follow-steps", ok: (stepBlocks.length > 0) !== nothingOpen && stepPeriods.length === 0, detail: stepBlocks.length ? `${stepBlocks.length} steps.` : "No follow-up step is open." },
     { id: "links", ok: brokenLinks.length === 0, detail: brokenLinks.map((item) => item.link ?? item.text).join(", ") || "Follow-up steps link to a section or check." },
   ];

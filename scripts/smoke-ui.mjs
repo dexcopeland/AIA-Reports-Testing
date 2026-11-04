@@ -77,9 +77,9 @@ await page.screenshot({ path: `${outDir}/04-report-mobile.png` });
 
 const client = await page.createCDPSession();
 await client.send("Page.setDownloadBehavior", { behavior: "allow", downloadPath: outDir });
-await page.click("button::-p-text(Download Word)");
-await page.waitForFunction(() => document.body.innerText.includes("Word file downloaded"), { timeout: 15000 }).catch(() => {
-  failures.push("Word download did not confirm.");
+await page.click("button::-p-text(Download report package (.zip))");
+await page.waitForFunction(() => document.body.innerText.includes("Report package downloaded"), { timeout: 20000 }).catch(() => {
+  failures.push("Report package download did not confirm.");
 });
 
 await browser.close();

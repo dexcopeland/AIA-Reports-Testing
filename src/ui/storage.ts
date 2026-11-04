@@ -1,5 +1,6 @@
 import { FORM_VERSION, RULES_VERSION, SCHEMA_VERSION, type AnswerFile } from "../content/types";
 import type { Answers } from "../engine/answers";
+import { normalizeSignoff } from "../engine/signoff";
 
 const KEY = "md-aia-draft-v1";
 
@@ -41,6 +42,7 @@ export function normalizeFile(value: unknown): AnswerFile {
     throw new Error(`This file uses schema ${schema || "unknown"}. This app reads schema ${SCHEMA_VERSION}.`);
   }
   const answers = record.answers && typeof record.answers === "object" ? (record.answers as Answers) : {};
+  const signoff = normalizeSignoff(record.signoff);
   return {
     schema_version: SCHEMA_VERSION,
     form_version: String(record.form_version ?? FORM_VERSION),
@@ -49,6 +51,7 @@ export function normalizeFile(value: unknown): AnswerFile {
     example: Boolean(record.example),
     example_label: typeof record.example_label === "string" ? record.example_label : undefined,
     answers,
+    ...(signoff ? { signoff } : {}),
   };
 }
 

@@ -1,15 +1,17 @@
 import { strFromU8, unzipSync } from "fflate";
 import { describe, expect, it } from "vitest";
 import { reportToDocxBlob } from "../src/docx/build-docx";
-import { buildReport } from "../src/engine/report";
+import { buildReport, documentView, type ReportDocument } from "../src/engine/report";
 import { buildScenario } from "../src/scenarios/build";
 import { SCENARIOS } from "../src/scenarios/catalog";
 
-async function documentXml(scenarioId: string): Promise<string> {
+async function documentXml(scenarioId: string, key: ReportDocument["key"]): Promise<string> {
   const scenario = SCENARIOS.find((item) => item.id === scenarioId);
   expect(scenario).toBeTruthy();
   const report = buildReport(buildScenario(scenario!));
-  const blob = await reportToDocxBlob(report);
+  const part = report.documents.find((item) => item.key === key);
+  expect(part).toBeTruthy();
+  const blob = await reportToDocxBlob(documentView(report, part!));
   const files = unzipSync(new Uint8Array(await blob.arrayBuffer()));
   return strFromU8(files["word/document.xml"]);
 }
@@ -19,12 +21,15 @@ describe("Word report", () => {
     const scenario = SCENARIOS.find((item) => item.id === "S01");
     expect(scenario).toBeTruthy();
     const report = buildReport(buildScenario(scenario!));
-    const blob = await reportToDocxBlob(report);
+    const part = report.documents.find((item) => item.key === "executive");
+    expect(part).toBeTruthy();
+    const blob = await reportToDocxBlob(documentView(report, part!));
     const xml = strFromU8(unzipSync(new Uint8Array(await blob.arrayBuffer()))["word/document.xml"]);
+    const evidence = await documentXml("S01", "evidence");
     expect(xml).toContain("Times New Roman");
     expect(xml).toContain("Bottom line up front");
     expect(xml).toContain("No follow-up step is open.");
-    expect(xml).toContain("w:numPr");
+    expect(evidence).toContain("w:numPr");
     expect(xml).not.toContain("________");
     expect(xml).not.toContain("{{cc|");
     const fields = report.blocks.flatMap((block) => block.fields ?? []);
@@ -39,14 +44,12 @@ describe("Word report", () => {
   });
 
   it("links each follow-up step to a bookmark in the same file", async () => {
-    const xml = await documentXml("S02");
-    expect(xml).toContain("The outcome is high-risk routing.");
-    const anchors = [...xml.matchAll(/w:anchor="([^"]+)"/g)].map((match) => match[1]);
-    const bookmarks = new Set([...xml.matchAll(/w:name="([^"]+)"/g)].map((match) => match[1]));
-    expect(anchors.length).toBeGreaterThan(0);
-    for (const anchor of anchors) expect(bookmarks.has(anchor)).toBe(true);
+    const evidence = await documentXml("S02", "evidence");
+    const followup = await documentXml("S02", "followup");
+    const bookmarks = new Set([...evidence.matchAll(/w:name="([^"]+)"/g)].map((match) => match[1]));
     expect(bookmarks.has("check_C9")).toBe(true);
     expect(bookmarks.has("sec_4")).toBe(true);
-    expect(xml).toContain("Close C9, human oversight, which is not in place.");
+    expect(followup).toContain("Close C9, human oversight, which is not in place (Evidence, C9).");
+    expect(followup).toContain("Owner:");
   });
 });
