@@ -31,13 +31,23 @@ if (saveCount !== 1) failures.push(`Expected one Save draft button, found ${save
 const saveInHeader = await page.$eval("#save-draft", (node) => Boolean(node.closest("header")));
 if (!saveInHeader) failures.push("Save draft is not in the header.");
 
-await page.select("#example-select", "vendor-eligibility-triage");
+await page.click("#example-select");
+await page.waitForSelector("[data-slot='select-item']");
+const exampleCount = await page.$$eval("[data-slot='select-item']", (nodes) => nodes.length);
+if (exampleCount !== 10) failures.push(`Expected 10 examples, found ${exampleCount}.`);
+await page.click("[data-slot='select-item']::-p-text(Benefits eligibility triage)");
 await page.waitForFunction(() => {
   const button = document.querySelector("#load-example");
   return button instanceof HTMLButtonElement && !button.disabled;
 });
 const blurb = await page.$eval("#example-description", (node) => node.textContent);
 if (!blurb?.includes("Eligibility staff")) failures.push(`Example description missing: ${blurb}`);
+const selectedLook = await page.$eval("#example-select", (node) => {
+  const style = getComputedStyle(node);
+  return { text: node.textContent ?? "", color: style.color, background: style.backgroundColor };
+});
+if (!selectedLook.text.includes("Benefits eligibility triage")) failures.push(`Closed select text: ${selectedLook.text}`);
+if (selectedLook.color === selectedLook.background) failures.push("Selected example text matches its background.");
 await page.click("#load-example");
 await page.waitForSelector("#section-heading");
 const section = await page.$eval("#section-heading", (node) => node.textContent);
@@ -45,8 +55,17 @@ if (!section?.includes("About this request")) failures.push(`Unexpected section:
 
 const agency = await page.$eval("#q2_agency", (node) => node.value);
 if (!agency.includes("fictional")) failures.push("Example agency was not loaded.");
-const headerStuck = await page.$eval("#header-progress", (node) => !node.hidden && node.querySelector("progress") !== null);
+const headerStuck = await page.$eval("#header-progress", (node) => !node.hidden && node.querySelector("[role='progressbar']") !== null);
 if (!headerStuck) failures.push("Progress is not in the sticky header.");
+const stepVisible = await page.evaluate(() => {
+  const nav = document.querySelector("[aria-label='Sections']");
+  const current = nav?.querySelector("[aria-current='step']");
+  if (!(nav instanceof HTMLElement) || !(current instanceof HTMLElement)) return false;
+  const navBox = nav.getBoundingClientRect();
+  const box = current.getBoundingClientRect();
+  return box.left >= navBox.left - 1 && box.right <= navBox.right + 1 && (current.textContent ?? "").includes("About this request");
+});
+if (!stepVisible) failures.push("Current section step is clipped in the header.");
 await page.screenshot({ path: `${outDir}/02-example-section.png` });
 
 await page.click('button[aria-current="step"]');
@@ -59,7 +78,7 @@ const attest = await page.$('button::-p-text(7. Attestation)');
 if (!attest) failures.push("Attestation step missing.");
 await attest?.click();
 await page.waitForFunction(() => document.querySelector("#section-heading")?.textContent?.includes("Attestation"));
-const confirmed = await page.$eval("#q25_confirm-confirm", (node) => node.checked);
+const confirmed = await page.$eval("#q25_confirm-confirm", (node) => node instanceof HTMLInputElement ? node.checked : node.getAttribute("aria-checked") === "true");
 if (!confirmed) failures.push("Example Q25 was not confirmed.");
 
 await page.click("button::-p-text(Review and create draft)");

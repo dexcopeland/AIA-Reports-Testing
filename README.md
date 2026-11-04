@@ -95,7 +95,7 @@ Asset paths are relative, so the same build works at that project URL and on a l
 
 ## Stack
 
-Vite and TypeScript, with no UI framework. The form uses native controls (labels, fieldsets, radios, checkboxes). The Word files are built in the browser with the `docx` library and ask for Times New Roman. The PDFs embed Liberation Serif (SIL Open Font License, in `src/fonts/`) and use DejaVu Serif, under the Bitstream Vera license in that same folder, when Liberation Serif has no glyph. Times New Roman itself is not included in this repository. The zip is built in the browser with `fflate`, so GitHub Pages does not need a server.
+Vite, TypeScript, and React. The screens use shadcn/ui (Tailwind) themed with the Maryland navy palette and Source Sans Pro. Scoring, branching, and report assembly stay in framework-free modules. The Word files are built in the browser with the `docx` library and ask for Times New Roman. The PDFs embed Liberation Serif (SIL Open Font License, in `src/fonts/`) and use DejaVu Serif, under the Bitstream Vera license in that same folder, when Liberation Serif has no glyph. Times New Roman itself is not included in this repository. The zip is built in the browser with `fflate`, loaded only when a report package is downloaded, so GitHub Pages does not need a server.
 
 ## Remaining work
 
