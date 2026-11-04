@@ -5,6 +5,7 @@ import {
   CheckBox,
   Document,
   Footer,
+  Header,
   HeadingLevel,
   InternalHyperlink,
   LevelFormat,
@@ -21,7 +22,8 @@ import {
   WidthType,
   type FileChild,
 } from "docx";
-import type { Block, ReportDoc, SignField } from "../engine/report";
+import { formatIsoDate } from "../engine/dates";
+import type { Block, ReportView, SignField } from "../engine/report";
 import { REPORT_STYLE } from "../report/style";
 import { applyContentControls } from "./content-controls";
 
@@ -51,8 +53,14 @@ const openBorders = { top: openBorder, bottom: openBorder, left: openBorder, rig
 const lineBorder = { style: BorderStyle.SINGLE, size: 6, color: NAVY };
 const boxBorders = { top: lineBorder, bottom: lineBorder, left: lineBorder, right: lineBorder };
 
+function markerValue(field: SignField): string {
+  const raw = field.value ?? "";
+  if (field.kind === "date") return formatIsoDate(raw);
+  return raw;
+}
+
 function fieldMarker(field: SignField): TextRun {
-  return run(`{{cc|${field.name}|${field.lines}|${field.label}}}`, { size: 22 });
+  return run(`{{cc|${field.name}|${field.lines}|${field.label}|${encodeURIComponent(markerValue(field))}}}`, { size: 22 });
 }
 
 function acknowledgmentTable(block: Block): Table {
@@ -68,7 +76,7 @@ function acknowledgmentTable(block: Block): Table {
       new Paragraph({
         spacing: { before: 20, after: 20 },
         children: field
-          ? [run(`${field.label} `, { size: 22 }), new CheckBox({ alias: `${field.label} ${field.group ?? field.name}` })]
+          ? [run(`${field.label} `, { size: 22 }), new CheckBox({ alias: `${field.label} ${field.group ?? field.name}`, checked: Boolean(field.selected) })]
           : [run(" ", { size: 22 })],
       }),
     ],
@@ -111,7 +119,7 @@ function commentTable(field: SignField): Table {
     columnWidths: [9360],
     rows: [
       new TableRow({
-        cantSplit: true,
+        cantSplit: !(field.value ?? "").trim(),
         children: [
           new TableCell({
             width: { size: 9360, type: WidthType.DXA },
@@ -183,7 +191,7 @@ function signTable(block: Block): FileChild[] {
   ];
 }
 
-function paragraphFrom(block: Block): FileChild[] {
+function paragraphFrom(block: Block, anchors: Set<string>): FileChild[] {
   if (block.type === "break") return [new Paragraph({ children: [new PageBreak()] })];
   if (block.type === "h1") {
     return [
@@ -223,26 +231,34 @@ function paragraphFrom(block: Block): FileChild[] {
     ];
   }
   if (block.type === "step") {
+    const aside = (block.aside ?? "").split("\n").filter(Boolean).map((line) => new Paragraph({
+      indent: { left: 720 },
+      spacing: { before: 0, after: 40 },
+      children: [run(line, { size: 24 })],
+    }));
     return [
       new Paragraph({
         numbering: { reference: "follow-up-steps", level: 0 },
-        spacing: { before: 40, after: 40 },
-        children: [
-          new InternalHyperlink({
-            anchor: block.link ?? "",
-            children: [
-              new TextRun({
-                text: block.text,
-                font: FONT,
-                size: 24,
-                style: "Hyperlink",
-                color: REPORT_STYLE.rule,
-                underline: { type: UnderlineType.SINGLE, color: REPORT_STYLE.rule },
-              }),
-            ],
-          }),
-        ],
+        spacing: { before: 40, after: aside.length > 0 ? 20 : 40 },
+        children: block.link && anchors.has(block.link)
+          ? [
+            new InternalHyperlink({
+              anchor: block.link,
+              children: [
+                new TextRun({
+                  text: block.text,
+                  font: FONT,
+                  size: 24,
+                  style: "Hyperlink",
+                  color: REPORT_STYLE.rule,
+                  underline: { type: UnderlineType.SINGLE, color: REPORT_STYLE.rule },
+                }),
+              ],
+            }),
+          ]
+          : [run(block.text, { size: 24 })],
       }),
+      ...aside,
     ];
   }
   if (block.type === "sign") return signTable(block);
@@ -294,13 +310,21 @@ function paragraphFrom(block: Block): FileChild[] {
   ];
 }
 
-export async function reportToDocxBlob(doc: ReportDoc): Promise<Blob> {
-  const children = doc.blocks.flatMap((item) => paragraphFrom(item));
+export async function reportToDocxBlob(doc: ReportView): Promise<Blob> {
+  const anchors = new Set(doc.blocks.flatMap((item) => item.anchor ? [item.anchor] : []));
+  const children = doc.blocks.flatMap((item) => paragraphFrom(item, anchors));
+  const header = new Header({
+    children: [
+      new Paragraph({
+        children: [run(`${doc.systemName} · ${doc.documentTitle}`, { size: 18, color: MUTED })],
+      }),
+    ],
+  });
   const footer = new Footer({
     children: [
       new Paragraph({
         children: [
-          run(`Algorithmic Impact Assessment · ${doc.systemName} · Page `, { size: 18, color: MUTED }),
+          run(`${doc.reportDate} · Page `, { size: 18, color: MUTED }),
           new TextRun({ children: [PageNumber.CURRENT], font: FONT, size: 18, color: MUTED }),
           run(" of ", { size: 18, color: MUTED }),
           new TextRun({ children: [PageNumber.TOTAL_PAGES], font: FONT, size: 18, color: MUTED }),
@@ -371,9 +395,10 @@ export async function reportToDocxBlob(doc: ReportDoc): Promise<Blob> {
         properties: {
           page: {
             size: { width: 12240, height: 15840 },
-            margin: { top: 1440, right: 1440, bottom: 1440, left: 1440 },
+            margin: { top: 1440, right: 1440, bottom: 1440, left: 1440, header: 720, footer: 720 },
           },
         },
+        headers: { default: header },
         footers: { default: footer },
         children,
       },

@@ -51,6 +51,24 @@ export interface MitigationDef {
 
 export type AnswerValue = string | string[];
 
+/** One mitigation's acknowledgment, filled in the app before the report is generated. */
+export interface MitigationAck {
+  id: string;
+  choice: "" | "yes" | "no";
+  /** Calendar date, yyyy-mm-dd. Empty when the lead has not picked one. */
+  date: string;
+  comment: string;
+}
+
+/** Dates, comments, and Agency Lead name saved with the draft. The signature is never stored. */
+export interface ReportSignoff {
+  mitigations: MitigationAck[];
+  lead_name: string;
+  lead_title: string;
+  /** Calendar date, yyyy-mm-dd. */
+  lead_date: string;
+}
+
 export interface AnswerFile {
   schema_version: string;
   form_version: string;
@@ -59,4 +77,5 @@ export interface AnswerFile {
   example?: boolean;
   example_label?: string;
   answers: Record<string, AnswerValue>;
+  signoff?: ReportSignoff;
 }

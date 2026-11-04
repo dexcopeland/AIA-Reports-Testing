@@ -5,8 +5,9 @@ import { FORM_VERSION, RULES_VERSION, SCHEMA_VERSION, type AnswerValue } from ".
 import type { Answers } from "../engine/answers";
 import { many, text } from "../engine/answers";
 import { buildReport } from "../engine/report";
-import { downloadBlob, reportToDocxBlob } from "../docx/build-docx";
-import { reportToPdfBlob } from "../pdf/build-pdf";
+import { ensureSignoff, upsertAck } from "../engine/signoff";
+import { downloadBlob } from "../docx/build-docx";
+import { packageZipName, reportPackageZip } from "../report/zip";
 import { renderReport } from "./report-view";
 import { exampleIndex, loadExampleFile } from "../examples/load";
 import { autoload, autosave, clearAutosave, downloadJson, emptyFile, normalizeFile } from "./storage";
@@ -184,44 +185,33 @@ export function mount(root: Element): void {
     exportNote.setAttribute("aria-live", "polite");
     const attested = text(file.answers, "q25_confirm") === "confirm" || many(file.answers, "q25_confirm").includes("confirm");
     const blocked = !attested;
-    actions.append(button("Download Word", () => {
+    actions.append(button("Download report package (.zip)", () => {
       if (!(text(file.answers, "q25_confirm") === "confirm" || many(file.answers, "q25_confirm").includes("confirm"))) {
-        exportNote.textContent = "Confirm Q25 before you download the Word file. This block is a proposed rule. The on-screen draft is still available.";
+        exportNote.textContent = "Confirm Q25 before you download the report package. This block is a proposed rule. The on-screen draft is still available.";
         return;
       }
-      void reportToDocxBlob(doc).then((blob) => {
-        const safe = doc.systemName.replace(/[^\w.-]+/g, "-").slice(0, 60);
-        downloadBlob(blob, `AIA-Report-${safe || "draft"}.docx`);
-        exportNote.textContent = "Word file downloaded. It uses Page X of Y in the footer.";
-      }).catch(() => {
-        exportNote.textContent = "The Word file could not be built in this browser.";
-      });
-    }, "secondary"));
-    actions.append(button("Download PDF", () => {
-      if (!(text(file.answers, "q25_confirm") === "confirm" || many(file.answers, "q25_confirm").includes("confirm"))) {
-        exportNote.textContent = "Confirm Q25 before you download the PDF. This block is a proposed rule. The on-screen draft is still available.";
-        return;
-      }
-      void reportToPdfBlob(doc).then(({ blob, warnings }) => {
-        const safe = doc.systemName.replace(/[^\w.-]+/g, "-").slice(0, 60);
-        downloadBlob(blob, `AIA-Report-${safe || "draft"}.pdf`);
+      const current = buildReport(file);
+      void reportPackageZip(current).then(({ blob, warnings }) => {
+        downloadBlob(blob, packageZipName(current.systemName));
         if (warnings.length === 0) {
-          exportNote.textContent = "PDF downloaded. It is built from the same report as the Word file.";
+          exportNote.textContent = "Report package downloaded. It contains four PDFs and the same four documents as Word files.";
           return;
         }
         const listed = warnings.map((warning) => `${warning.character} (${warning.questions.join(", ")})`).join("; ");
-        exportNote.textContent = `PDF downloaded. These characters are not in the report fonts, so they may not appear: ${listed}.`;
+        exportNote.textContent = `Report package downloaded. These characters are not in the report fonts, so they may not appear: ${listed}.`;
       }).catch(() => {
-        exportNote.textContent = "The PDF could not be built in this browser.";
+        exportNote.textContent = "The report package could not be built in this browser.";
       });
     }, "secondary"));
     box.append(actions);
     if (blocked) {
-      const note = el("p", "Word and PDF downloads stay off until Q25 is confirmed.");
+      const note = el("p", "The report package stays off until Q25 is confirmed.");
       note.className = "no-print";
       box.append(note);
     }
-    box.append(exportNote);
+    const fillNote = el("p", "Fill the dates, comments, and Agency Lead name in the executive summary before you download. They are saved in this draft. The signature stays blank for a handwritten or PDF signature.");
+    fillNote.className = "no-print";
+    box.append(exportNote, fillNote);
     const details = document.createElement("details");
     details.className = "no-print";
     const summary = document.createElement("summary");
@@ -237,7 +227,20 @@ export function mount(root: Element): void {
     }
     details.append(checks);
     box.append(details);
-    box.append(renderReport(doc));
+    box.append(renderReport(doc, (signId, fieldName, value) => {
+      if (signId === "lead") {
+        const signoff = ensureSignoff(file);
+        if (fieldName === "lead_name") signoff.lead_name = value;
+        else if (fieldName === "lead_title") signoff.lead_title = value;
+        else if (fieldName === "lead_date") signoff.lead_date = value;
+      } else if (signId) {
+        const ack = upsertAck(file, signId);
+        if (fieldName.startsWith("ack_")) ack.choice = value === "no" ? "no" : "yes";
+        else if (fieldName.startsWith("date_")) ack.date = value;
+        else if (fieldName.startsWith("comment_")) ack.comment = value;
+      }
+      touch();
+    }));
     return box;
   }
 

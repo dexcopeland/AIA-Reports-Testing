@@ -478,7 +478,7 @@ export const SOURCES: { id: string; name: string; url: string }[] = [
 
 export const FIXED = {
   purpose: [
-    "Maryland law (SF&P § 3.5-803) requires an algorithmic impact assessment for each High-risk AI system a State agency uses. The Responsible AI Policy expects safeguards that protect residents' rights, safety and privacy. This report identifies risks, gaps and recommended mitigations. It is advisory and is not an approval or authorization to buy, use or deploy the AI system. The Agency Lead reviews each recommended mitigation, records a plan and target date for each one, and signs the acknowledgment in Section 9.",
+    "Maryland law (SF&P § 3.5-803) requires an algorithmic impact assessment for each High-risk AI system a State agency uses. The Responsible AI Policy expects safeguards that protect residents' rights, safety and privacy. This report identifies risks, gaps and recommended mitigations. It is advisory and is not an approval or authorization to buy, use or deploy the AI system. The Agency Lead reviews each recommended mitigation, records a plan and target date for each one, and signs the acknowledgment in the executive summary.",
     "This report also checks 8 recommended practices drawn from 2 international standards, ISO/IEC 42001 (AI management systems) and ISO/IEC 27090 (AI security). DoIT has not adopted these standards as policy. Findings from them are recommendations, not compliance findings.",
     "This report is based only on the agency's answers as submitted. DoIT did not check whether they are accurate. The agency is responsible for making sure its answers are accurate and complete, as the respondent confirmed in Q25.",
   ],

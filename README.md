@@ -12,7 +12,7 @@ It follows the shape of Canada's [AIA tool](https://github.com/canada-ca/aia-eia
 2. Start a new assessment, continue a saved draft, or load an example. The example list has ten fictional drafts, grouped as **Built by the State** and **A vendor product**. Each one is a saved-draft JSON file. The report is scored from those answers.
 3. Answer section by section. Later questions appear only when they apply. Statement sets run from weakest to strongest, plus "We don't know / not determined yet." A planned line asks for a target date. The strongest line can ask for one line of evidence.
 4. The browser saves the draft on this computer. Use **Save JSON file** to download a copy. The file includes `schema_version`, `form_version` and `rules_version`.
-5. Read the on-screen draft. After Q25 is confirmed, download a Word file or a PDF. Both are built from the same report. The Word file uses Times New Roman. The PDF embeds Liberation Serif (metric-compatible, SIL Open Font License) and uses DejaVu Serif for characters Liberation Serif does not have. If a character is in neither font, the download says so and names the question. The PDF is US Letter with 1 inch margins, a "Page X of Y" footer, Section 9 and the appendix starting on new pages, and shaded answer paragraphs. The narrative is prose. In Section 9, each acknowledgment is a Yes/No pair with a short date. Comments and the Agency Lead signature stay in bordered boxes. In the PDF the Yes/No pair is a radio group, comments and dates are text fields, and the signature is a signature field.
+5. Read the on-screen draft. In the executive summary, record each mitigation acknowledgment (Yes or No), pick each date from the calendar, and type comments. Type the Agency Lead's name and date. The signature line stays blank. Those entries are saved in the draft JSON. After Q25 is confirmed, download a report package (.zip). The zip holds four PDFs and the same four documents as Word files: Executive Summary, Evidence, Assessment Submission Record, and Follow-Up Actions. Files are named from the system, for example `Benefits-Eligibility-Triage-fictional-1-Executive-Summary.pdf`. The Word files use Times New Roman. Each PDF embeds Liberation Serif (metric-compatible, SIL Open Font License) and uses DejaVu Serif for characters Liberation Serif does not have. If a character is in neither font, the download says so and names the question. Each PDF is US Letter. The header names the system and the document. The footer names the date and "Page X of Y". The narrative is prose. Empty dates, comments, the name, and the title stay blank fillable fields. A comment that was typed is wrapped, and its box grows instead of cutting the text off. The signature stays a signature field.
 
 Keep the JSON file in agency storage. Do not put resident data in it. The questions ask about the AI system, not about a person's case file.
 
@@ -20,22 +20,16 @@ The Agency Lead email, if you enter one, stays in the JSON file and is left out 
 
 ## What the report covers
 
-A bottom line up front comes before the ten sections. It states the outcome, the High-risk level, and the single most important reason in a few plain sentences, then lists follow-up steps. Each step links to the check or section it comes from. If nothing needs follow-up, the report says so in one sentence.
+The download is four documents.
 
-Ten sections, in the same order as the current report writer:
+1. **Executive Summary.** System info, the bottom line up front, what is in place, where there is room for improvement, and the risks with recommended mitigations in plain language. Each item names the Evidence section it comes from. The mitigation acknowledgments, dates, comments, and the Agency Lead sign-off are here.
+2. **Evidence.** Every gate and criteria check: what was checked, the result, and the answers that drove it.
+3. **Assessment Submission Record.** Every question and the agency's answer, in order, with the system name and submission date.
+4. **Follow-Up Actions.** The numbered follow-up steps, one sentence each, with the owner and due date when the assessment has them. Each step names the Evidence section.
 
-1. Summary
-2. Purpose of this assessment
-3. The AI system and inventory record
-4. Why this AI system is High-risk
-5. Findings by criterion (C1–C12, then recommended practice RP1–RP8)
-6. Risks and recommended mitigations
-7. Agency Follow-Up
-8. Inventory summary (b7)
-9. Agency Lead acknowledgment
-10. Sources
+The bottom line states the outcome, the High-risk level, and the single most important reason in a few plain sentences, then lists follow-up steps. If nothing needs follow-up, the report says so in one sentence.
 
-An appendix lists Q1–Q25 with the answers as selected. A blank prints "No answer provided."
+A blank answer prints "No answer provided."
 
 Citations are the published statute (Md. Code SF&P §§ 3.5-801, 803, 804, 805) and the published Responsible AI Policy and Implementation Guidance, tagged [P1] and [P2], plus the other published sources listed in Section 10. ISO/IEC 42001 and ISO/IEC 27090 are cited by clause number only.
 
@@ -56,6 +50,7 @@ Edit the data modules, not the page layout, unless the layout is what you mean t
 | Finding sentences (What we found) | `content/findings.json` |
 | Example drafts | `examples/*.json` and `examples/index.json` |
 | Report assembly | `src/engine/report.ts` |
+| Report package zip | `src/report/zip.ts` |
 | Word and PDF layout tokens | `src/report/style.ts` |
 | Scoring | `src/engine/evaluate.ts` |
 
@@ -100,7 +95,7 @@ Asset paths are relative, so the same build works at that project URL and on a l
 
 ## Stack
 
-Vite and TypeScript, with no UI framework. The form uses native controls (labels, fieldsets, radios, checkboxes). The Word file is built in the browser with the `docx` library and asks for Times New Roman. The PDF embeds Liberation Serif (SIL Open Font License, in `src/fonts/`) and uses DejaVu Serif, under the Bitstream Vera license in that same folder, when Liberation Serif has no glyph. Times New Roman itself is not included in this repository.
+Vite and TypeScript, with no UI framework. The form uses native controls (labels, fieldsets, radios, checkboxes). The Word files are built in the browser with the `docx` library and ask for Times New Roman. The PDFs embed Liberation Serif (SIL Open Font License, in `src/fonts/`) and use DejaVu Serif, under the Bitstream Vera license in that same folder, when Liberation Serif has no glyph. Times New Roman itself is not included in this repository. The zip is built in the browser with `fflate`, so GitHub Pages does not need a server.
 
 ## Remaining work
 

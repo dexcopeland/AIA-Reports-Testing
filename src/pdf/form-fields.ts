@@ -85,13 +85,13 @@ const BOX = 11;
 const BOX_OFF = `q ${NAVY} RG 0.9 w 0.6 0.6 ${BOX - 1.2} ${BOX - 1.2} re S Q`;
 const BOX_ON = `${BOX_OFF} q ${NAVY} RG 1.35 w 2.3 4.5 m 4.3 2.4 l 8.6 8.1 l S Q`;
 
-function radioParent(doc: PdfKitDoc, groups: Map<string, PdfRef>, group: string): PdfRef {
+function radioParent(doc: PdfKitDoc, groups: Map<string, PdfRef>, group: string, value: "Yes" | "No" | "Off"): PdfRef {
   const existing = groups.get(group);
   if (existing) return existing;
   const dict = doc._fieldDict(group, "radioButton", { noToggleToOff: true });
   const flags = typeof dict.Ff === "number" ? dict.Ff : 0;
   dict.Ff = flags | 0x8000 | 0x4000;
-  dict.V = "Off";
+  dict.V = value;
   const parent = doc.ref(dict);
   const fields = doc._root.data.AcroForm?.data.Fields;
   if (!fields) throw new Error("The PDF form was not started.");
@@ -100,9 +100,9 @@ function radioParent(doc: PdfKitDoc, groups: Map<string, PdfRef>, group: string)
   return parent;
 }
 
-function addChoice(doc: PdfKitDoc, field: SignField, x: number, y: number, groups: Map<string, PdfRef>, off: PdfRef): void {
+function addChoice(doc: PdfKitDoc, field: SignField, x: number, y: number, groups: Map<string, PdfRef>, off: PdfRef, value: "Yes" | "No" | "Off"): void {
   const group = field.group ?? field.name;
-  const parent = radioParent(doc, groups, group);
+  const parent = radioParent(doc, groups, group, value);
   const onState = field.label === "No" ? "No" : "Yes";
   const on = appearance(doc, BOX_ON);
   const widget = doc._fieldDict(onState, "radioButton", { parent });
@@ -112,7 +112,7 @@ function addChoice(doc: PdfKitDoc, field: SignField, x: number, y: number, group
   widget.Parent = parent;
   widget.Subtype = "Widget";
   widget.F = 4;
-  widget.AS = "Off";
+  widget.AS = field.selected ? onState : "Off";
   widget.MK = { BC: [0.039, 0.192, 0.38], BG: [1, 1, 1] };
   widget.AP = { N: { [onState]: on, Off: off } };
   doc.annotate(x, y, BOX, BOX, widget);
@@ -142,13 +142,19 @@ function fieldBox(field: SignField, doc: PdfKitDoc, spot: FieldSpot): { width: n
   }
 }
 
-function place(doc: PdfKitDoc, field: SignField, spot: FieldSpot, groups: Map<string, PdfRef>, off: PdfRef): void {
+function groupValue(fields: SignField[], group: string): "Yes" | "No" | "Off" {
+  const chosen = fields.find((field) => field.kind === "choice" && (field.group ?? field.name) === group && field.selected);
+  if (!chosen) return "Off";
+  return chosen.label === "No" ? "No" : "Yes";
+}
+
+function place(doc: PdfKitDoc, field: SignField, spot: FieldSpot, groups: Map<string, PdfRef>, off: PdfRef, fields: SignField[]): void {
   doc.switchToPage(spot.page);
   doc._ctm = [1, 0, 0, -1, 0, doc.page.height];
   const box = fieldBox(field, doc, spot);
   switch (field.kind) {
     case "choice":
-      addChoice(doc, field, spot.x, box.top, groups, off);
+      addChoice(doc, field, spot.x, box.top, groups, off, groupValue(fields, field.group ?? field.name));
       break;
     case "date":
     case "text":
@@ -179,7 +185,7 @@ export function addAcroFormFields(doc: PdfKitDoc, fields: SignField[]): void {
   for (const field of fields) {
     const spot = placed.get(field.name);
     if (!spot) throw new Error(`No PDF destination for sign-off field ${field.name}.`);
-    place(doc, field, spot, groups, off);
+    place(doc, field, spot, groups, off, fields);
   }
 }
 
