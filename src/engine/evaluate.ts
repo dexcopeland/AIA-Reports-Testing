@@ -531,12 +531,8 @@ export function evaluate(file: AnswerFile): Evaluation {
   }
 
   const prohibitedIds = many(answers, "q7b_prohibited").filter((id) => PROHIBITED.some((item) => item.id === id));
-  const combo = caps.includes("biometric_id") && areas.includes("identifying_people");
-  const prohibited = prohibitedIds.length > 0 || combo;
-  const prohibitedLabels = [
-    ...prohibitedIds.map((id) => PROHIBITED.find((item) => item.id === id)?.label ?? id),
-    ...(combo && prohibitedIds.length === 0 ? ["Identifies people from biometrics in a setting aimed at identifying people"] : []),
-  ];
+  const prohibited = prohibitedIds.length > 0;
+  const prohibitedLabels = prohibitedIds.map((id) => PROHIBITED.find((item) => item.id === id)?.label ?? id);
 
   const level = dataLevel(answers);
   const suggested = suggestedLevel(answers);
@@ -811,7 +807,6 @@ export function evaluate(file: AnswerFile): Evaluation {
     inputProblems,
     prohibited,
     prohibitedLabels,
-    prohibitedProposed: combo && prohibitedIds.length === 0,
     area: { rights, safety, label: areaLabel },
     speech,
     gates,

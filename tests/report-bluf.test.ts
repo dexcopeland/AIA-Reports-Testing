@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { APPROVAL_BANNED } from "../src/content/rules";
+import { APPROVAL_BANNED, PROHIBITED } from "../src/content/rules";
 import { BLUF_OUTCOME, buildBluf } from "../src/engine/bluf";
 import { evaluate } from "../src/engine/evaluate";
 import { buildReport } from "../src/engine/report";
@@ -117,10 +117,20 @@ describe("bottom line up front", () => {
     const start = executive!.blocks.findIndex((block) => block.text === "Bottom line up front");
     const summary = executive!.blocks.findIndex((block) => block.text === "What the agency is doing well");
     const takeaway = executive!.blocks.slice(start, summary).filter((block) => block.type === "p").map((block) => block.text).join(" ");
+    const result = evaluate(buildScenario(scenario!));
+    expect(result.prohibited).toBe(true);
+    expect(result.mitigations.some((item) => item.id === "M-PROHIBITED")).toBe(true);
+    const published = PROHIBITED.find((item) => item.id === "covert_or_realtime_biometric_id_no_consent");
+    expect(published).toBeTruthy();
+    expect(body).toContain(published!.label);
     expect(takeaway).toContain(BLUF_OUTCOME.prohibited);
     expect(takeaway).toContain("The path is Prohibited.");
     expect(takeaway).toContain("prohibited use");
+    const blufParagraphs = executive!.blocks.slice(start, summary).filter((block) => block.type === "p").slice(0, 3).map((block) => block.text);
+    expect(blufParagraphs).toHaveLength(3);
+    expect(sentences(blufParagraphs.join(" "))).toHaveLength(3);
     expect(takeaway).not.toContain("The risk level is High-risk.");
+    expect(report.checks.find((check) => check.id === "bluf")?.ok).toBe(true);
     expect(body).not.toMatch(/\bApproved\b/);
     for (const phrase of APPROVAL_BANNED) expect(body).not.toContain(phrase);
     expect(body).not.toContain("________");

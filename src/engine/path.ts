@@ -78,21 +78,15 @@ function capabilityClause(biometric: boolean, ranking: boolean): string {
 export function deriveAssessmentPath(answers: Answers): PathDerivation {
   const caps = capabilities(answers);
   const target = text(answers, "q8_target");
-  const areas = many(answers, "q8_areas");
   const rights = areaFact(answers, RIGHTS_AREAS);
   const safety = areaFact(answers, SAFETY_AREAS);
   const prohibited = prohibitedFact(answers);
   const basis = basisFact(answers);
   const biometric = caps.includes("biometric_id");
   const individualRanking = caps.includes("ranks") && (target === "individuals" || target === "both");
-  const identifyingCombo = biometric && areas.includes("identifying_people");
 
-  if (prohibited === "yes" || identifyingCombo) {
-    const reasons = [
-      ...(prohibited === "yes" ? ["A prohibited use is selected."] : []),
-      ...(identifyingCombo ? ["Biometric identification is used where the output identifies people."] : []),
-    ];
-    return { path: "prohibited", reasons };
+  if (prohibited === "yes") {
+    return { path: "prohibited", reasons: ["A prohibited use is selected."] };
   }
 
   const reasons: string[] = [];

@@ -96,7 +96,6 @@ export interface Evaluation {
   inputProblems: string[];
   prohibited: boolean;
   prohibitedLabels: string[];
-  prohibitedProposed: boolean;
   area: { rights: boolean; safety: boolean; label: string };
   speech: boolean;
   gates: GateHit[];

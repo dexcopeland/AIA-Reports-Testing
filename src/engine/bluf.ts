@@ -129,7 +129,8 @@ function highPathReason(result: Evaluation): string {
 function reason(result: Evaluation): string {
   if (result.path === "prohibited" || result.prohibited) {
     const use = result.prohibitedLabels[0] ?? "a use on the prohibited list";
-    return `The single most important reason is a prohibited use: ${use}.`;
+    const sentence = use.endsWith(".") ? use.slice(0, -1) : use;
+    return `The single most important reason is a prohibited use: ${sentence}.`;
   }
   if (result.path === "high") return highPathReason(result);
   if (result.statusConflict) {

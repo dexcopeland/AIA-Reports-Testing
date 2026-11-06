@@ -105,12 +105,32 @@ export const LEVEL_SAFEGUARD: Record<string, string> = {
   L4: "Level 4 Restricted: authorized users who meet the regulatory requirements only, encryption at rest and in transit, and the stricter overlay controls for the full lifecycle [P3] [P4].",
 };
 
+/** Prohibited Uses, Responsible AI Policy, Version 1.0, Date Issued 05/23/25. Labels are the published sentences. */
 export const PROHIBITED: { id: string; label: string }[] = [
   {
     id: "covert_or_realtime_biometric_id_no_consent",
-    label: "Identifies people from biometrics covertly or in real time without their consent",
+    label:
+      "Real-time and covert biometric identification: The live identification of an individual using technologies including, but not limited to, facial recognition and iris scanning without that individual's knowledge or meaningful consent.",
   },
-  { id: "social_scoring", label: "Scores people's social behavior or personal traits" },
+  {
+    id: "emotion_analysis",
+    label:
+      "Emotion analysis: The use of computer vision techniques to classify human facial expressions, body movements, or language into emotions or sentiments (e.g., positive, negative, neutral, happy, angry).",
+  },
+  {
+    id: "fully_automated_unacceptable_risk",
+    label:
+      "Fully automated decisions (e.g., Agentic AI) that specifically fall under the use cases of \u201cUnacceptable Risk\u201d outlined above.",
+  },
+  {
+    id: "social_scoring",
+    label:
+      "Social scoring: The use of AI systems to track and classify individuals based on their behaviors, socioeconomic status, or personal characteristics.",
+  },
+  {
+    id: "cognitive_behavioral_manipulation",
+    label: "Cognitive behavioral manipulation of people or specific vulnerable groups.",
+  },
 ];
 
 export const MITIGATIONS: MitigationDef[] = [
@@ -432,7 +452,7 @@ export const SOURCES: { id: string; name: string; url: string }[] = [
   },
   {
     id: "P1",
-    name: "Responsible AI Policy",
+    name: "Responsible AI Policy (Version 1.0, Date Issued 05/23/25)",
     url: "https://doit.maryland.gov/policies/ai/Pages/maryland-responsible-ai-policy.aspx",
   },
   {
@@ -553,10 +573,6 @@ export const PROPOSED_RULES: { id: string; text: string }[] = [
   {
     id: "g6",
     text: "G6 is proposed as record matching plus an area where the match can lead to an adverse action.",
-  },
-  {
-    id: "biometric-combo",
-    text: "Proposed combination flag: biometric identification plus the identifying-people area raises the prohibited-use blocker even if the checklist was left as none. The published Prohibited Uses list is not fully encoded in v1.",
   },
   {
     id: "export-gate",

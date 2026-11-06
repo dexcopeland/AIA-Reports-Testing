@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { ASSURANCES } from "../src/content/catalog";
 import { FIELD_AUDIENCE, SECTIONS, activeSections, visibleFieldIds } from "../src/content/form";
+import { PROHIBITED, PROPOSED_RULES } from "../src/content/rules";
 import { FORM_VERSION, RULES_VERSION, SCHEMA_VERSION, type AnswerFile } from "../src/content/types";
 import { CREDITED_CERT_IDS, NEVER_WAIVE_FIELDS } from "../src/engine/credits";
 import { evaluate } from "../src/engine/evaluate";
@@ -103,14 +104,91 @@ describe("fact-derived path", () => {
     }).path).toBe("general");
   });
 
-  it("routes a listed prohibited use, and the biometric identifying-people blocker, to Prohibited", () => {
-    expect(deriveAssessmentPath({ ...gate, q7b_prohibited: ["social_scoring"] }).path).toBe("prohibited");
-    expect(deriveAssessmentPath({
+  it("routes each published prohibited use to Prohibited and keeps None and Unknown off that path", () => {
+    expect(PROHIBITED.map((item) => item.id)).toEqual([
+      "covert_or_realtime_biometric_id_no_consent",
+      "emotion_analysis",
+      "fully_automated_unacceptable_risk",
+      "social_scoring",
+      "cognitive_behavioral_manipulation",
+    ]);
+    expect(PROHIBITED.map((item) => item.label)).toEqual([
+      "Real-time and covert biometric identification: The live identification of an individual using technologies including, but not limited to, facial recognition and iris scanning without that individual's knowledge or meaningful consent.",
+      "Emotion analysis: The use of computer vision techniques to classify human facial expressions, body movements, or language into emotions or sentiments (e.g., positive, negative, neutral, happy, angry).",
+      "Fully automated decisions (e.g., Agentic AI) that specifically fall under the use cases of \u201cUnacceptable Risk\u201d outlined above.",
+      "Social scoring: The use of AI systems to track and classify individuals based on their behaviors, socioeconomic status, or personal characteristics.",
+      "Cognitive behavioral manipulation of people or specific vulnerable groups.",
+    ]);
+    expect(PROPOSED_RULES.map((item) => item.id)).not.toContain("biometric-combo");
+    const field = SECTIONS.flatMap((section) => section.fields).find((item) => item.id === "q7b_prohibited");
+    expect(field?.options?.map((option) => option.id)).toEqual([...PROHIBITED.map((item) => item.id), "none", "unknown"]);
+    expect(field?.options?.map((option) => option.label)).toEqual([
+      ...PROHIBITED.map((item) => item.label),
+      "None of these",
+      "Unknown",
+    ]);
+    expect(field?.help).toContain("https://doit.maryland.gov/policies/ai/Pages/maryland-responsible-ai-policy.aspx");
+    expect(field?.help).toContain("Version 1.0");
+    expect(field?.help).toContain("05/23/25");
+    expect(field?.help).toContain("Prohibited Uses");
+
+    for (const item of PROHIBITED) {
+      const answers = { ...gate, q7b_prohibited: [item.id] };
+      const derived = deriveAssessmentPath(answers);
+      expect(derived.path, item.id).toBe("prohibited");
+      const result = evaluate(file(answers));
+      expect(result.path, item.id).toBe("prohibited");
+      expect(result.prohibited, item.id).toBe(true);
+      expect(result.prohibitedLabels, item.id).toEqual([item.label]);
+      expect(result.mitigations.some((mitigation) => mitigation.id === "M-PROHIBITED"), item.id).toBe(true);
+      expect("prohibitedProposed" in result, item.id).toBe(false);
+    }
+
+    const none = evaluate(file({ ...gate, q7b_prohibited: ["none"] }));
+    expect(none.path).toBe("general");
+    expect(none.prohibited).toBe(false);
+    expect(none.prohibitedLabels).toEqual([]);
+
+    const unknown = evaluate(file({ ...gate, q7b_prohibited: ["unknown"] }));
+    expect(unknown.path).toBe("high");
+    expect(unknown.prohibited).toBe(false);
+    expect(unknown.prohibitedLabels).toEqual([]);
+    expect(deriveAssessmentPath({ ...gate, q7b_prohibited: ["unknown"] }).reasons.join(" ")).toContain("Unknown");
+  });
+
+  it("does not treat biometric identification plus the identifying-people area as a prohibited use", () => {
+    const infoOnly = {
       ...gate,
       q6_capabilities: ["biometric_id"],
       q8_areas: ["identifying_people"],
       q10_role: "info_only",
-    }).path).toBe("prohibited");
+      q7b_prohibited: ["none"],
+    };
+    expect(deriveAssessmentPath(infoOnly).path).toBe("general");
+    expect(evaluate(file(infoOnly)).prohibited).toBe(false);
+
+    const basis = { ...infoOnly, q10_role: "recommends" as const };
+    expect(deriveAssessmentPath(basis).path).toBe("high");
+    expect(evaluate(file(basis)).prohibited).toBe(false);
+
+    const ranking = {
+      ...gate,
+      q6_capabilities: ["ranks"],
+      q8_target: "individuals",
+      q8_areas: ["regulatory_inspection"],
+      q10_role: "decides",
+    };
+    expect(deriveAssessmentPath(ranking).path).toBe("high");
+    expect(evaluate(file(ranking)).prohibited).toBe(false);
+  });
+
+  it("keeps None and Unknown exclusive of a published purpose", () => {
+    expect(toggleCheck({ q7b_prohibited: ["none"] }, "q7b_prohibited", "social_scoring", true)).toEqual(["social_scoring"]);
+    expect(toggleCheck({ q7b_prohibited: ["emotion_analysis"] }, "q7b_prohibited", "unknown", true)).toEqual(["unknown"]);
+    expect(toggleCheck({ q7b_prohibited: ["unknown"] }, "q7b_prohibited", "cognitive_behavioral_manipulation", true)).toEqual([
+      "cognitive_behavioral_manipulation",
+    ]);
+    expect(toggleCheck({ q7b_prohibited: ["social_scoring", "emotion_analysis"] }, "q7b_prohibited", "none", true)).toEqual(["none"]);
   });
 
   it("names the Q8, Q10, or Q6 check that makes the path High", () => {
