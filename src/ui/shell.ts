@@ -2,7 +2,6 @@ import { FORM_VERSION, RULES_VERSION, SCHEMA_VERSION, type AnswerFile } from "..
 import { stampAssessment } from "../engine/draft-state";
 
 const COLUMN_TYPES = new Set(["short", "email", "date"]);
-const FULL_WIDTH_TYPES = new Set(["paragraph", "statement", "groups", "check"]);
 
 export function questionClusters<T extends { legacyQ: number }>(fields: T[]): T[][] {
   const clusters: T[][] = [];
@@ -16,11 +15,6 @@ export function questionClusters<T extends { legacyQ: number }>(fields: T[]): T[
 
 export function clusterUsesColumns(fields: { type: string }[]): boolean {
   return fields.length > 1 && fields.every((field) => COLUMN_TYPES.has(field.type));
-}
-
-export function clusterSpansFull(fields: { type: string }[]): boolean {
-  if (fields.length >= 3) return true;
-  return fields.some((field) => FULL_WIDTH_TYPES.has(field.type));
 }
 
 /** How far a restored draft can jump: through the first incomplete section, or the last section when every one is complete. */

@@ -22,7 +22,7 @@ import type { Answers } from "../engine/answers";
 import { exampleIndex } from "../examples/load";
 import { FieldControl } from "./fields";
 import { touchTarget } from "./form-model";
-import { clusterSpansFull, clusterUsesColumns, questionClusters } from "./shell";
+import { clusterUsesColumns, questionClusters } from "./shell";
 
 const exampleItems = [
   { value: null, label: "Choose an example" },
@@ -144,7 +144,7 @@ function QuestionCard({
   const question = fields[0]?.legacyQ;
   const columns = clusterUsesColumns(fields);
   return (
-    <Card className={clusterSpansFull(fields) ? "2xl:col-span-2" : undefined} data-question={question}>
+    <Card data-question={question}>
       <CardHeader className="border-b">
         <CardTitle>Question {question}</CardTitle>
       </CardHeader>
@@ -198,7 +198,7 @@ export function FormScreen({
           onNext();
         }}
       >
-        <div className="grid grid-cols-1 items-start gap-4 2xl:grid-cols-2">
+        <div className="flex flex-col gap-4">
           {clusters.map((cluster) => (
             <QuestionCard key={cluster[0]?.id ?? "question"} fields={cluster} answers={file.answers} onAnswer={onAnswer} />
           ))}
