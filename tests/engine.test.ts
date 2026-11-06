@@ -1,10 +1,11 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { MITIGATIONS } from "../src/content/rules";
+import { FIXED, MITIGATIONS, PROHIBITED, PROPOSED_RULES } from "../src/content/rules";
 import { SECTIONS, countVisibleQuestions, visibleFields } from "../src/content/form";
 import { FORM_VERSION, RULES_VERSION, SCHEMA_VERSION, type AnswerFile } from "../src/content/types";
 import { findingTemplates } from "../src/engine/findings";
 import { STATEMENTS } from "../src/content/statements";
+import { BLUF_OUTCOME, buildBluf } from "../src/engine/bluf";
 import { evaluate } from "../src/engine/evaluate";
 import { displayedSamePlace, priorAssessment, processingPlace, showProcessingPlace, statusConflict, threatApplies } from "../src/engine/visibility";
 import { buildReport } from "../src/engine/report";
@@ -84,7 +85,8 @@ describe("evaluation engine", () => {
     };
     expect(index.rules_version).toBe(RULES_VERSION);
     expect(index.statement_count).toBe(STATEMENTS.length);
-    expect(index.proposed_rules.length).toBeGreaterThan(0);
+    expect(index.proposed_rules.map((item) => item.id)).toEqual(PROPOSED_RULES.map((item) => item.id));
+    expect(index.proposed_rules.map((item) => item.id)).not.toContain("biometric-combo");
   });
 
   it("maps every statement set, including the unknown choice", () => {
@@ -374,18 +376,29 @@ describe("evaluation engine", () => {
     expect(countVisibleQuestions(s03.answers)).toBe(67);
   });
 
-  it("flags a prohibited use without a go or no-go decision", () => {
-    const result = evaluate(file({
-      ...base,
-      q7b_prohibited: ["social_scoring"],
-      q17_status: "live",
-    }));
-    expect(result.prohibited).toBe(true);
-    const report = buildReport(file({ ...base, q7b_prohibited: ["social_scoring"], q17_status: "live", q4_name: "Example Scorer (fictional)" }));
-    const text = report.blocks.map((block) => block.text).join("\n");
-    expect(text).not.toMatch(/\bApproved\b/);
-    expect(text).not.toMatch(/no-go decision/i);
-    expect(result.mitigations.some((item) => item.id === "M-PROHIBITED" && item.timing === "Before use")).toBe(true);
+  it("flags each published prohibited use without a go or no-go decision", () => {
+    for (const item of PROHIBITED) {
+      const answers = { ...base, q7b_prohibited: [item.id], q17_status: "live", q4_name: "Example Scorer (fictional)" };
+      const result = evaluate(file(answers));
+      expect(result.prohibited, item.id).toBe(true);
+      expect(result.prohibitedLabels, item.id).toEqual([item.label]);
+      expect(result.mitigations.some((mitigation) => mitigation.id === "M-PROHIBITED" && mitigation.timing === "Before use"), item.id).toBe(true);
+      const bluf = buildBluf(result);
+      expect(bluf.sentences, item.id).toHaveLength(3);
+      expect(bluf.sentences[0], item.id).toBe(BLUF_OUTCOME.prohibited);
+      expect(bluf.sentences[1], item.id).toBe("The path is Prohibited.");
+      expect(bluf.sentences[2], item.id).toContain(item.label.replace(/\.$/, ""));
+      expect(bluf.sentences[2], item.id).not.toContain("..");
+      const report = buildReport(file(answers));
+      const text = report.blocks.map((block) => block.text).join("\n");
+      expect(text, item.id).toContain(item.label);
+      expect(text, item.id).toContain(FIXED.draftBanner);
+      expect(text, item.id).not.toMatch(/\bApproved\b/);
+      expect(text, item.id).not.toMatch(/no-go decision/i);
+      expect(text, item.id).not.toMatch(/go \/ no-go|go\/no-go/);
+      expect(report.checks.find((check) => check.id === "bluf")?.ok, item.id).toBe(true);
+      expect(report.checks.find((check) => check.id === "approval")?.ok, item.id).toBe(true);
+    }
   });
 
   it("caps mitigations at 3 when nothing is Gap or Not yet", () => {

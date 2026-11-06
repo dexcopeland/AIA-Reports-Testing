@@ -6,7 +6,7 @@ Versions in `src/content/types.ts`:
 
 - Schema version `1.0.0` (answers files)
 - Form version `v2-structured-1.0.0`
-- Rules version `1.2.0`
+- Rules version `1.2.1`
 
 The engine reads the TypeScript modules in `src/content/`. Those modules are the versioned questions, statement sets, mitigations and fixed report paragraphs. Change them in git. The report footer records the rules version and a content fingerprint of the answers.
 
@@ -41,7 +41,6 @@ These are marked `proposed: true` in the content modules. They need DoIT sign-of
 | g4-decides | G4 applies when Q10 is decides, unless every output is reviewed before it takes effect. Sample review, late review and no review also set G4. |
 | g4-cross-check | Q6 "sends output to other systems" plus Q10 "information only" sets G4 when every output is not reviewed first. |
 | g6 | G6 is record matching plus an area where the match can lead to action. |
-| biometric-combo | Biometric identification plus the identifying-people area raises the prohibited-use flag even if the checklist says none. |
 | export-gate | Word and print stay off until Q25 is confirmed. The on-screen draft still renders. |
 | cap-priority | The cap of 3 keeps a prohibited-use or abuse-risk item first, then a path for a group that uses the system or is acted on as individuals, then other partial items by earliest timing, plus Ongoing. |
 | status-conflict | A start date while Q17 is Planning or Procuring uses Before use timing until the agency confirms the status. |
@@ -49,7 +48,7 @@ These are marked `proposed: true` in the content modules. They need DoIT sign-of
 | level-cross-check | Q14 can suggest a higher data level than Q13. The report says so and does not change Q13. |
 | threat-fit | Q22 shows only threats that fit the Q6 answers. The mapping below is proposed. A hidden threat is excluded because of those answers. |
 
-The prohibited-use checklist in v1 has two examples named in the current writer rules (covert or real-time biometric identification without consent, and social scoring), plus none and unknown. It is not the full published Prohibited Uses list.
+The prohibited-use checklist is the five Prohibited Uses in the Responsible AI Policy, Version 1.0, Date Issued 05/23/25, section Prohibited Uses [P1] (https://doit.maryland.gov/policies/ai/Pages/maryland-responsible-ai-policy.aspx), plus none and unknown. A selected purpose sets Prohibited. Unknown sets High and is not a confirmed prohibition. None of these does not set High by itself. Biometric identification or individual ranking still sets High when the output is a basis for a decision or action. That High trigger is separate from the prohibited-use checklist.
 
 ## Question branching
 

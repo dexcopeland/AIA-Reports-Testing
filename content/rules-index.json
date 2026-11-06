@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "form_version": "v2-structured-1.0.0",
-  "rules_version": "1.2.0",
+  "rules_version": "1.2.1",
   "statement_count": 32,
   "statements": [
     {
@@ -1745,10 +1745,6 @@
     {
       "id": "g6",
       "text": "G6 is proposed as record matching plus an area where the match can lead to an adverse action."
-    },
-    {
-      "id": "biometric-combo",
-      "text": "Proposed combination flag: biometric identification plus the identifying-people area raises the prohibited-use blocker even if the checklist was left as none. The published Prohibited Uses list is not fully encoded in v1."
     },
     {
       "id": "export-gate",

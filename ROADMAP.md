@@ -12,9 +12,7 @@ All 32 statement sets in `src/content/statements.ts` are proposals (`proposed: t
 
 **Suggested label:** `content`
 
-The checklist has the two examples named in the current writer rules (covert or real-time biometric identification without consent, and social scoring), plus none and unknown. Replace that list with the full Prohibited Uses list from the published Responsible AI Policy [P1]. Do not paste unpublished material into this public repository.
-
-A proposed combination flag also treats biometric identification plus the identifying-people area as a blocker. Confirm or remove that flag when the full list is encoded.
+Encoded in rules version 1.2.1. Q7 lists the five Prohibited Uses from the Responsible AI Policy, Version 1.0, Date Issued 05/23/25, section Prohibited Uses (https://doit.maryland.gov/policies/ai/Pages/maryland-responsible-ai-policy.aspx), plus None of these and Unknown. The biometric-combo blocker was removed. It is not one of those published purposes. Biometric identification or individual ranking still sets High when the output is a basis for a decision or action.
 
 ## Proposed rules needing sign-off
 

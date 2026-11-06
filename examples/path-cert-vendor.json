@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "form_version": "v2-structured-1.0.0",
-  "rules_version": "1.2.0",
+  "rules_version": "1.2.1",
   "saved_at": "2026-11-02T00:00:00.000Z",
   "example": true,
   "example_label": "Example data. Fictional agency and AI system. Not a real assessment.",

@@ -607,7 +607,8 @@ function buildEvidence(file: AnswerFile, result: Evaluation, answers: Answers, s
   blocks.push(block("label", "Prohibited use", "template", { anchor: "prohibited" }));
   blocks.push(block("field", "What was checked: Whether a prohibited use in the Responsible AI Policy applies.", "template"));
   if (result.prohibited) {
-    blocks.push(block("field", `Result: Set. ${result.prohibitedLabels.join("; ")}. The Responsible AI Policy lists this use [P1].`, "slot"));
+    const labels = result.prohibitedLabels.map((label) => (label.endsWith(".") ? label.slice(0, -1) : label)).join("; ");
+    blocks.push(block("field", `Result: Set. ${labels}. The Responsible AI Policy lists this use [P1].`, "slot"));
   } else blocks.push(block("field", "Result: Not set. None selected.", "template"));
   if (result.speech) blocks.push(block("p", "This use touches speech, assembly or religion. It needs named legal authority; refer to agency counsel.", "template"));
   const levelLine = dataLevel(answers) === "unknown"
