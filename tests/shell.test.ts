@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import { SECTIONS, visibleFields } from "../src/content/form";
 import { FORM_VERSION, RULES_VERSION, SCHEMA_VERSION, type AnswerFile } from "../src/content/types";
 import {
-  clusterSpansFull,
   clusterUsesColumns,
   initialMaxReached,
   persistAdvance,
@@ -21,13 +20,41 @@ describe("question cards", () => {
     ]);
   });
 
-  it("puts short related answers in columns and keeps long decisions full width", () => {
+  it("keeps each question number in one consecutive run, in numeric order", () => {
+    for (const section of SECTIONS) {
+      const seen = new Set<number>();
+      let previous: number | undefined;
+      for (const field of section.fields) {
+        if (field.legacyQ === previous) continue;
+        expect(seen.has(field.legacyQ), `${section.id} repeats Q${field.legacyQ}`).toBe(false);
+        if (previous !== undefined) expect(field.legacyQ).toBeGreaterThan(previous);
+        seen.add(field.legacyQ);
+        previous = field.legacyQ;
+      }
+    }
+  });
+
+  it("puts the High-path effect line inside Question 8, then Question 9, then Question 10", () => {
+    const section = SECTIONS.find((item) => item.id === "system");
+    expect(section).toBeDefined();
+    const clusters = questionClusters(visibleFields(section!, { q8_areas: ["safety"] }));
+    expect(clusters.map((cluster) => cluster[0]?.legacyQ)).toEqual([4, 5, 6, 7, 8, 9, 10]);
+    expect(clusters.map((cluster) => cluster.map((field) => field.id))).toEqual([
+      ["q4_name"],
+      ["q5_builder", "q5_changes"],
+      ["q6_capabilities", "q6_design_facts", "q6_method", "q6_hosting", "q6_description"],
+      ["q7_purpose", "q7b_prohibited"],
+      ["q8_areas", "q8_target", "q8_how"],
+      ["q9_groups", "q9_other"],
+      ["q10_role"],
+    ]);
+    expect(SECTIONS.flatMap((item) => item.fields).some((field) => field.id.startsWith("q9_rel__"))).toBe(false);
+  });
+
+  it("puts short related answers in columns inside one card", () => {
     expect(clusterUsesColumns([{ type: "short" }, { type: "email" }])).toBe(true);
     expect(clusterUsesColumns([{ type: "short" }])).toBe(false);
     expect(clusterUsesColumns([{ type: "short" }, { type: "paragraph" }])).toBe(false);
-    expect(clusterSpansFull([{ type: "radio" }])).toBe(false);
-    expect(clusterSpansFull([{ type: "statement" }])).toBe(true);
-    expect(clusterSpansFull([{ type: "short" }, { type: "short" }, { type: "short" }])).toBe(true);
   });
 });
 
