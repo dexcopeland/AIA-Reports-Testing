@@ -1,3 +1,4 @@
+import type { AssessmentPath } from "../content/types";
 import type { Evaluation } from "./model";
 
 export interface FollowStep {
@@ -44,10 +45,25 @@ function isActionCheck(id: string): boolean {
   return /^C(?:[4-9]|1[0-2])$/.test(id) || /^RP\d+$/.test(id);
 }
 
+function lowerFact(value: string): string {
+  const trimmed = value.trim().replace(/[.]+$/, "");
+  if (!trimmed) return "the path facts are not complete";
+  return trimmed.charAt(0).toLowerCase() + trimmed.slice(1);
+}
+
+/** High only because every path reason is an Unknown answer, with no affirmative High fact. */
+function forcedByUnknowns(result: Evaluation): boolean {
+  return result.path === "high" && result.pathReasons.length > 0 && result.pathReasons.every((item) => item.endsWith("Unknown."));
+}
+
 function reason(result: Evaluation): string {
-  if (result.prohibited) {
+  if (result.path === "prohibited" || result.prohibited) {
     const use = result.prohibitedLabels[0] ?? "a use on the prohibited list";
     return `The single most important reason is a prohibited use: ${use}.`;
+  }
+  if (forcedByUnknowns(result)) {
+    const unknown = result.pathReasons.find((item) => item.endsWith("Unknown.")) ?? "An answer is Unknown.";
+    return `The single most important reason is that ${lowerFact(unknown)}.`;
   }
   if (result.statusConflict) {
     return "The single most important reason is that the deployment status and the start date do not agree.";
@@ -68,31 +84,66 @@ function reason(result: Evaluation): string {
   }
   const mitigation = result.mitigations.find((item) => item.id !== "M-ONGOING");
   if (mitigation) return `The single most important reason is the open safeguard ${plainName(mitigation.title)}.`;
-  return "The single most important reason is that intake found this system High-risk, so yearly monitoring stays in place.";
+  if (result.path === "high") {
+    const why = result.pathReasons[0];
+    if (why) return `The single most important reason is that ${lowerFact(why)}.`;
+  }
+  if (result.path === "general") {
+    return "The single most important reason is that no High or Prohibited fact applies, and this draft does not authorize use.";
+  }
+  return "The single most important reason is that the path facts are not complete.";
 }
 
-/** Rights or safety under § 3.5-801. Benefits is inside the rights area list. */
-function humanImpact(result: Evaluation): boolean {
-  return result.area.rights || result.area.safety;
+export const BLUF_OUTCOME = {
+  prohibited: "The outcome is that a prohibited use applies, so the agency stops that use, and this draft is not an approval.",
+  highGaps: "The outcome is High, with gaps the agency still has to close.",
+  highConditions: "The outcome is High, and it is ready only with conditions.",
+  highClean: "The outcome is High, and the coded safeguards are in place, and this draft does not authorize use.",
+  generalConditions: "The outcome is General, and it is ready only with conditions.",
+  generalClean: "The outcome is General, and the coded safeguards are in place, and this draft does not authorize use.",
+  highUnknowns: "The outcome is High because an Unknown answer forces that path.",
+  unset: "The outcome is not set, because the path facts are not complete.",
+} as const;
+
+function openConditions(result: Evaluation): boolean {
+  const checks = [...result.criteria, ...result.rp];
+  const failed = checks.some((item) => isActionCheck(item.id) && actionKind(item.status) === "fail");
+  const partial = checks.some((item) => isActionCheck(item.id) && actionKind(item.status) === "partial");
+  const openMitigation = result.mitigations.some((item) => item.id !== "M-ONGOING");
+  return failed || partial || openMitigation || result.speech || result.crossChecks.length > 0 || !result.attestation || result.followups.length > 0 || Boolean(result.priorDeployment) || result.statusConflict;
 }
 
 function outcomeSentence(result: Evaluation): string {
-  const checks = [...result.criteria, ...result.rp];
-  const failed = checks.some((item) => actionKind(item.status) === "fail");
-  const partial = checks.some((item) => actionKind(item.status) === "partial");
-  const openMitigation = result.mitigations.some((item) => item.id !== "M-ONGOING");
-  // High-risk routing follows a prohibited use, a deployment fact, or an open
-  // safeguard on a rights- or safety-impacting use. A Gap or Not yet on a use
-  // that is neither does not, by itself, decide High. G1–G7 are reported from
-  // those same impact answers and are not a second High switch.
-  const highRisk = result.prohibited
-    || result.statusConflict
-    || Boolean(result.priorDeployment)
-    || (failed && humanImpact(result));
-  const conditions = failed || partial || openMitigation || result.speech || result.crossChecks.length > 0 || !result.attestation || result.followups.length > 0;
-  if (highRisk) return "The outcome is high-risk routing.";
-  if (conditions) return "The outcome is ready only with conditions.";
-  return "The outcome is that the coded safeguards are in place, and this draft does not authorize use.";
+  if (result.path === "prohibited" || result.prohibited) return BLUF_OUTCOME.prohibited;
+  if (forcedByUnknowns(result)) return BLUF_OUTCOME.highUnknowns;
+  if (result.path === "high") {
+    const failed = [...result.criteria, ...result.rp].some((item) => isActionCheck(item.id) && actionKind(item.status) === "fail");
+    if (failed) return BLUF_OUTCOME.highGaps;
+    if (openConditions(result)) return BLUF_OUTCOME.highConditions;
+    return BLUF_OUTCOME.highClean;
+  }
+  if (result.path === "general") {
+    if (openConditions(result)) return BLUF_OUTCOME.generalConditions;
+    return BLUF_OUTCOME.generalClean;
+  }
+  return BLUF_OUTCOME.unset;
+}
+
+export function pathSentence(path: AssessmentPath): string {
+  switch (path) {
+    case "high":
+      return "The path is High.";
+    case "general":
+      return "The path is General.";
+    case "prohibited":
+      return "The path is Prohibited.";
+    case "undetermined":
+      return "The path is not set yet.";
+    default: {
+      const never: never = path;
+      return never;
+    }
+  }
 }
 
 export function buildBluf(result: Evaluation): BlufCopy {
@@ -148,7 +199,7 @@ export function buildBluf(result: Evaluation): BlufCopy {
   }
 
   return {
-    sentences: [outcomeSentence(result), "The risk level is High-risk.", reason(result)],
+    sentences: [outcomeSentence(result), pathSentence(result.path), reason(result)],
     steps,
   };
 }

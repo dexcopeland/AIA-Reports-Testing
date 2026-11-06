@@ -2,7 +2,7 @@
 
 This is a no-AI, in-browser Algorithmic Impact Assessment for Maryland state agencies. An agency answers a structured form. The page builds a draft report with fixed rules. Nothing is sent to a server.
 
-The draft is for DoIT AI Governance review. It does not approve an AI system.
+Agency draft — not approval. Send DoIT the signed Executive Summary.
 
 It follows the shape of Canada's [AIA tool](https://github.com/canada-ca/aia-eia-js): a client-side questionnaire, a JSON file you can save and load, and deterministic scoring. The output here is a written 10-section report, not only a score.
 

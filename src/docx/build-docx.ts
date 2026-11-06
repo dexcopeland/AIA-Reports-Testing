@@ -191,8 +191,41 @@ function signTable(block: Block): FileChild[] {
   ];
 }
 
+function inventoryTable(block: Block): Table {
+  const widths = [2800, 6560];
+  const headerCell = (label: string, width: number) => new TableCell({
+    width: { size: width, type: WidthType.DXA },
+    borders: boxBorders,
+    shading: { type: ShadingType.CLEAR, fill: REPORT_STYLE.shade },
+    margins: { top: 40, bottom: 40, left: 80, right: 80 },
+    children: [new Paragraph({ children: [run(label, { size: 22, bold: true, color: NAVY })] })],
+  });
+  const bodyCell = (label: string, width: number, bold = false) => new TableCell({
+    width: { size: width, type: WidthType.DXA },
+    borders: boxBorders,
+    margins: { top: 40, bottom: 40, left: 80, right: 80 },
+    children: [new Paragraph({ children: [run(label || " ", { size: 22, bold, color: bold ? NAVY : BODY })] })],
+  });
+  return new Table({
+    width: { size: 9360, type: WidthType.DXA },
+    columnWidths: widths,
+    rows: [
+      new TableRow({
+        tableHeader: true,
+        cantSplit: true,
+        children: [headerCell("Field", widths[0]), headerCell("Value", widths[1])],
+      }),
+      ...(block.rows ?? []).map((row) => new TableRow({
+        cantSplit: true,
+        children: [bodyCell(row.field, widths[0], true), bodyCell(row.value, widths[1])],
+      })),
+    ],
+  });
+}
+
 function paragraphFrom(block: Block, anchors: Set<string>): FileChild[] {
   if (block.type === "break") return [new Paragraph({ children: [new PageBreak()] })];
+  if (block.type === "table") return [inventoryTable(block)];
   if (block.type === "h1") {
     return [
       new Paragraph({

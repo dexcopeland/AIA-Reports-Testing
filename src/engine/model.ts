@@ -73,6 +73,8 @@ export interface AnswerLine {
   statement: string;
   evidence: string;
   targetDate: string;
+  /** Certificate ids when this statement line is credited. Empty means the statement is not credited. Omitted on lead lines that are not statements. */
+  creditCerts?: string[];
 }
 
 export interface CriterionResult {

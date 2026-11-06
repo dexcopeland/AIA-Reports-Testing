@@ -111,14 +111,15 @@ function line(label: string, statement: string, evidence = "", targetDate = ""):
 }
 
 export function statementLines(items: ResolvedItem[]): AnswerLine[] {
-  return items.map((item) =>
-    line(
+  return items.map((item) => ({
+    ...line(
       item.context || item.title,
       item.choiceText,
       item.evidence,
       item.targetDate ? formatDate(item.targetDate) : "",
     ),
-  );
+    creditCerts: item.credited ? [...(item.creditCerts ?? [])] : [],
+  }));
 }
 
 export function quoteFromLines(lines: AnswerLine[]): string {

@@ -208,6 +208,12 @@ summary:focus-visible,
 }
 .r-bullet::before { content: "• "; }
 .r-sub { margin: 0 0 0.35rem 1.7rem; }
+.inventory-table { width: 100%; border-collapse: collapse; margin: 0.4rem 0 1rem; }
+.inventory-table th,
+.inventory-table td { border: 1px solid #0a3161; padding: 0.35rem 0.5rem; vertical-align: top; text-align: left; }
+.inventory-table thead th { background: #f4f7fb; color: #0a3161; }
+.inventory-table tbody th { width: 32%; font-weight: 700; color: #0a3161; }
+.sheet-break { display: none; }
 .r-steps { margin: 0.2rem 0 0.7rem; padding-left: 1.4rem; }
 .r-steps a { color: #0a3161; }
 .r-aside { margin: 0.1rem 0 0.35rem; }
@@ -295,6 +301,7 @@ summary:focus-visible,
   #app-shell { display: block; }
   #main, #assessment-column { max-width: none; padding: 0; }
   .sheet { border: 0; padding: 0; }
+  .sheet-break { display: block; break-before: page; }
   .r-h1 { font-size: 22pt; }
   .r-h2 { font-size: 16pt; }
   .r-h3 { font-size: 13.5pt; }

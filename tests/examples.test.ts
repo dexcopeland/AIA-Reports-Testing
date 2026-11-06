@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { SECTIONS } from "../src/content/form";
 import { STATEMENT_BY_ID } from "../src/content/statements";
-import { buildBluf } from "../src/engine/bluf";
+import { BLUF_OUTCOME, buildBluf } from "../src/engine/bluf";
 import { evaluate } from "../src/engine/evaluate";
 import { buildReport } from "../src/engine/report";
 import { buildExample } from "../src/examples/build";
@@ -54,7 +54,8 @@ describe("loadable examples", () => {
       expect(result.rp.map((item) => item.id)).toEqual(["RP1", "RP2", "RP3", "RP4", "RP5", "RP6", "RP7", "RP8"]);
       const bluf = buildBluf(result).sentences.join(" ");
       expect(bluf).toContain("The outcome is");
-      expect(bluf).toContain("The risk level is High-risk.");
+      expect(bluf).toContain("The path is");
+      expect(bluf).not.toContain("The risk level is High-risk.");
       expect(`${spec.title} ${spec.description} ${loaded.example_label ?? ""}`.toLowerCase()).not.toMatch(/\b(good|poor)\b/);
     }
   });
@@ -88,7 +89,7 @@ describe("loadable examples", () => {
       expect(rows[2].c2).toBe("Impact: No");
       expect(rows[2].c3).toBe("Impact: No");
       expect(rows[2].outcome).toContain("ready only with conditions");
-      expect(rows[4].outcome).toContain("high-risk routing");
+      expect(rows[4].outcome).toBe(BLUF_OUTCOME.highGaps);
       expect(new Set(rows.map((row) => row.reason)).size).toBe(rows.length);
       expect(rows[0].c1 === "Impact: Yes" || rows[0].c2 === "Impact: Yes" || rows[0].c3 === "Impact: Yes").toBe(true);
       expect(rows[4].c1 === "Impact: Yes" || rows[4].c2 === "Impact: Yes" || rows[4].c3 === "Impact: Yes").toBe(true);
