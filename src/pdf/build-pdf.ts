@@ -311,8 +311,40 @@ function signBox(block: Block, faces: LoadedFaces, missing: Set<string>): PdfCon
   return parts.map((part) => ({ ...part, margin: [0, 2, 0, 1] }));
 }
 
+function inventoryTable(block: Block, faces: LoadedFaces, missing: Set<string>): PdfContent {
+  const header = (label: string): PdfContent => ({
+    text: paint(label, faces, missing),
+    bold: true,
+    color: `#${REPORT_STYLE.navy}`,
+    fillColor: `#${REPORT_STYLE.shade}`,
+    margin: [4, 4, 4, 4],
+  });
+  const cell = (label: string): PdfContent => ({
+    text: paint(label, faces, missing),
+    margin: [4, 4, 4, 4],
+  });
+  return {
+    table: {
+      headerRows: 1,
+      widths: ["32%", "*"],
+      body: [
+        [header("Field"), header("Value")],
+        ...(block.rows ?? []).map((row) => [cell(row.field), cell(row.value)]),
+      ],
+    },
+    layout: {
+      hLineColor: () => `#${REPORT_STYLE.navy}`,
+      vLineColor: () => `#${REPORT_STYLE.navy}`,
+      hLineWidth: () => 0.5,
+      vLineWidth: () => 0.5,
+    },
+    margin: [0, 4, 0, 10],
+  };
+}
+
 function blockContent(block: Block, faces: LoadedFaces, missing: Set<string>): PdfContent | PdfContent[] {
   if (block.type === "break") return { text: "", pageBreak: "before" };
+  if (block.type === "table") return inventoryTable(block, faces, missing);
   if (block.type === "h1") {
     return [
       {

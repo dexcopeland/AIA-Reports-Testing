@@ -166,9 +166,32 @@ function SignBlock({ block, onEdit }: { block: Block; onEdit: SignoffEdit }) {
   );
 }
 
+function InventoryTable({ rows }: { rows: { field: string; value: string }[] }) {
+  return (
+    <table className="inventory-table">
+      <thead>
+        <tr>
+          <th scope="col">Field</th>
+          <th scope="col">Value</th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((row) => (
+          <tr key={row.field}>
+            <th scope="row">{row.field}</th>
+            <td>{row.value}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
 function BlockNode({ block, onEdit }: { block: Block; onEdit: SignoffEdit }) {
   if (block.type === "sign") return <SignBlock block={block} onEdit={onEdit} />;
-  if (block.type === "break" || block.type === "step") return null;
+  if (block.type === "step") return null;
+  if (block.type === "break") return <div className="sheet-break" />;
+  if (block.type === "table") return <InventoryTable rows={block.rows ?? []} />;
   const className = block.text.startsWith("Aligned to:") ? `r-${block.type} r-aligned` : `r-${block.type}`;
   const content = block.text;
   if (block.type === "h1") return <h1 id={block.anchor} className={`${className} report-title`}>{content}</h1>;

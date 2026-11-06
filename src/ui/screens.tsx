@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { activeSections, sectionHeading, visibleFields, type Field as FormField } from "../content/form";
+import { FIXED } from "../content/rules";
 import { deriveAssessmentPath, pathNote } from "../engine/path";
 import type { AnswerFile, AnswerValue } from "../content/types";
 import type { Answers } from "../engine/answers";
@@ -48,7 +49,7 @@ export function HomeScreen({
   return (
     <div className="flex flex-col gap-4">
       <h2 id="section-heading" tabIndex={-1} className="text-2xl font-semibold text-primary outline-none">Start an assessment</h2>
-      <p>Work section by section. You can save a JSON file and load it later on this computer. The draft report is for DoIT AI Governance review.</p>
+      <p>Work section by section. You can save a JSON file and load it later on this computer. {FIXED.draftBanner}</p>
       <div className="flex flex-wrap gap-2">
         <Button type="button" className={touchTarget} onClick={onStart}>Start a new assessment</Button>
         {saved && Object.keys(saved.answers).length > 0 ? (

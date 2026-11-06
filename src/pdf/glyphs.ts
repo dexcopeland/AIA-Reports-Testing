@@ -112,8 +112,9 @@ export function glyphWarnings(blocks: Block[], missing: string[]): GlyphWarning[
   const context = questionContext(blocks);
   blocks.forEach((block, index) => {
     const fieldText = (block.fields ?? []).map((field) => field.value ?? "").join("");
+    const rowText = (block.rows ?? []).map((row) => `${row.field}${row.value}`).join("");
     for (const character of missing) {
-      if (!block.text.includes(character) && !fieldText.includes(character)) continue;
+      if (!block.text.includes(character) && !fieldText.includes(character) && !rowText.includes(character)) continue;
       const bucket = questions.get(character);
       if (!bucket) continue;
       const named = context[index] ?? [];

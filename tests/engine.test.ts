@@ -457,7 +457,7 @@ describe("evaluation engine", () => {
     }));
     const text = report.blocks.map((block) => block.text).join("\n");
     expect(text).not.toContain("agency.lead@example.md.gov");
-    expect(text).toContain("Draft for DoIT AI Governance review.");
+    expect(text).toContain("Agency draft — not approval. Send DoIT the signed Executive Summary.");
     expect(report.checks.find((check) => check.id === "email")?.ok).toBe(true);
     expect(report.checks.find((check) => check.id === "b7")?.ok).toBe(true);
   });

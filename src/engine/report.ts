@@ -6,8 +6,9 @@ import type { AnswerFile } from "../content/types";
 import type { Answers } from "./answers";
 import { many, text } from "./answers";
 import { formatIsoDate, reportDateFromSaved } from "./dates";
+import { buildBluf, pathSentence, type FollowStep } from "./bluf";
+import { certCreditLabels } from "./credits";
 import { evaluate, levelSafeguard, optionLabel } from "./evaluate";
-import { buildBluf, type FollowStep } from "./bluf";
 import type { Evaluation, LiveMitigation } from "./model";
 import { ackFor } from "./signoff";
 import { dataLevel, deployment, priorAssessment, processingPlace, procurementApplicable, selectedGroups, statusConflict, threatApplies, vendorInvolved } from "./visibility";
@@ -29,8 +30,13 @@ export interface SignField {
   selected?: boolean;
 }
 
+export interface TableRow {
+  field: string;
+  value: string;
+}
+
 export interface Block {
-  type: "h1" | "h2" | "h3" | "p" | "label" | "field" | "note" | "qa" | "break" | "bullet" | "sub" | "step" | "sign";
+  type: "h1" | "h2" | "h3" | "p" | "label" | "field" | "note" | "qa" | "break" | "bullet" | "sub" | "step" | "sign" | "table";
   text: string;
   source: "template" | "answer" | "slot";
   anchor?: string;
@@ -40,6 +46,8 @@ export interface Block {
   signId?: string;
   /** Owner and due date lines that sit under a follow-up step. */
   aside?: string;
+  /** Two-column Field | Value rows. Used by the High inventory table. */
+  rows?: TableRow[];
 }
 
 export interface ReportDocument {
@@ -66,7 +74,7 @@ export interface ReportView {
 }
 
 const QUESTIONS: { n: number; section: string; text: string; rp?: string }[] = [
-  { n: 1, section: "Section 1: About this request", text: "Intake reference number (from your High-risk intake result)" },
+  { n: 1, section: "Section 1: About this request", text: "Intake reference number" },
   { n: 2, section: "Section 1: About this request", text: "Your agency or unit, and your role" },
   { n: 3, section: "Section 1: About this request", text: "Are you the Agency Lead who will acknowledge the report? If not, give the Agency Lead's role and email." },
   { n: 4, section: "Section 2: The AI system", text: "Name of the AI system" },
@@ -93,7 +101,7 @@ const QUESTIONS: { n: number; section: string; text: string; rp?: string }[] = [
   { n: 25, section: "Section 7: Attestation", text: "I confirm these answers are accurate to the best of my knowledge, and I understand this form is not approval." },
 ];
 
-function block(type: Block["type"], text: string, source: Block["source"], extra?: Pick<Block, "anchor" | "link" | "fields" | "signId" | "aside">): Block {
+function block(type: Block["type"], text: string, source: Block["source"], extra?: Pick<Block, "anchor" | "link" | "fields" | "signId" | "aside" | "rows">): Block {
   return { type, text, source, ...extra };
 }
 
@@ -135,13 +143,27 @@ function leadSign(file: AnswerFile): Block {
   return block("sign", "Agency Lead sign-off", "template", { fields, signId: "lead" });
 }
 
-function answerBlocks(item: { qRefs: string; answerLines: { label: string; statement: string; evidence: string; targetDate: string }[] }): Block[] {
+function creditPhrase(ids: string[]): string {
+  return `Credited (in-scope ${certCreditLabels(ids)})`;
+}
+
+function evidenceStatus(status: string, lines: { creditCerts?: string[] }[]): string {
+  const statements = lines.filter((line) => line.creditCerts !== undefined);
+  if (statements.length === 0) return status;
+  const allCredited = statements.every((line) => (line.creditCerts ?? []).length > 0);
+  if (!allCredited || (status !== "Met" && status !== "In place")) return status;
+  const ids = [...new Set(statements.flatMap((line) => line.creditCerts ?? []))];
+  return ids.length > 0 ? creditPhrase(ids) : status;
+}
+
+function answerBlocks(item: { qRefs: string; answerLines: { label: string; statement: string; evidence: string; targetDate: string; creditCerts?: string[] }[] }): Block[] {
   const lines: Block[] = [block("field", `Answer relied on (${item.qRefs}):`, "answer")];
   const answers = item.answerLines.length > 0 ? item.answerLines : [{ label: "Answer", statement: "No answer provided.", evidence: "", targetDate: "" }];
   for (const line of answers) {
     lines.push(block("bullet", `${line.label}: ${line.statement}`, "answer"));
     if (line.evidence) lines.push(block("sub", `Evidence: ${line.evidence}`, "answer"));
     if (line.targetDate) lines.push(block("sub", `Target date: ${line.targetDate}.`, "answer"));
+    if (line.creditCerts && line.creditCerts.length > 0) lines.push(block("sub", `${creditPhrase(line.creditCerts)}.`, "slot"));
   }
   return lines;
 }
@@ -340,6 +362,31 @@ function inventoryB5(answers: Answers): string {
   return `Use started ${start || "start date not given"}. Impact assessment before deployment: ${prior}.`;
 }
 
+function inventoryRows(answers: Answers, result: Evaluation): TableRow[] {
+  const caps = many(answers, "q6_capabilities").map((id) => labelOf(CAPABILITIES, id));
+  const description = text(answers, "q6_description");
+  const capabilityValue = [caps.join("; "), description].filter(Boolean).join(". ") || "No answer provided";
+  const builder = text(answers, "q5_builder");
+  const vendorParts = [text(answers, "q5_vendor"), text(answers, "q5_product"), text(answers, "q5_version")].filter(Boolean);
+  const vendorValue = builder === "state_built"
+    ? "Not applicable. Built by the State."
+    : vendorParts.join(", ") || labelOf(BUILDERS, builder) || "No answer provided";
+  const status = deployment(answers);
+  const priorAsked = status === "pilot" || status === "live" || statusConflict(answers);
+  const priorValue = priorAsked
+    ? labelOf(PRIOR, priorAssessment(answers)) || "No answer provided"
+    : "Not applicable. Use has not started.";
+  return [
+    { field: "Name of the system", value: text(answers, "q4_name") || "No answer provided" },
+    { field: "Vendor", value: vendorValue },
+    { field: "Capabilities", value: capabilityValue },
+    { field: "Purpose and intended uses", value: text(answers, "q7_purpose") || "No answer provided" },
+    { field: "Impact assessment before deployment", value: priorValue },
+    { field: "Decision role", value: optionLabel("role", text(answers, "q10_role")) || "No answer provided" },
+    { field: "Summary of this impact assessment", value: buildBluf(result).sentences.join(" ") },
+  ];
+}
+
 function plainName(name: string): string {
   if (/^[A-Z][a-z]/.test(name)) return name.charAt(0).toLowerCase() + name.slice(1);
   return name;
@@ -428,11 +475,12 @@ const GATE_CHECKS: { id: string; name: string; checked: string }[] = [
   { id: "G7", name: "decision role or impact unknown", checked: "Whether Q8 or Q10 is unknown." },
 ];
 
-function findingBlocks(item: { id: string; name: string; status: string; found: string; qRefs: string; answerLines: { label: string; statement: string; evidence: string; targetDate: string }[] }, checked: string): Block[] {
+function findingBlocks(item: { id: string; name: string; status: string; found: string; qRefs: string; answerLines: { label: string; statement: string; evidence: string; targetDate: string; creditCerts?: string[] }[] }, checked: string): Block[] {
+  const shown = evidenceStatus(item.status, item.answerLines);
   const lines: Block[] = [
-    block("label", `${item.id} – ${item.name}: ${item.status}`, "template"),
+    block("label", `${item.id} – ${item.name}: ${shown}`, "template"),
     block("field", `What was checked: ${checked}`, "template"),
-    block("field", `Result: ${item.status}.`, "slot"),
+    block("field", `Result: ${shown}.`, "slot"),
     block("field", `What we found: ${item.found}`, "slot"),
     ...answerBlocks(item),
   ];
@@ -467,15 +515,21 @@ function buildExecutive(file: AnswerFile, result: Evaluation, answers: Answers, 
   banner(file, blocks);
   blocks.push(block("p", `Response ID: ${result.responseId}`, "slot"));
   blocks.push(block("p", `Report date: ${reportDateFromSaved(file.saved_at).label}.`, "slot"));
+  blocks.push(block("h2", "About this summary", "template"));
+  for (const paragraph of FIXED.purpose) blocks.push(block("p", paragraph, "template"));
   blocks.push(block("h2", "The AI system", "template", { anchor: "sec_1" }));
   blocks.push(block("p", `AI system (Q4): ${system}`, "answer"));
   blocks.push(block("p", `Agency: ${[text(answers, "q2_agency"), text(answers, "q2_unit")].filter(Boolean).join(", ") || "No answer provided"}`, "answer"));
+  const capabilities = many(answers, "q6_capabilities").map((id) => labelOf(CAPABILITIES, id)).join(", ");
+  blocks.push(block("p", `Capabilities: ${capabilities || "No answer provided"}`, "answer"));
   blocks.push(block("p", `Purpose: ${text(answers, "q7_purpose") || "No answer provided"}`, "answer"));
   blocks.push(block("p", `Deployment: ${inventoryB5(answers)}`, "answer"));
   blocks.push(block("p", `Decision role: ${optionLabel("role", text(answers, "q10_role")) || "No answer provided"}`, "answer"));
-  blocks.push(block("p", `Intake reference (Q1): ${text(answers, "q1_intake") || FIXED.noIntake}`, "answer"));
+  if (result.path === "high" || result.path === "prohibited") {
+    blocks.push(block("p", `Intake reference (Q1): ${text(answers, "q1_intake") || FIXED.noIntake}`, "answer"));
+  }
   const areaNames = many(answers, "q8_areas").map((id) => AREAS.find((area) => area.id === id)?.label ?? id).join(", ") || "no area selected";
-  blocks.push(block("p", `High-risk area: ${areaNames}. This is ${result.area.label}.`, "slot"));
+  blocks.push(block("p", `Affected area: ${areaNames}. This is ${result.area.label}.`, "slot"));
   blocks.push(block("p", result.summaryDeadline, "template"));
   blocks.push(block("p", b7Text(result, answers), "slot", { anchor: "b7" }));
   if (!result.attestation) blocks.push(block("p", "Q25 was not confirmed. The executive summary still needs the Agency Lead's signature.", "template"));
@@ -529,6 +583,11 @@ function buildExecutive(file: AnswerFile, result: Evaluation, answers: Answers, 
   blocks.push(block("p", FIXED.leadNote, "template"));
   blocks.push(block("p", "Sign by hand on the printed copy, or in the signature field of the PDF. The name and date above are the ones entered in the assessment.", "template"));
   blocks.push(...sourceBlocks(blocks));
+  if (result.path === "high") {
+    blocks.push(block("break", "", "template"));
+    blocks.push(block("h2", "Inventory under SF&P § 3.5-803(b)", "template", { anchor: "sec_inventory" }));
+    blocks.push(block("table", "", "answer", { rows: inventoryRows(answers, result) }));
+  }
   return blocks;
 }
 
@@ -621,7 +680,8 @@ function b7Text(result: Evaluation, answers: Answers): string {
   const purpose = firstSentence(text(answers, "q7_purpose"), "Its purpose is in the agency's answers.");
   const open = result.mitigations.filter((item) => item.id !== "M-ONGOING").map((item) => item.title);
   const openText = open.length ? `Still to plan: ${open.join("; ")}.` : "The answers show the main safeguards in place.";
-  let textValue = `${name} supports this purpose: ${purpose} It is High-risk because intake found it so, in an area that is ${result.area.label}. ${openText} The Agency Lead will plan the mitigations in this report and reassess at least yearly. This public summary leaves out security settings.`;
+  const pathLine = pathSentence(result.path).replace(/\.$/, "");
+  let textValue = `${name} supports this purpose: ${purpose} ${pathLine}, in an area that is ${result.area.label}. ${openText} The Agency Lead will plan the mitigations in this report and reassess at least yearly. This public summary leaves out security settings.`;
   const parts = textValue.split(/(?<=[.])\s+/);
   while (words(textValue) > 150 && parts.length > 1) {
     parts.pop();
@@ -675,20 +735,20 @@ function citedIds(blocks: Block[]): Set<string> {
   return ids;
 }
 
+function blockPlain(item: Block): string {
+  const rows = (item.rows ?? []).flatMap((row) => [row.field, row.value]);
+  return [item.text, ...rows].filter((part) => part !== "").join("\n");
+}
+
 export function reportPlainText(doc: ReportDoc): string {
   return doc.blocks
-    .map((item) => {
-      if (item.type === "break") return "";
-      if (item.type === "h1") return item.text;
-      if (item.type === "h2" || item.type === "h3") return item.text;
-      return item.text;
-    })
+    .map((item) => (item.type === "break" ? "" : blockPlain(item)))
     .filter((line) => line !== "")
     .join("\n\n");
 }
 
 export function selfCheck(blocks: Block[], result: Evaluation, answers: Answers): { id: string; ok: boolean; detail: string }[] {
-  const textValue = blocks.map((item) => item.text).join("\n");
+  const textValue = blocks.map((item) => blockPlain(item)).join("\n");
   const lower = textValue.toLowerCase();
   const bannedHit = BANNED.filter((word) => {
     if (word === "quiet" || word === "quietly") return new RegExp(`\\b${word}\\b`, "i").test(textValue);
@@ -733,7 +793,7 @@ export function selfCheck(blocks: Block[], result: Evaluation, answers: Answers)
     { id: "q25-followup", ok: !result.followups.some((item) => item.q === 25), detail: "No Q25 follow-up." },
     { id: "cap", ok: !result.wellAnswered || result.mitigations.length <= 3, detail: `${result.mitigations.length} mitigations; well answered: ${result.wellAnswered}.` },
     { id: "tags", ok: !textValue.includes("[P1] Implementation Guidance") && !/\[P2\] Responsible AI Policy(?! Implementation)/.test(textValue), detail: "P1 and P2 tags match their names." },
-    { id: "bluf", ok: blufStart > 0 && followAt > 0 && takeawaySentences.length >= 2 && takeawaySentences.length <= 4 && takeawayText.includes("The risk level is High-risk.") && takeawayText.includes("The outcome is"), detail: `${takeawaySentences.length} sentences.` },
+    { id: "bluf", ok: blufStart > 0 && followAt > 0 && takeawaySentences.length === 3 && /The path is (?:High|General|Prohibited|not set yet)\./.test(takeawayText) && takeawayText.includes("The outcome is") && takeawayText.includes("The single most important reason is") && !takeawayText.includes("The risk level is High-risk."), detail: `${takeawaySentences.length} sentences.` },
     { id: "follow-steps", ok: (stepBlocks.length > 0) !== nothingOpen && stepPeriods.length === 0, detail: stepBlocks.length ? `${stepBlocks.length} steps.` : "No follow-up step is open." },
     { id: "links", ok: brokenLinks.length === 0, detail: brokenLinks.map((item) => item.link ?? item.text).join(", ") || "Follow-up steps link to a section or check." },
   ];

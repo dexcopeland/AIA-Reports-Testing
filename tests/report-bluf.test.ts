@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { APPROVAL_BANNED } from "../src/content/rules";
-import { buildBluf } from "../src/engine/bluf";
+import { BLUF_OUTCOME, buildBluf } from "../src/engine/bluf";
 import { evaluate } from "../src/engine/evaluate";
 import { buildReport } from "../src/engine/report";
 import { loadExampleFile } from "../src/examples/load";
@@ -19,8 +19,9 @@ describe("bottom line up front", () => {
     const executive = report.documents.find((item) => item.key === "executive");
     expect(executive).toBeTruthy();
     const headings = executive!.blocks.filter((block) => block.type === "h2").map((block) => block.text);
-    expect(headings[0]).toBe("The AI system");
-    expect(headings[1]).toBe("Bottom line up front");
+    expect(headings[0]).toBe("About this summary");
+    expect(headings[1]).toBe("The AI system");
+    expect(headings[2]).toBe("Bottom line up front");
 
     const start = executive!.blocks.findIndex((block) => block.text === "Bottom line up front");
     const summary = executive!.blocks.findIndex((block) => block.text === "What the agency is doing well");
@@ -28,11 +29,11 @@ describe("bottom line up front", () => {
     const follow = bluf.findIndex((block) => block.text === "Follow-up steps for the agency");
     expect(follow).toBeGreaterThan(0);
     const takeaway = sentences(bluf.slice(0, follow).filter((block) => block.type === "p").map((block) => block.text).join(" "));
-    expect(takeaway.length).toBeGreaterThanOrEqual(2);
-    expect(takeaway.length).toBeLessThanOrEqual(4);
-    expect(takeaway.join(" ")).toContain("The outcome is that the coded safeguards are in place");
-    expect(takeaway.join(" ")).toContain("The risk level is High-risk.");
-    expect(takeaway.join(" ")).toContain("The single most important reason is");
+    expect(takeaway).toHaveLength(3);
+    expect(takeaway[0]).toBe(BLUF_OUTCOME.highClean);
+    expect(takeaway[1]).toBe("The path is High.");
+    expect(takeaway[2]).toContain("The single most important reason is");
+    expect(takeaway.join(" ")).not.toContain("The risk level is High-risk.");
     expect(bluf.some((block) => block.type === "step")).toBe(false);
     expect(bluf.some((block) => block.text === "No follow-up step is open.")).toBe(true);
     expect(report.checks.find((check) => check.id === "bluf")?.ok).toBe(true);
@@ -52,8 +53,9 @@ describe("bottom line up front", () => {
     const summary = executive!.blocks.findIndex((block) => block.text === "What the agency is doing well");
     const bluf = executive!.blocks.slice(start, summary);
     const takeaway = bluf.filter((block) => block.type === "p").map((block) => block.text).join(" ");
-    expect(takeaway).toContain("The outcome is ready only with conditions.");
-    expect(takeaway).toContain("The risk level is High-risk.");
+    expect(takeaway).toContain(BLUF_OUTCOME.highConditions);
+    expect(takeaway).toContain("The path is High.");
+    expect(takeaway).not.toContain("The risk level is High-risk.");
     const steps = bluf.filter((block) => block.type === "step");
     expect(steps.length).toBeGreaterThan(0);
     expect(steps.every((step) => (step.text.match(/[.!?]/g) ?? []).length === 1)).toBe(true);
@@ -73,14 +75,25 @@ describe("bottom line up front", () => {
       expect(result.area.safety).toBe(false);
       expect(result.prohibited).toBe(false);
       expect(result.criteria.some((item) => item.status === "Gap") || result.rp.some((item) => item.status === "Not yet")).toBe(true);
-      expect(buildBluf(result).sentences[0]).toBe("The outcome is ready only with conditions.");
+      expect(result.path).toBe("general");
+      expect(buildBluf(result).sentences[0]).toBe(BLUF_OUTCOME.generalConditions);
+      expect(buildBluf(result).sentences[1]).toBe("The path is General.");
       expect(buildBluf(result).steps.length).toBeGreaterThan(0);
 
       const impacted = structuredClone(file);
       impacted.answers = { ...file.answers, q8_areas: ["benefits_services"] };
       const routed = evaluate(impacted);
       expect(routed.area.rights).toBe(true);
-      expect(buildBluf(routed).sentences[0]).toBe("The outcome is high-risk routing.");
+      const routedBluf = buildBluf(routed);
+      if (id === "state-park-schedule") {
+        expect(routed.path).toBe("high");
+        expect(routedBluf.sentences[0]).toBe(BLUF_OUTCOME.highGaps);
+        expect(routedBluf.sentences[1]).toBe("The path is High.");
+      } else {
+        expect(routed.path).toBe("general");
+        expect(routedBluf.sentences[0]).toBe(BLUF_OUTCOME.generalConditions);
+        expect(routedBluf.sentences[1]).toBe("The path is General.");
+      }
     }
   });
 
@@ -94,8 +107,10 @@ describe("bottom line up front", () => {
     const start = executive!.blocks.findIndex((block) => block.text === "Bottom line up front");
     const summary = executive!.blocks.findIndex((block) => block.text === "What the agency is doing well");
     const takeaway = executive!.blocks.slice(start, summary).filter((block) => block.type === "p").map((block) => block.text).join(" ");
-    expect(takeaway).toContain("The outcome is high-risk routing.");
+    expect(takeaway).toContain(BLUF_OUTCOME.prohibited);
+    expect(takeaway).toContain("The path is Prohibited.");
     expect(takeaway).toContain("prohibited use");
+    expect(takeaway).not.toContain("The risk level is High-risk.");
     expect(body).not.toMatch(/\bApproved\b/);
     for (const phrase of APPROVAL_BANNED) expect(body).not.toContain(phrase);
     expect(body).not.toContain("________");

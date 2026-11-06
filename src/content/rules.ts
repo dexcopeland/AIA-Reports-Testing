@@ -479,7 +479,7 @@ export const SOURCES: { id: string; name: string; url: string }[] = [
 
 export const FIXED = {
   purpose: [
-    "Maryland law (SF&P § 3.5-803) requires an algorithmic impact assessment for each High-risk AI system a State agency uses. The Responsible AI Policy expects safeguards that protect residents' rights, safety and privacy. This report identifies risks, gaps and recommended mitigations. It is advisory and is not an approval or authorization to buy, use or deploy the AI system. The Agency Lead reviews each recommended mitigation, records a plan and target date for each one, and signs the acknowledgment in the executive summary.",
+    "This summary is for the agency. It is not an approval and it does not authorize the agency to buy, use, or deploy the AI system. Assign an owner and a target date for each recommended mitigation. The Agency Lead signs the acknowledgment. Keep the full report package in the agency's records. Send DoIT a copy of the signed Executive Summary.",
     "This report also checks 8 recommended practices drawn from 2 international standards, ISO/IEC 42001 (AI management systems) and ISO/IEC 27090 (AI security). DoIT has not adopted these standards as policy. Findings from them are recommendations, not compliance findings.",
     "This report is based only on the agency's answers as submitted. DoIT did not check whether they are accurate. The agency is responsible for making sure its answers are accurate and complete, as the respondent confirmed in Q25.",
   ],
@@ -490,11 +490,11 @@ export const FIXED = {
   acknowledge:
     "I acknowledge the risks and recommended mitigations in this report and accept responsibility for the plans above before this AI system moves forward.",
   leadNote: "If the Agency Lead did not submit the form, the Agency Lead still signs.",
-  noIntake: "No intake reference. DoIT AI Governance must confirm the High-risk result.",
+  noIntake: "No intake reference is recorded.",
   noDate: "The § 3.5-803(e) deadline depends on the procurement date; DoIT AI Governance will confirm it.",
   appendixNote:
     "These are the agency's answers to the 25 form questions as submitted (Response ID {id}, submitted {when}). They are copied word for word and have not been edited or checked by DoIT. The agency is responsible for the accuracy of its answers. Questions marked recommended practice also reflect ISO/IEC 42001 or ISO/IEC 27090.",
-  draftBanner: "Draft for DoIT AI Governance review.",
+  draftBanner: "Agency draft — not approval. Send DoIT the signed Executive Summary.",
   notDeployed: "Not yet deployed – this assessment precedes deployment.",
 };
 

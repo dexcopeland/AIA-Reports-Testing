@@ -19,8 +19,12 @@ page.on("response", (response) => {
   if (response.status() >= 400 && !response.url().endsWith("/favicon.ico")) failures.push(`HTTP ${response.status()} ${response.url()}`);
 });
 
+const banner = "Agency draft — not approval. Send DoIT the signed Executive Summary.";
 await page.goto(base, { waitUntil: "networkidle0" });
 const title = await page.title();
+const homeText = await page.$eval("body", (node) => node.innerText);
+if (!homeText.includes(banner)) failures.push("Home banner missing.");
+if (homeText.includes("Draft for DoIT AI Governance review.")) failures.push("Old DoIT-review framing is still on the home screen.");
 if (!title.includes("Algorithmic Impact Assessment")) failures.push(`Unexpected title: ${title}`);
 await page.screenshot({ path: `${outDir}/01-home.png` });
 
@@ -105,7 +109,13 @@ await page.click("button::-p-text(Review and create draft)");
 await page.waitForSelector("#report");
 const reportText = await page.$eval("#report", (node) => node.innerText);
 if (!reportText.includes("Benefits Eligibility Triage (fictional)")) failures.push("Report title missing the example system.");
-if (!reportText.includes("Draft for DoIT AI Governance review.")) failures.push("Draft banner missing.");
+if (!reportText.includes(banner)) failures.push("Draft banner missing.");
+if (reportText.includes("Draft for DoIT AI Governance review.")) failures.push("Old DoIT-review banner is still in the report.");
+if (reportText.includes("The risk level is High-risk.")) failures.push("BLUF still says every draft is High-risk.");
+if (!reportText.includes("The path is High.")) failures.push("High BLUF path line missing.");
+if (!reportText.includes("Capabilities:")) failures.push("High executive summary is missing capabilities.");
+if (!reportText.includes("Inventory under SF&P § 3.5-803(b)")) failures.push("High inventory table heading missing.");
+if (!reportText.includes("Keep the full report package in the agency's records.")) failures.push("Executive purpose paragraph missing.");
 if (!reportText.includes("1 July 2027")) failures.push("Deadline missing from the example report.");
 if (reportText.includes("agency.lead@")) failures.push("An email leaked into the report.");
 if (reportText.toLowerCase().includes("quietly")) failures.push("Banned word in the report.");
@@ -151,6 +161,12 @@ const generalConfirmed = await page.$eval("#q25_confirm-confirm", (node) => node
 if (!generalConfirmed) failures.push("General example Q25 was not confirmed.");
 await page.click("button::-p-text(Review and create draft)");
 await page.waitForSelector("#report");
+const generalReport = await page.$eval("#report", (node) => node.innerText);
+if (!generalReport.includes(banner)) failures.push("General report banner missing.");
+if (!generalReport.includes("The path is General.")) failures.push("General BLUF path line missing.");
+if (!generalReport.includes("Capabilities:")) failures.push("General executive summary is missing capabilities.");
+if (generalReport.includes("Inventory under SF&P § 3.5-803(b)")) failures.push("General report includes the High inventory table.");
+if (generalReport.includes("The risk level is High-risk.")) failures.push("General BLUF still says High-risk.");
 await page.click("#download-zip");
 await page.waitForFunction(() => document.body.innerText.includes("Report package downloaded"), { timeout: 20000 }).catch(() => {
   failures.push("General path report package download did not confirm.");

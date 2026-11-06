@@ -1,5 +1,6 @@
 import { PDFParse } from "pdf-parse";
 import { describe, expect, it } from "vitest";
+import { BLUF_OUTCOME } from "../src/engine/bluf";
 import { buildReport, documentView, type ReportDoc, type ReportDocument } from "../src/engine/report";
 import { reportToPdfBytes } from "../src/pdf/build-pdf";
 import { buildScenario } from "../src/scenarios/build";
@@ -103,7 +104,7 @@ describe("PDF report", () => {
     expect(raw).toContain("/Ff 49152");
     const flat = executive.flat;
     expect(flat).toContain("Bottom line up front");
-    expect(flat).toContain("The outcome is high-risk routing.");
+    expect(flat).toContain(BLUF_OUTCOME.highGaps);
     expect(flat).toContain("Follow-up steps for the agency");
     expect(flat).not.toContain("Acknowledged (Yes / No)");
     expect(flat).toContain("Agency Lead signature");

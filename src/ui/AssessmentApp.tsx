@@ -9,6 +9,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { activeSections } from "../content/form";
+import { FIXED } from "../content/rules";
 import { type AnswerFile, type AnswerValue } from "../content/types";
 import { exampleIndex, loadExampleFile } from "../examples/load";
 import { ensureSignoff, upsertAck } from "../engine/signoff";
@@ -257,7 +258,7 @@ export function AssessmentApp() {
             <p id="header-save-status" className="sr-only" aria-live="polite">{headerNote}</p>
           </div>
         </div>
-        <div className="banner border-t border-primary-foreground/20 bg-banner px-4 py-2 text-sm text-banner-foreground lg:px-6">Draft for DoIT AI Governance review. This tool does not approve an AI system.</div>
+        <div className="banner border-t border-primary-foreground/20 bg-banner px-4 py-2 text-sm text-banner-foreground lg:px-6">{FIXED.draftBanner}</div>
       </header>
       <div id="app-shell" className="grid items-start lg:grid-cols-[18.5rem_minmax(0,1fr)]">
         <ProgressRail
