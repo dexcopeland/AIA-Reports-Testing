@@ -146,5 +146,40 @@
     "st23c": "told",
     "st24a": "all_four",
     "st24b": "full"
+  },
+  "assessment_path": "high",
+  "assessment_path_reasons": [
+    "A rights area applies and the output is a basis for a decision or action.",
+    "Biometric identification or individual ranking is a basis for a decision or action."
+  ],
+  "cert_credits": {
+    "active": true,
+    "certs": [
+      "soc2",
+      "iso27001",
+      "iso42001"
+    ],
+    "product_in_scope": true,
+    "shortened": [
+      "st11d",
+      "st15a",
+      "st15b",
+      "st15d",
+      "st20a",
+      "st21c",
+      "st21d",
+      "st21e",
+      "st22",
+      "st22f",
+      "st24a"
+    ],
+    "softened_mitigations": [
+      "M-ACCURACY",
+      "M-ENCRYPT",
+      "M-IMPACT",
+      "M-LOG",
+      "M-SEC",
+      "M-TRAIN"
+    ]
   }
 }

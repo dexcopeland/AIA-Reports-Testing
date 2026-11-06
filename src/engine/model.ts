@@ -1,4 +1,4 @@
-import type { ItemStatus, Timing, Track } from "../content/types";
+import type { AssessmentPath, CertCreditSnapshot, ItemStatus, Timing, Track } from "../content/types";
 
 export interface ResolvedItem {
   instanceId: string;
@@ -23,6 +23,9 @@ export interface ResolvedItem {
   designFact?: string;
   /** Hidden because the Q6 answers do not fit this threat. The saved statement is ignored. */
   q6Excluded?: boolean;
+  /** An in-scope certificate overlaps this control. The status is one step softer and is not marked met. */
+  credited?: boolean;
+  creditCerts?: string[];
 }
 
 export interface GateHit {
@@ -49,6 +52,9 @@ export interface LiveMitigation {
   rpOnly: boolean;
   covers: string[];
   quotes: { q: number; text: string }[];
+  /** In-scope certificate overlaps this safeguard. The action is unchanged. */
+  softened?: boolean;
+  creditCerts?: string[];
 }
 
 export interface Followup {
@@ -112,4 +118,7 @@ export interface Evaluation {
   capApplied: boolean;
   attestation: boolean;
   statusConflict: boolean;
+  path: AssessmentPath;
+  pathReasons: string[];
+  certCredits: CertCreditSnapshot;
 }

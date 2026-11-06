@@ -8,7 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { SECTIONS } from "../content/form";
+import { activeSections } from "../content/form";
 import { type AnswerFile, type AnswerValue } from "../content/types";
 import { exampleIndex, loadExampleFile } from "../examples/load";
 import { ensureSignoff, upsertAck } from "../engine/signoff";
@@ -24,7 +24,7 @@ import { autosave, autoload, clearAutosave, downloadJson, emptyFile, normalizeFi
 type Screen = "home" | "form" | "report";
 
 function reachedFor(file: AnswerFile): number {
-  return initialMaxReached(SECTIONS.map((section) => missing(section, file.answers).length));
+  return initialMaxReached(activeSections(file.answers).map((section) => missing(section, file.answers).length));
 }
 
 export function AssessmentApp() {
@@ -100,7 +100,8 @@ export function AssessmentApp() {
   }
 
   function openSection(index: number): void {
-    if (index < 0 || index >= SECTIONS.length) return;
+    const sections = activeSections(fileRef.current.answers);
+    if (index < 0 || index >= sections.length) return;
     commit(fileRef.current, "Saved in this browser.");
     setSectionIndex(index);
     setMaxReached((current) => reachedAfterOpen(current, index));
@@ -119,8 +120,10 @@ export function AssessmentApp() {
 
   function goNext(): void {
     commit(fileRef.current, "Saved in this browser.");
-    const blanks = missing(SECTIONS[sectionIndex]!, fileRef.current.answers);
-    if (blanks.length > 0 && sectionIndex < SECTIONS.length - 1) {
+    const sections = activeSections(fileRef.current.answers);
+    const section = sections[sectionIndex];
+    const blanks = section ? missing(section, fileRef.current.answers) : [];
+    if (blanks.length > 0 && sectionIndex < sections.length - 1) {
       const message = `Still blank: ${blanks.join("; ")}. You can continue. A blank answer counts as a gap.`;
       if (!formError) {
         setFormError(message);
@@ -128,7 +131,7 @@ export function AssessmentApp() {
       }
     }
     setFormError("");
-    if (sectionIndex < SECTIONS.length - 1) {
+    if (sectionIndex < sections.length - 1) {
       const nextIndex = sectionIndex + 1;
       setSectionIndex(nextIndex);
       setMaxReached((current) => reachedAfterOpen(current, nextIndex));

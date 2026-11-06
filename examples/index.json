@@ -71,6 +71,36 @@
           "file": "vendor-license-score.json"
         }
       ]
+    },
+    {
+      "id": "path",
+      "label": "Path examples",
+      "examples": [
+        {
+          "id": "path-high-benefits",
+          "title": "Path example: benefits queue (High)",
+          "description": "Staff use a state-built score to order benefit files. A supervisor decides each file.",
+          "file": "path-high-benefits.json"
+        },
+        {
+          "id": "path-general-grounds",
+          "title": "Path example: grounds forecast (General)",
+          "description": "Crew leads see a state-built forecast of mowing time. It does not decide a service for a person.",
+          "file": "path-general-grounds.json"
+        },
+        {
+          "id": "path-prohibited-score",
+          "title": "Path example: social scoring tool (Prohibited)",
+          "description": "A state-built tool scores personal traits. That use is on the prohibited list.",
+          "file": "path-prohibited-score.json"
+        },
+        {
+          "id": "path-cert-vendor",
+          "title": "Path example: certified hold forecast (General, in-scope certificates)",
+          "description": "A vendor forecast shows hold time. SOC 2 and ISO/IEC 27001 cover this product. The path stays General.",
+          "file": "path-cert-vendor.json"
+        }
+      ]
     }
   ]
 }

@@ -1,4 +1,5 @@
 import { FORM_VERSION, RULES_VERSION, SCHEMA_VERSION, type AnswerFile } from "../content/types";
+import { stampAssessment } from "../engine/draft-state";
 
 const COLUMN_TYPES = new Set(["short", "email", "date"]);
 const FULL_WIDTH_TYPES = new Set(["paragraph", "statement", "groups", "check"]);
@@ -50,13 +51,13 @@ export function reportCanOpen(state: { navigationEnabled: boolean; reportUnlocke
 
 /** Snapshot the draft the moment the user leaves the current question or section. */
 export function persistAdvance(file: AnswerFile, save: (file: AnswerFile) => void, now = new Date().toISOString()): AnswerFile {
-  const next: AnswerFile = {
+  const next = stampAssessment({
     ...file,
     saved_at: now,
     rules_version: RULES_VERSION,
     form_version: FORM_VERSION,
     schema_version: SCHEMA_VERSION,
-  };
+  });
   save(next);
   return next;
 }

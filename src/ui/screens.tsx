@@ -14,7 +14,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { SECTIONS, visibleFields, type Field as FormField } from "../content/form";
+import { activeSections, sectionHeading, visibleFields, type Field as FormField } from "../content/form";
+import { deriveAssessmentPath, pathNote } from "../engine/path";
 import type { AnswerFile, AnswerValue } from "../content/types";
 import type { Answers } from "../engine/answers";
 import { exampleIndex } from "../examples/load";
@@ -174,15 +175,18 @@ export function FormScreen({
   onBack: () => void;
   onNext: () => void;
 }) {
-  const section = SECTIONS[sectionIndex];
+  const sections = activeSections(file.answers);
+  const section = sections[sectionIndex];
   if (!section) return null;
-  const last = sectionIndex === SECTIONS.length - 1;
+  const last = sectionIndex === sections.length - 1;
   const clusters = questionClusters(visibleFields(section, file.answers));
+  const path = deriveAssessmentPath(file.answers);
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <p className="text-sm font-semibold text-primary">Section {sectionIndex + 1} of {SECTIONS.length}</p>
-        <h2 id="section-heading" tabIndex={-1} className="text-2xl font-semibold text-primary outline-none">{section.title}</h2>
+        <p id="assessment-path" className="text-sm font-semibold text-primary" data-assessment-path={path.path}>{pathNote(path.path)}</p>
+        <p className="text-sm font-semibold text-primary">Section {sectionIndex + 1} of {sections.length}</p>
+        <h2 id="section-heading" tabIndex={-1} className="text-2xl font-semibold text-primary outline-none">{sectionHeading(sectionIndex, section.title)}</h2>
         {file.example && file.example_label ? <p>{file.example_label}</p> : null}
       </div>
       <form

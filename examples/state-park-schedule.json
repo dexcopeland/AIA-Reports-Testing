@@ -118,5 +118,16 @@
     "st23c": "told",
     "st24a": "all_four",
     "st24b": "none"
+  },
+  "assessment_path": "general",
+  "assessment_path_reasons": [
+    "No High or Prohibited fact applies."
+  ],
+  "cert_credits": {
+    "active": false,
+    "certs": [],
+    "product_in_scope": false,
+    "shortened": [],
+    "softened_mitigations": []
   }
 }

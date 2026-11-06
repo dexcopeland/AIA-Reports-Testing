@@ -41,7 +41,7 @@ if (!zipInRail) failures.push("Save and zip are not together at the bottom of th
 await page.click("#example-select");
 await page.waitForSelector("[data-slot='select-item']");
 const exampleCount = await page.$$eval("[data-slot='select-item']", (nodes) => nodes.length);
-if (exampleCount !== 10) failures.push(`Expected 10 examples, found ${exampleCount}.`);
+if (exampleCount !== 14) failures.push(`Expected 14 examples, found ${exampleCount}.`);
 await page.click("[data-slot='select-item']::-p-text(Benefits eligibility triage)");
 await page.waitForFunction(() => {
   const button = document.querySelector("#load-example");
@@ -62,6 +62,13 @@ if (!section?.includes("About this request")) failures.push(`Unexpected section:
 
 const agency = await page.$eval("#q2_agency", (node) => node.value);
 if (!agency.includes("fictional")) failures.push("Example agency was not loaded.");
+const highPath = await page.$eval("#assessment-path", (node) => node.textContent ?? "");
+if (!highPath.includes("Path: High")) failures.push(`High path note missing: ${highPath}`);
+const highRailPath = await page.$eval("#rail-assessment-path", (node) => node.textContent ?? "");
+if (!highRailPath.includes("Path: High")) failures.push(`Rail path note missing: ${highRailPath}`);
+if (!(await page.$("#q1_intake"))) failures.push("High path hid the optional intake reference.");
+const highRail = await page.$eval("#progress-rail", (node) => node.innerText);
+if (!highRail.includes("Status")) failures.push("High rail is missing the status section.");
 const railProgress = await page.$eval("#progress-rail", (node) => node.querySelector("[role='progressbar']") !== null);
 if (!railProgress) failures.push("Progress is not in the left rail.");
 const stepVisible = await page.evaluate(() => {
@@ -112,6 +119,41 @@ await client.send("Page.setDownloadBehavior", { behavior: "allow", downloadPath:
 await page.click("button::-p-text(Download report package (.zip))");
 await page.waitForFunction(() => document.body.innerText.includes("Report package downloaded"), { timeout: 20000 }).catch(() => {
   failures.push("Report package download did not confirm.");
+});
+
+await page.setViewport({ width: 1280, height: 900 });
+await page.click("#go-home");
+await page.waitForSelector("#example-select");
+await page.click("#example-select");
+await page.waitForSelector("[data-slot='select-item']");
+await page.click("[data-slot='select-item']::-p-text(Path example: grounds forecast)");
+await page.waitForFunction(() => {
+  const button = document.querySelector("#load-example");
+  return button instanceof HTMLButtonElement && !button.disabled;
+});
+await page.click("#load-example");
+await page.waitForFunction(() => document.querySelector("#assessment-path")?.textContent?.includes("Path: General"));
+const generalPath = await page.$eval("#assessment-path", (node) => node.textContent ?? "");
+if (!generalPath.includes("The short question set is open.")) failures.push(`General path note missing: ${generalPath}`);
+if (await page.$("#q1_intake")) failures.push("General path shows the High intake reference.");
+const generalRail = await page.$eval("#progress-rail", (node) => node.innerText);
+if (/\bStatus\b/.test(generalRail)) failures.push("General rail still lists the status section.");
+if (!generalRail.includes("Attestation")) failures.push("General rail is missing attestation.");
+await page.click("button::-p-text(Risks and safeguards)");
+await page.waitForFunction(() => document.querySelector("#section-heading")?.textContent?.includes("Risks"));
+const risks = await page.$eval("#main", (node) => node.innerText);
+if (risks.includes("Protections for each threat")) failures.push("General path shows the High threat questions.");
+if (!risks.includes("What could go wrong")) failures.push("General path is missing what could go wrong.");
+if (!risks.includes("Accuracy testing")) failures.push("General path is missing accuracy.");
+await page.click("button::-p-text(Attestation)");
+await page.waitForFunction(() => document.querySelector("#section-heading")?.textContent?.includes("Attestation"));
+const generalConfirmed = await page.$eval("#q25_confirm-confirm", (node) => node instanceof HTMLInputElement ? node.checked : node.getAttribute("aria-checked") === "true");
+if (!generalConfirmed) failures.push("General example Q25 was not confirmed.");
+await page.click("button::-p-text(Review and create draft)");
+await page.waitForSelector("#report");
+await page.click("#download-zip");
+await page.waitForFunction(() => document.body.innerText.includes("Report package downloaded"), { timeout: 20000 }).catch(() => {
+  failures.push("General path report package download did not confirm.");
 });
 
 await browser.close();

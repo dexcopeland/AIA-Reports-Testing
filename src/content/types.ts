@@ -51,6 +51,18 @@ export interface MitigationDef {
 
 export type AnswerValue = string | string[];
 
+/** Fact-derived assessment route. Certificates never change High to General. */
+export type AssessmentPath = "undetermined" | "general" | "high" | "prohibited";
+
+/** Saved on the draft so a later report can name credited controls. Scoring still uses the answers. */
+export interface CertCreditSnapshot {
+  active: boolean;
+  certs: string[];
+  product_in_scope: boolean;
+  shortened: string[];
+  softened_mitigations: string[];
+}
+
 /** One mitigation's acknowledgment, filled in the app before the report is generated. */
 export interface MitigationAck {
   id: string;
@@ -78,4 +90,7 @@ export interface AnswerFile {
   example_label?: string;
   answers: Record<string, AnswerValue>;
   signoff?: ReportSignoff;
+  assessment_path?: AssessmentPath;
+  assessment_path_reasons?: string[];
+  cert_credits?: CertCreditSnapshot;
 }

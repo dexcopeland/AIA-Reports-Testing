@@ -25,6 +25,8 @@ import {
 import { FORM_VERSION, RULES_VERSION, type AnswerFile, type ItemStatus, type StatementDef, type Timing, type TimingProfile } from "../content/types";
 import type { Answers } from "./answers";
 import { has, many, text } from "./answers";
+import { applyCertCredit, certCreditSnapshot, mitigationCreditCerts, softenRemaining } from "./credits";
+import { deriveAssessmentPath } from "./path";
 import {
   areaLabels,
   buildDetail,
@@ -483,7 +485,10 @@ function applyCap(list: LiveMitigation[], well: boolean): { kept: LiveMitigation
 
 export function evaluate(file: AnswerFile): Evaluation {
   const answers = file.answers ?? {};
-  const items = instancesFor(answers).map((instance) => resolveOne(STATEMENT_BY_ID[instance.statementId], instance, answers));
+  const derivedPath = deriveAssessmentPath(answers);
+  const items = instancesFor(answers).map((instance) =>
+    applyCertCredit(resolveOne(STATEMENT_BY_ID[instance.statementId], instance, answers), answers),
+  );
   const areas = many(answers, "q8_areas");
   const rights = areas.some((id) => RIGHTS_AREAS.includes(id));
   const safety = areas.some((id) => SAFETY_AREAS.includes(id));
@@ -663,17 +668,19 @@ export function evaluate(file: AnswerFile): Evaluation {
       .filter((item) => item.choiceText)
       .slice(0, 2)
       .map((item) => ({ q: item.legacyQ, text: `${item.context ? `${item.context}: ` : ""}${item.choiceText}` }));
+    const creditCerts = mitigationCreditCerts(id, trig, answers);
     live.push({
       id,
       title: def.title,
       action: def.action,
       owner: def.owner,
       sources: def.sources,
-      remaining: def.remaining,
+      remaining: creditCerts.length > 0 ? softenRemaining(def.remaining, creditCerts) : def.remaining,
       timing: pickTiming(def.timing, answers, conflict),
       rpOnly: def.rpOnly,
       covers: [...covers],
       quotes,
+      ...(creditCerts.length > 0 ? { softened: true, creditCerts } : {}),
     });
   }
   const capped = applyCap(live, wellAnswered);
@@ -704,7 +711,9 @@ export function evaluate(file: AnswerFile): Evaluation {
   ];
 
   const extraFollow: Followup[] = [];
-  if (text(answers, "q1_intake") === "") extraFollow.push({ q: 1, text: "Q1: What is the intake reference number for this AI system?", mitigationId: null });
+  if ((derivedPath.path === "high" || derivedPath.path === "prohibited") && text(answers, "q1_intake") === "") {
+    extraFollow.push({ q: 1, text: "Q1: What is the intake reference number for this AI system?", mitigationId: null });
+  }
   if (text(answers, "q13_level") === "" || text(answers, "q13_level") === "unknown") {
     extraFollow.push({ q: 13, text: "Q13: What is the highest data level this AI system uses?", mitigationId: "M-PRIVACY" });
   }
@@ -826,6 +835,9 @@ export function evaluate(file: AnswerFile): Evaluation {
     capApplied: capped.capApplied,
     attestation: has(answers, "q25_confirm", "confirm"),
     statusConflict: conflict,
+    path: derivedPath.path,
+    pathReasons: derivedPath.reasons,
+    certCredits: certCreditSnapshot(answers),
   };
 }
 

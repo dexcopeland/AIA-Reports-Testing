@@ -16,10 +16,15 @@ import {
   labelOf,
 } from "./catalog";
 import { AREAS, DATA_TYPES, OVERLAYS, PROHIBITED } from "./rules";
-import { CONTRACT_TERMS, GROUPS, RELATIONS, THREATS } from "./statements";
+import { CONTRACT_TERMS, GROUPS, THREATS } from "./statements";
 import type { Answers } from "../engine/answers";
 import { text } from "../engine/answers";
+import { assuranceSelected, certCreditActive, shortenedFieldIds } from "../engine/credits";
+import { deriveAssessmentPath } from "../engine/path";
 import { selectedGroups, showProcessingPlace, showStatement, threatApplies, vendorInvolved } from "../engine/visibility";
+
+/** all: shared front. gate: facts that set the path. core: General short set, also shown on High. high: High and Prohibited only. */
+export type FieldAudience = "all" | "gate" | "core" | "high";
 
 export interface Field {
   id: string;
@@ -36,6 +41,8 @@ export interface Field {
   role?: boolean;
   autocomplete?: string;
   spellcheck?: boolean;
+  /** Which path shows this field. Omitted fields are treated as high-only. */
+  audience?: FieldAudience;
 }
 
 export interface FormSection {
@@ -54,18 +61,114 @@ export function samePlaceLabel(answers: Answers): string {
   const named = place && place !== text(answers, "q6_hosting") ? place : "the place named in Q6";
   return `Is the data processed in the same place it runs (${named})?`;
 }
-const certPicked = (answers: Answers) => {
-  const values = answers.q16_assurances;
-  const list = Array.isArray(values) ? values : [];
-  return list.includes("iso27001") || list.includes("iso42001");
+const certPicked = (answers: Answers) => vendorInvolved(answers) && assuranceSelected(answers);
+
+export const FIELD_AUDIENCE: Record<string, FieldAudience> = {
+  q1_intake: "high",
+  q2_agency: "all",
+  q2_unit: "all",
+  q2_role: "all",
+  q3_is_lead: "all",
+  q3_lead_role: "all",
+  q3_email: "all",
+  q4_name: "all",
+  q5_builder: "all",
+  q5_vendor: "all",
+  q5_product: "all",
+  q5_version: "all",
+  q5_changes: "all",
+  q6_capabilities: "gate",
+  q6_design_facts: "high",
+  q6_method: "high",
+  q6_hosting: "high",
+  q6_description: "high",
+  q7_purpose: "all",
+  q7b_prohibited: "gate",
+  q8_areas: "gate",
+  q8_target: "gate",
+  q8_how: "high",
+  q9_groups: "core",
+  q9_other: "core",
+  q10_role: "gate",
+  q11_reviewer: "high",
+  st11a: "core",
+  st11b: "high",
+  st11c: "high",
+  st11d: "high",
+  q12_outside: "core",
+  st12a: "core",
+  st12b: "high",
+  st12c: "high",
+  st12d: "high",
+  st12e: "high",
+  st12f: "high",
+  q13_level: "core",
+  q14_data_types: "core",
+  q14_overlays: "core",
+  q14_sources: "high",
+  st14a: "high",
+  st14b: "high",
+  st14c: "high",
+  q15_same_place: "high",
+  q15_where: "high",
+  st15a: "core",
+  st15b: "core",
+  st15c: "high",
+  st15d: "high",
+  q16_note: "core",
+  st16a: "core",
+  q16_assurances: "core",
+  q16_cert_scope: "core",
+  q16_credit_note: "core",
+  st16b: "high",
+  q17_status: "high",
+  q18_procured: "high",
+  q19_start: "high",
+  q19_prior: "high",
+  q20_harm: "core",
+  q20_types: "core",
+  st20a: "high",
+  st21a: "core",
+  st21b: "core",
+  st21c: "high",
+  st21d: "high",
+  st21e: "high",
+  st22: "high",
+  st22f: "high",
+  q23_monitor: "core",
+  q23_incident: "core",
+  q23_reassess: "high",
+  st23a: "core",
+  st23b: "high",
+  st23c: "high",
+  st24a: "high",
+  st24b: "high",
+  q25_confirm: "core",
 };
+
+function audienceVisible(audience: FieldAudience, answers: Answers): boolean {
+  const path = deriveAssessmentPath(answers).path;
+  switch (audience) {
+    case "all":
+    case "gate":
+      return true;
+    case "core":
+      return path === "general" || path === "high" || path === "prohibited";
+    case "high":
+      return path === "high" || path === "prohibited";
+    default: {
+      const never: never = audience;
+      return never;
+    }
+  }
+}
 
 export const SECTIONS: FormSection[] = [
   {
     id: "about",
     title: "Section 1: About this request",
     fields: [
-      { id: "q1_intake", legacyQ: 1, type: "short", label: "Intake reference number", help: "Copy the reference from your High-risk intake result. Leave blank only if you do not have one yet.", autocomplete: "off", spellcheck: false },
+      { id: "q1_intake", legacyQ: 1, type: "short", label: "Intake reference number", audience: "high", help: "Optional. If this system already has an intake reference, record it. Leave this blank if you do not. This number does not set the path.", autocomplete: "off", spellcheck: false },
       { id: "q2_agency", legacyQ: 2, type: "short", label: "Agency", required: true, help: "The agency that owns this AI system.", autocomplete: "organization" },
       { id: "q2_unit", legacyQ: 2, type: "short", label: "Unit", required: true, help: "The office or unit inside the agency." },
       { id: "q2_role", legacyQ: 2, type: "short", label: "Your role", required: true, role: true, help: "A role, such as program manager. Do not write a person's name." },
@@ -84,25 +187,25 @@ export const SECTIONS: FormSection[] = [
       { id: "q5_product", legacyQ: 5, type: "short", label: "Product", show: notState },
       { id: "q5_version", legacyQ: 5, type: "short", label: "Version", show: notState },
       { id: "q5_changes", legacyQ: 5, type: "short", label: "What the agency built or changed", help: "Settings, connections or added steps. Write none if nothing was changed." },
-      { id: "q6_capabilities", legacyQ: 6, type: "check", label: "What can the AI system do?", required: true, options: CAPABILITIES, help: "Pick every capability that is true today." },
+      { id: "q6_capabilities", legacyQ: 6, type: "check", label: "What can the AI system do?", required: true, audience: "gate", options: CAPABILITIES, help: "Pick every capability that is true today. Identifying people from body features, or ranking individual people, can set High when the output is also a basis for a decision. A public chat does not set High by itself. Example: a chat window for residents is not High on its own. Matching a face to a case file can be." },
       { id: "q6_design_facts", legacyQ: 6, type: "check", label: "Which design facts are true today?", options: DESIGN_FACTS, help: "Pick only facts you can point to. They can excuse a specific security threat. They never excuse human review, bias testing, accuracy, accountability or the data level." },
       { id: "q6_method", legacyQ: 6, type: "radio", label: "Method", required: true, options: METHODS },
       { id: "q6_hosting", legacyQ: 6, type: "radio", label: "Where it runs", required: true, options: HOSTING },
       { id: "q6_description", legacyQ: 6, type: "paragraph", label: "Describe what it does, the method and where it runs", required: true, help: "This is copied word for word into the inventory and the appendix. Do not put security settings here." },
       { id: "q7_purpose", legacyQ: 7, type: "paragraph", label: "Purpose and the process it changes", required: true, help: "What problem it solves, how the work is done today, and what changes when staff use it." },
-      { id: "q7b_prohibited", legacyQ: 7, type: "check", label: "Does the AI system do any of these?", required: true, options: [...PROHIBITED.map((item) => ({ id: item.id, label: item.label })), { id: "none", label: "None of these" }, { id: "unknown", label: "Unknown" }], help: "This v1 list has the two examples named in the current rules, plus none and unknown. It is not the full Prohibited Uses list. If one applies, the report flags a blocker and still does not approve or reject the system." },
-      { id: "q8_areas", legacyQ: 8, type: "check", label: "Which areas could its output affect?", required: true, options: AREAS },
-      { id: "q8_target", legacyQ: 8, type: "radio", label: "What does the output pick, rank or act on?", required: true, options: TARGETS, help: "Places or groups can set gate G5. Ranking individual people does not set G5 by itself." },
+      { id: "q7b_prohibited", legacyQ: 7, type: "check", label: "Does the AI system do any of these?", required: true, audience: "gate", options: [...PROHIBITED.map((item) => ({ id: item.id, label: item.label })), { id: "none", label: "None of these" }, { id: "unknown", label: "Unknown" }], help: "This v1 list has the two examples named in the current rules, plus none and unknown. It is not the full Prohibited Uses list. A listed use sets the path to Prohibited. Unknown sets High. None of these leaves this question off the High path. The report still does not approve or reject the system." },
+      { id: "q8_areas", legacyQ: 8, type: "check", label: "Which areas could its output affect?", required: true, audience: "gate", options: AREAS, help: "A rights area plus a decision basis sets High. A safety area sets High on its own. Choose None of these when no listed area applies. Example: ordering benefit files is a rights area. A park mowing forecast is None of these. Unknown sets High. Data level, a public chat, a vendor product, or deciding alone does not set High." },
+      { id: "q8_target", legacyQ: 8, type: "radio", label: "What does the output pick, rank or act on?", required: true, audience: "gate", options: TARGETS, help: "Places or groups can set gate G5. Ranking individual people does not set G5 by itself. Ranking individual people, together with a decision basis, can set High even without a rights area. Ranking places does not. Example: ranking applicants is individual ranking. Ranking park maps is not." },
+      { id: "q10_role", legacyQ: 10, type: "radio", label: "What role does the output play in decisions?", required: true, audience: "gate", options: ROLES, help: "A basis means the output decides or staff use it to decide, including a recommendation. Information only is not a basis. Example: a supervisor uses a score to order files. That is a basis. A number on a staff screen that nobody acts on is not. Deciding alone, with no rights or safety area, does not set High. Unknown sets High." },
       { id: "q8_how", legacyQ: 8, type: "short", label: "How could the output affect those areas?", help: "A short line. It is quoted and not scored." },
-      { id: "q9_groups", legacyQ: 9, type: "groups", label: "Who is affected?", required: true, options: GROUPS, help: "For each group, say whether they use the system, the output acts on them one by one, or they are affected only in general." },
-      { id: "q9_other", legacyQ: 9, type: "short", label: "Other groups", help: "Optional. Name any group the list missed." },
+      { id: "q9_groups", legacyQ: 9, type: "groups", label: "Who is affected?", required: true, audience: "core", options: GROUPS, help: "For each group, say whether they use the system, the output acts on them one by one, or they are affected only in general." },
+      { id: "q9_other", legacyQ: 9, type: "short", label: "Other groups", audience: "core", help: "Optional. Name any group the list missed." },
     ],
   },
   {
     id: "decisions",
     title: "Section 3: Decisions and oversight",
     fields: [
-      { id: "q10_role", legacyQ: 10, type: "radio", label: "What role does the output play in decisions?", required: true, options: ROLES },
       { id: "q11_reviewer", legacyQ: 11, type: "short", label: "Which role reviews the output?", required: true, role: true, help: "Write Unknown if the role is not decided. Use a role, not a person's name." },
       { id: "st11a", legacyQ: 11, type: "statement", statementId: "11a", label: "Human review before an output takes effect", required: true },
       { id: "st11b", legacyQ: 11, type: "statement", statementId: "11b", label: "Power to change or stop", required: true },
@@ -145,8 +248,9 @@ export const SECTIONS: FormSection[] = [
       { id: "st15d", legacyQ: 15, type: "statement", statementId: "15d", label: "Retention", required: true, help: "Proposed item. DoIT has not signed off on this mapping." },
       { id: "q16_note", legacyQ: 16, type: "info", label: "Vendor terms do not apply", show: (answers) => text(answers, "q5_builder") === "state_built", help: "Q5 is built by the State with no outside model, so the vendor statements stay hidden and RP2 is not applicable." },
       { id: "st16a", legacyQ: 16, type: "statement", statementId: "16a", label: "Vendor use of State data for training", required: true, show: (answers) => showStatement("16a", answers) },
-      { id: "q16_assurances", legacyQ: 16, type: "check", label: "Assurances the vendor has given", show: (answers) => vendorInvolved(answers), options: ASSURANCES, help: "A certificate does not by itself satisfy the contract-term statements." },
-      { id: "q16_cert_scope", legacyQ: 16, type: "radio", label: "Does the certificate scope cover this product?", show: certPicked, options: [...YES_NO, { id: "unknown", label: "Unknown" }] },
+      { id: "q16_assurances", legacyQ: 16, type: "check", label: "Assurances the vendor has given", show: (answers) => vendorInvolved(answers), options: ASSURANCES, help: "Pick every certificate the vendor has given. The next question asks whether it covers this product, for every certificate, not only ISO. An in-scope certificate can shorten overlapping questions and soften the related risk. It cannot move High to General, and it does not skip human review, data level, prohibited use, training on State data, document limits, accuracy testing for this workflow, or deployment approval. A certificate does not by itself satisfy the contract-term statements." },
+      { id: "q16_cert_scope", legacyQ: 16, type: "radio", label: "Does the certificate scope cover this product?", show: certPicked, options: [...YES_NO, { id: "unknown", label: "Unknown" }], help: "Yes means the certificate's stated scope includes this product. No or Unknown gives no credit. Credit never changes a High path to General." },
+      { id: "q16_credit_note", legacyQ: 16, type: "info", label: "In-scope certificates shorten overlapping questions", show: certCreditActive, help: "Access, encryption, logging, security threats, and some AI-management questions stay off this screen when the matching certificate covers this product. Saved answers remain in the file. Human review, data level, prohibited use, training on State data, document limits, accuracy for this workflow, and deployment approval stay on screen." },
       { id: "st16b", legacyQ: 16, type: "statement", statementId: "16b", repeat: "term", label: "Contract terms", required: true, show: (answers) => showStatement("16b", answers), help: "Recommended practice (RP2). One set for each term. A certificate alone never counts as the signed term." },
     ],
   },
@@ -193,8 +297,29 @@ export const SECTIONS: FormSection[] = [
   },
 ];
 
+export function fieldIsVisible(field: Field, answers: Answers): boolean {
+  if (field.show && !field.show(answers)) return false;
+  const audience = field.audience ?? FIELD_AUDIENCE[field.id] ?? "high";
+  if (!audienceVisible(audience, answers)) return false;
+  if (shortenedFieldIds(answers).includes(field.id)) return false;
+  return true;
+}
+
 export function visibleFields(section: FormSection, answers: Answers): Field[] {
-  return section.fields.filter((field) => !field.show || field.show(answers));
+  return section.fields.filter((field) => fieldIsVisible(field, answers));
+}
+
+export function activeSections(answers: Answers): FormSection[] {
+  return SECTIONS.filter((section) => visibleFields(section, answers).length > 0);
+}
+
+export function visibleFieldIds(answers: Answers): string[] {
+  return activeSections(answers).flatMap((section) => visibleFields(section, answers).map((field) => field.id));
+}
+
+export function sectionHeading(index: number, title: string): string {
+  const name = title.replace(/^Section\s+\d+:\s*/, "");
+  return `Section ${index + 1}: ${name}`;
 }
 
 /** Each visible answer control, including repeated statements and each group relation. Info notes are not counted. */

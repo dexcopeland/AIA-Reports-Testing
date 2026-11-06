@@ -16,7 +16,7 @@ function openCount(file: ReturnType<typeof buildExample>): number {
 
 async function main(): Promise<void> {
   await mkdir(root, { recursive: true });
-  const groups = (["state", "vendor"] as const).map((id) => ({
+  const groups = (["state", "vendor", "path"] as const).map((id) => ({
     id,
     label: EXAMPLE_GROUP_LABELS[id],
     examples: EXAMPLES.filter((spec) => spec.group === id).map((spec) => ({
