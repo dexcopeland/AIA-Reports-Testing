@@ -8,6 +8,7 @@ import { deriveAssessmentPath } from "../src/engine/path";
 import { buildExample } from "../src/examples/build";
 import { EXAMPLES } from "../src/examples/catalog";
 import { missing } from "../src/ui/app";
+import { toggleCheck } from "../src/ui/form-model";
 
 function file(answers: AnswerFile["answers"]): AnswerFile {
   return {
@@ -29,8 +30,21 @@ const gate = {
 describe("fact-derived path", () => {
   it("stays undetermined until the gate facts are answered", () => {
     expect(deriveAssessmentPath({}).path).toBe("undetermined");
+    expect(deriveAssessmentPath({ ...gate, q8_areas: [] }).path).toBe("undetermined");
     expect(deriveAssessmentPath({ q8_areas: ["safety"] }).path).toBe("high");
     expect(deriveAssessmentPath({ ...gate, q6_capabilities: ["ranks"], q8_target: "" }).path).toBe("undetermined");
+  });
+
+  it("treats None of these as an answered negative and still routes Unknown and named areas", () => {
+    expect(deriveAssessmentPath({ ...gate, q8_areas: ["none"] }).path).toBe("general");
+    expect(deriveAssessmentPath({ ...gate, q8_areas: ["none"], q10_role: "decides" }).path).toBe("general");
+    expect(deriveAssessmentPath({ ...gate, q8_areas: ["unknown"] }).path).toBe("high");
+    expect(deriveAssessmentPath({ ...gate, q8_areas: ["none", "unknown"] }).path).toBe("high");
+    expect(deriveAssessmentPath({ ...gate, q8_areas: ["benefits_services"], q10_role: "recommends" }).path).toBe("high");
+    expect(deriveAssessmentPath({ ...gate, q8_areas: ["safety"], q10_role: "info_only" }).path).toBe("high");
+    expect(deriveAssessmentPath({ ...gate, q8_areas: ["none", "benefits_services"], q10_role: "recommends" }).path).toBe("high");
+    expect(toggleCheck({ q8_areas: ["safety", "jobs"] }, "q8_areas", "none", true)).toEqual(["none"]);
+    expect(toggleCheck({ q8_areas: ["none"] }, "q8_areas", "benefits_services", true)).toEqual(["benefits_services"]);
   });
 
   it("routes High on the locked triggers", () => {
@@ -289,6 +303,9 @@ describe("path examples", () => {
       expect(evaluate(draft).path).toBe(path);
       expect(SECTIONS.flatMap((section) => missing(section, draft.answers))).toEqual([]);
     }
+    const grounds = buildExample(EXAMPLES.find((item) => item.id === "path-general-grounds")!);
+    expect(grounds.answers.q8_areas).toEqual(["none"]);
+    expect(evaluate(grounds).path).toBe("general");
     const credited = buildExample(EXAMPLES.find((item) => item.id === "path-cert-vendor")!);
     expect(credited.cert_credits?.active).toBe(true);
     expect(credited.cert_credits?.certs).toEqual(expect.arrayContaining(["soc2", "iso27001", "aiuc1"]));

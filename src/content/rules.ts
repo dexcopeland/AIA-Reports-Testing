@@ -61,6 +61,7 @@ export const AREAS: { id: string; label: string }[] = [
   { id: "regulatory_inspection", label: "Inspections by a non-police agency, such as fire, health or building" },
   { id: "speech_assembly_religion", label: "Speech, assembly or religion" },
   { id: "privacy", label: "Privacy" },
+  { id: "none", label: "None of these" },
   { id: "unknown", label: "Unknown" },
 ];
 

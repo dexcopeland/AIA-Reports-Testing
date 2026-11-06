@@ -16,6 +16,9 @@ function areaFact(answers: Answers, ids: readonly string[]): Fact {
   if (picked.length === 0) return "unanswered";
   if (picked.includes("unknown")) return "unknown";
   if (picked.some((id) => ids.includes(id))) return "yes";
+  // "None of these" is an answered negative for both rights and safety.
+  // A named area in this list still wins if a saved file contains both.
+  if (picked.includes("none")) return "no";
   return "no";
 }
 

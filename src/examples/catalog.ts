@@ -598,7 +598,7 @@ export const EXAMPLES: ExampleSpec[] = [
       q6_hosting: "agency_network",
       q6_description: "The helper forecasts mowing time for each park map. It runs on the agency network. A crew coordinator sets the real schedule. Fictional system.",
       q7_purpose: "Crew leads now build the weekly order on a whiteboard. The helper shows a time estimate. It does not serve or deny a resident. Fictional purpose.",
-      q8_areas: ["regulatory_inspection"],
+      q8_areas: ["none"],
       q8_target: "places_or_groups",
       q8_how: "It orders park maps for routine grounds work. It does not decide a case.",
       q9_groups: ["state_employees"],
