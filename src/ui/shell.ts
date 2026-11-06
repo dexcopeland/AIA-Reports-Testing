@@ -30,6 +30,11 @@ export function initialMaxReached(missingCounts: number[]): number {
   return firstGap;
 }
 
+/** Remember a section the rail or Back control actually opened, so it stays available if its answers are cleared. */
+export function reachedAfterOpen(maxReached: number, index: number): number {
+  return Math.max(maxReached, index);
+}
+
 export function sectionCanOpen(
   index: number,
   state: { maxReached: number; complete: boolean; reportOpen: boolean; navigationEnabled: boolean },

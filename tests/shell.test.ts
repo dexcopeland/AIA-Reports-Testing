@@ -6,6 +6,7 @@ import {
   clusterUsesColumns,
   initialMaxReached,
   persistAdvance,
+  reachedAfterOpen,
   questionClusters,
   reportCanOpen,
   sectionCanOpen,
@@ -47,6 +48,19 @@ describe("progress rail", () => {
     expect(reportCanOpen({ navigationEnabled: true, reportUnlocked: true })).toBe(true);
     expect(reportCanOpen({ navigationEnabled: true, reportUnlocked: false })).toBe(false);
     expect(reportCanOpen({ navigationEnabled: false, reportUnlocked: true })).toBe(false);
+  });
+
+  it("keeps a later section open after a rail visit even when that section becomes incomplete", () => {
+    const restored = initialMaxReached([2, 0, 0]);
+    expect(restored).toBe(0);
+    const later = { maxReached: restored, complete: true, reportOpen: false, navigationEnabled: true };
+    expect(sectionCanOpen(2, later)).toBe(true);
+
+    const visited = reachedAfterOpen(restored, 2);
+    expect(visited).toBe(2);
+    const cleared = { maxReached: visited, complete: false, reportOpen: false, navigationEnabled: true };
+    expect(sectionCanOpen(2, cleared)).toBe(true);
+    expect(sectionCanOpen(1, cleared)).toBe(true);
   });
 });
 

@@ -18,7 +18,7 @@ import { ProgressRail } from "./ProgressRail";
 import { downloadReportPackage } from "./report-package";
 import { ReportScreen } from "./ReportScreen";
 import { FormScreen, HomeScreen, LoadFileCard } from "./screens";
-import { initialMaxReached, persistAdvance } from "./shell";
+import { initialMaxReached, persistAdvance, reachedAfterOpen } from "./shell";
 import { autosave, autoload, clearAutosave, downloadJson, emptyFile, normalizeFile } from "./storage";
 
 type Screen = "home" | "form" | "report";
@@ -103,6 +103,7 @@ export function AssessmentApp() {
     if (index < 0 || index >= SECTIONS.length) return;
     commit(fileRef.current, "Saved in this browser.");
     setSectionIndex(index);
+    setMaxReached((current) => reachedAfterOpen(current, index));
     setFormError("");
     setScreen("form");
     focusNext();
@@ -130,7 +131,7 @@ export function AssessmentApp() {
     if (sectionIndex < SECTIONS.length - 1) {
       const nextIndex = sectionIndex + 1;
       setSectionIndex(nextIndex);
-      setMaxReached((current) => Math.max(current, nextIndex));
+      setMaxReached((current) => reachedAfterOpen(current, nextIndex));
       focusNext();
       return;
     }
