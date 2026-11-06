@@ -45,15 +45,85 @@ function isActionCheck(id: string): boolean {
   return /^C(?:[4-9]|1[0-2])$/.test(id) || /^RP\d+$/.test(id);
 }
 
-function lowerFact(value: string): string {
-  const trimmed = value.trim().replace(/[.]+$/, "");
-  if (!trimmed) return "the path facts are not complete";
-  return trimmed.charAt(0).toLowerCase() + trimmed.slice(1);
-}
-
 /** High only because every path reason is an Unknown answer, with no affirmative High fact. */
 function forcedByUnknowns(result: Evaluation): boolean {
   return result.path === "high" && result.pathReasons.length > 0 && result.pathReasons.every((item) => item.endsWith("Unknown."));
+}
+
+function isUnknownReason(reason: string): boolean {
+  return reason.endsWith("Unknown.");
+}
+
+function isSafetyReason(reason: string): boolean {
+  return !isUnknownReason(reason) && reason.includes("safety impact");
+}
+
+function isRightsReason(reason: string): boolean {
+  return !isUnknownReason(reason) && reason.includes("rights impact");
+}
+
+function isBasisCapabilityReason(reason: string): boolean {
+  return reason.includes("is a basis for a decision or action") && !isRightsReason(reason) && !isUnknownReason(reason);
+}
+
+type HighReasonKind = "both" | "rights" | "safety" | "basis" | "unknown";
+
+function highReasonKind(reasons: string[]): HighReasonKind {
+  const safety = reasons.some(isSafetyReason);
+  const rights = reasons.some(isRightsReason);
+  if (rights && safety) return "both";
+  if (safety) return "safety";
+  if (rights) return "rights";
+  if (reasons.some(isBasisCapabilityReason)) return "basis";
+  return "unknown";
+}
+
+function factsForKind(kind: HighReasonKind, reasons: string[]): string[] {
+  switch (kind) {
+    case "both":
+      return [...reasons.filter(isRightsReason), ...reasons.filter(isSafetyReason)];
+    case "rights":
+      return reasons.filter(isRightsReason);
+    case "safety":
+      return reasons.filter(isSafetyReason);
+    case "basis":
+      return reasons.filter(isBasisCapabilityReason);
+    case "unknown":
+      return reasons.filter(isUnknownReason);
+    default: {
+      const never: never = kind;
+      return never;
+    }
+  }
+}
+
+function leadForKind(kind: HighReasonKind): string {
+  switch (kind) {
+    case "both":
+      return "it impacts rights and safety";
+    case "rights":
+      return "it impacts rights";
+    case "safety":
+      return "it impacts safety";
+    case "basis":
+      return "biometric identification or individual ranking is a basis for a decision or action";
+    case "unknown":
+      return "an Unknown answer forces that path";
+    default: {
+      const never: never = kind;
+      return never;
+    }
+  }
+}
+
+/** Why the path is High. Gaps and the intake reference are not path reasons. */
+function highPathReason(result: Evaluation): string {
+  const reasons = result.pathReasons.filter((item) => !/intake|\bQ1\b/i.test(item));
+  const kind = reasons.length > 0 ? highReasonKind(reasons) : "unknown";
+  const facts = factsForKind(kind, reasons).map((item) => item.replace(/[.]+$/, ""));
+  const detail = facts.join(", and ");
+  const body = detail ? `${leadForKind(kind)}: ${detail}` : leadForKind(kind);
+  return `The single most important reason is that this use is High-risk because ${body}.`;
 }
 
 function reason(result: Evaluation): string {
@@ -61,10 +131,7 @@ function reason(result: Evaluation): string {
     const use = result.prohibitedLabels[0] ?? "a use on the prohibited list";
     return `The single most important reason is a prohibited use: ${use}.`;
   }
-  if (forcedByUnknowns(result)) {
-    const unknown = result.pathReasons.find((item) => item.endsWith("Unknown.")) ?? "An answer is Unknown.";
-    return `The single most important reason is that ${lowerFact(unknown)}.`;
-  }
+  if (result.path === "high") return highPathReason(result);
   if (result.statusConflict) {
     return "The single most important reason is that the deployment status and the start date do not agree.";
   }
@@ -84,10 +151,6 @@ function reason(result: Evaluation): string {
   }
   const mitigation = result.mitigations.find((item) => item.id !== "M-ONGOING");
   if (mitigation) return `The single most important reason is the open safeguard ${plainName(mitigation.title)}.`;
-  if (result.path === "high") {
-    const why = result.pathReasons[0];
-    if (why) return `The single most important reason is that ${lowerFact(why)}.`;
-  }
   if (result.path === "general") {
     return "The single most important reason is that no High or Prohibited fact applies, and this draft does not authorize use.";
   }

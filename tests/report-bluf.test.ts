@@ -32,7 +32,10 @@ describe("bottom line up front", () => {
     expect(takeaway).toHaveLength(3);
     expect(takeaway[0]).toBe(BLUF_OUTCOME.highClean);
     expect(takeaway[1]).toBe("The path is High.");
-    expect(takeaway[2]).toContain("The single most important reason is");
+    expect(takeaway[2]).toContain("this use is High-risk because it impacts");
+    expect(takeaway[2]).toMatch(/rights|safety/);
+    expect(takeaway[2]).toContain("Q8");
+    expect(takeaway[2]).not.toMatch(/intake|\bQ1\b/i);
     expect(takeaway.join(" ")).not.toContain("The risk level is High-risk.");
     expect(bluf.some((block) => block.type === "step")).toBe(false);
     expect(bluf.some((block) => block.text === "No follow-up step is open.")).toBe(true);
@@ -55,6 +58,9 @@ describe("bottom line up front", () => {
     const takeaway = bluf.filter((block) => block.type === "p").map((block) => block.text).join(" ");
     expect(takeaway).toContain(BLUF_OUTCOME.highConditions);
     expect(takeaway).toContain("The path is High.");
+    expect(takeaway).toMatch(/High-risk because it impacts/);
+    expect(takeaway).toContain("Q8");
+    expect(takeaway).not.toMatch(/not in place|partly in place|intake|\bQ1\b/i);
     expect(takeaway).not.toContain("The risk level is High-risk.");
     const steps = bluf.filter((block) => block.type === "step");
     expect(steps.length).toBeGreaterThan(0);
@@ -89,6 +95,10 @@ describe("bottom line up front", () => {
         expect(routed.path).toBe("high");
         expect(routedBluf.sentences[0]).toBe(BLUF_OUTCOME.highGaps);
         expect(routedBluf.sentences[1]).toBe("The path is High.");
+        expect(routedBluf.sentences[2]).toContain("High-risk because it impacts rights");
+        expect(routedBluf.sentences[2]).toContain("Q8");
+        expect(routedBluf.sentences[2]).toContain("Q10");
+        expect(routedBluf.sentences[2]).not.toMatch(/intake|\bQ1\b/i);
       } else {
         expect(routed.path).toBe("general");
         expect(routedBluf.sentences[0]).toBe(BLUF_OUTCOME.generalConditions);
@@ -121,6 +131,40 @@ describe("bottom line up front", () => {
     const evidence = report.documents.find((item) => item.key === "evidence");
     expect(evidence?.blocks.some((block) => block.text === "Prohibited use" && block.anchor === "prohibited")).toBe(true);
     expect(steps.every((step) => step.link && report.blocks.some((block) => block.anchor === step.link))).toBe(true);
+  });
+});
+
+describe("high path reason", () => {
+  it("does not treat a blank intake reference as the reason a use is High", () => {
+    for (const id of ["state-appeal-ranker", "vendor-license-score"]) {
+      const file = loadExampleFile(`${id}.json`);
+      expect(file.answers.q1_intake).toBe("");
+      const result = evaluate(file);
+      expect(result.path).toBe("high");
+      const reason = buildBluf(result).sentences[2];
+      expect(reason, id).toContain("High-risk because it impacts rights");
+      expect(reason, id).toContain("Q8");
+      expect(reason, id).toContain("Q10");
+      expect(reason, id).not.toMatch(/intake|\bQ1\b/i);
+      expect(buildBluf(result).steps.some((step) => step.text.includes("intake reference"))).toBe(true);
+    }
+  });
+
+  it("uses a biometric or ranking basis when no rights or safety area is named", () => {
+    const file = loadExampleFile("path-general-grounds.json");
+    file.answers.q6_capabilities = ["biometric_id"];
+    file.answers.q8_areas = ["regulatory_inspection"];
+    file.answers.q8_target = "individuals";
+    file.answers.q10_role = "recommends";
+    const result = evaluate(file);
+    expect(result.area.rights).toBe(false);
+    expect(result.area.safety).toBe(false);
+    expect(result.path).toBe("high");
+    const reason = buildBluf(result).sentences[2];
+    expect(reason).toContain("basis for a decision or action");
+    expect(reason).toContain("Q6");
+    expect(reason).toContain("Q10");
+    expect(reason).not.toMatch(/impacts rights|impacts safety|intake|\bQ1\b/i);
   });
 });
 

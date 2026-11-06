@@ -1,5 +1,6 @@
+import { CAPABILITIES } from "../content/catalog";
 import type { AssessmentPath } from "../content/types";
-import { PROHIBITED, RIGHTS_AREAS, SAFETY_AREAS } from "../content/rules";
+import { AREAS, PROHIBITED, RIGHTS_AREAS, SAFETY_AREAS } from "../content/rules";
 import type { Answers } from "./answers";
 import { many, text } from "./answers";
 import { capabilities } from "./visibility";
@@ -40,6 +41,36 @@ function basisFact(answers: Answers): Fact {
   return "unanswered";
 }
 
+function proseList(parts: string[]): string {
+  if (parts.length === 0) return "";
+  if (parts.length === 1) return parts[0];
+  if (parts.length === 2) return `${parts[0]} and ${parts[1]}`;
+  return `${parts.slice(0, -1).join(", ")}, and ${parts[parts.length - 1]}`;
+}
+
+function namedAreas(answers: Answers, ids: readonly string[]): string {
+  const picked = new Set(many(answers, "q8_areas"));
+  const labels = ids.filter((id) => picked.has(id)).map((id) => AREAS.find((area) => area.id === id)?.label ?? id);
+  return proseList(labels);
+}
+
+function roleClause(answers: Answers): string {
+  const role = text(answers, "q10_role");
+  if (role === "decides") return "Q10 says the output decides or acts without a person approving each one";
+  if (role === "recommends") return "Q10 says the output recommends or scores and staff decide";
+  if (role === "info_only") return "Q10 says the output gives information to staff only";
+  if (role === "unknown") return "Q10 is Unknown";
+  return "Q10 does not say what role the output plays";
+}
+
+function capabilityClause(biometric: boolean, ranking: boolean): string {
+  const biometricLabel = CAPABILITIES.find((item) => item.id === "biometric_id")?.label ?? "Identifies people from faces, voices or other body features";
+  const rankLabel = CAPABILITIES.find((item) => item.id === "ranks")?.label ?? "Ranks or prioritizes";
+  if (biometric && ranking) return `Q6 ${biometricLabel.charAt(0).toLowerCase()}${biometricLabel.slice(1)} and ${rankLabel.charAt(0).toLowerCase()}${rankLabel.slice(1)} individuals`;
+  if (biometric) return `Q6 ${biometricLabel.charAt(0).toLowerCase()}${biometricLabel.slice(1)}`;
+  return `Q6 ${rankLabel.charAt(0).toLowerCase()}${rankLabel.slice(1)} individuals`;
+}
+
 /**
  * High, General, or Prohibited from the gate facts.
  * Certificates are ignored here. They never move High to General.
@@ -65,14 +96,22 @@ export function deriveAssessmentPath(answers: Answers): PathDerivation {
   }
 
   const reasons: string[] = [];
-  if (prohibited === "unknown") reasons.push("Prohibited use is Unknown.");
-  if (rights === "unknown") reasons.push("Rights impact is Unknown.");
-  if (safety === "unknown") reasons.push("Safety impact is Unknown.");
-  if (basis === "unknown") reasons.push("Whether the output is a basis for a decision or action is Unknown.");
-  if (safety === "yes") reasons.push("The use is safety-impacting.");
-  if (rights === "yes" && basis === "yes") reasons.push("A rights area applies and the output is a basis for a decision or action.");
+  if (prohibited === "unknown") reasons.push("Q7 does not say whether a prohibited use applies, so prohibited use is Unknown.");
+  if (rights === "unknown" || safety === "unknown") {
+    reasons.push("Q8 includes Unknown, so rights impact is Unknown and safety impact is Unknown.");
+  }
+  if (basis === "unknown") reasons.push("Q10 does not say whether the output is a basis for a decision or action, so that fact is Unknown.");
+  if (safety === "yes") reasons.push(`Q8 names ${namedAreas(answers, SAFETY_AREAS)}, so this is a safety impact.`);
+  if (rights === "yes" && basis === "yes") {
+    reasons.push(`Q8 names ${namedAreas(answers, RIGHTS_AREAS)}, and ${roleClause(answers)}, so this is a rights impact and the output is a basis for a decision or action.`);
+  }
   if ((biometric || individualRanking) && basis === "yes") {
-    reasons.push("Biometric identification or individual ranking is a basis for a decision or action.");
+    const what = biometric && individualRanking
+      ? "biometric identification or individual ranking"
+      : biometric
+        ? "biometric identification"
+        : "individual ranking";
+    reasons.push(`${capabilityClause(biometric, individualRanking)}, and ${roleClause(answers)}, so ${what} is a basis for a decision or action.`);
   }
   if (reasons.length > 0) return { path: "high", reasons };
 

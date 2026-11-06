@@ -1,14 +1,15 @@
 import type { ExampleSpec } from "./build";
 
 /**
- * Dropdown order within each path runs from fewest residual risks to most.
- * Titles stay neutral. The report, not the label, shows the risks.
+ * Dropdown order within each builder group runs from fewest residual risks to most.
+ * Each title names the assessment path (High-risk, General Impact Assessment, or Prohibited)
+ * so the picker matches deriveAssessmentPath for that example.
  */
 export const EXAMPLES: ExampleSpec[] = [
   {
     id: "state-subsidy-review",
     group: "state",
-    title: "Child-care subsidy review desk (state-built system)",
+    title: "High-risk: Child-care subsidy review desk (state-built system)",
     description: "Staff use a state-built score to order child-care subsidy files before a supervisor decides.",
     profile: "strong",
     agency: "Maryland Office of Family Subsidy Standards (fictional)",
@@ -48,7 +49,7 @@ export const EXAMPLES: ExampleSpec[] = [
   {
     id: "state-road-notice",
     group: "state",
-    title: "Road-closure notice drafter (state-built system)",
+    title: "High-risk: Road-closure notice drafter (state-built system)",
     description: "A state-built drafter proposes road-closure notices that a traffic supervisor edits before posting.",
     profile: "strong",
     agency: "Maryland Route Notice Desk (fictional)",
@@ -94,7 +95,7 @@ export const EXAMPLES: ExampleSpec[] = [
   {
     id: "state-park-schedule",
     group: "state",
-    title: "Park mowing schedule helper (state-built system)",
+    title: "General Impact Assessment: Park mowing schedule helper (state-built system)",
     description: "Crew leads use a state-built forecast of mowing time. It does not decide a service for a person.",
     profile: "strong",
     agency: "Maryland Civic Grounds Office (fictional)",
@@ -142,7 +143,7 @@ export const EXAMPLES: ExampleSpec[] = [
   {
     id: "state-visit-window",
     group: "state",
-    title: "Visitation window suggester (state-built system)",
+    title: "High-risk: Visitation window suggester (state-built system)",
     description: "A state-built scheduler, calling an outside model, suggests visitation windows for a custody supervisor to accept or change.",
     profile: "strong",
     agency: "Maryland Custody Scheduling Desk (fictional)",
@@ -210,7 +211,7 @@ export const EXAMPLES: ExampleSpec[] = [
   {
     id: "state-appeal-ranker",
     group: "state",
-    title: "Benefits appeal ranker (state-built system)",
+    title: "High-risk: Benefits appeal ranker (state-built system)",
     description: "Appeal files are ranked by a state-built tool. The saved answers say planning, while a start date is already filled in, and most safeguards are blank.",
     profile: "thin",
     agency: "Maryland Appeals Ranking Unit (fictional)",
@@ -266,7 +267,7 @@ export const EXAMPLES: ExampleSpec[] = [
   {
     id: "vendor-eligibility-triage",
     group: "vendor",
-    title: "Benefits eligibility triage (vendor product)",
+    title: "High-risk: Benefits eligibility triage (vendor product)",
     description: "Eligibility staff review a vendor score before any benefit file moves forward.",
     profile: "strong",
     agency: "Maryland Benefit File Review Office (fictional)",
@@ -312,7 +313,7 @@ export const EXAMPLES: ExampleSpec[] = [
   {
     id: "vendor-injury-summary",
     group: "vendor",
-    title: "Workplace injury summary assistant (vendor product)",
+    title: "High-risk: Workplace injury summary assistant (vendor product)",
     description: "An agency-extended vendor assistant drafts injury summaries that a safety reviewer checks.",
     profile: "strong",
     agency: "Maryland Workplace Harm Review Desk (fictional)",
@@ -364,7 +365,7 @@ export const EXAMPLES: ExampleSpec[] = [
   {
     id: "vendor-library-forecast",
     group: "vendor",
-    title: "Library hold-time forecast (vendor product)",
+    title: "General Impact Assessment: Library hold-time forecast (vendor product)",
     description: "Branch leads see a vendor forecast of how long a hold might take. No case decision is made.",
     profile: "strong",
     agency: "Maryland Branch Reading Services (fictional)",
@@ -417,7 +418,7 @@ export const EXAMPLES: ExampleSpec[] = [
   {
     id: "vendor-waitlist",
     group: "vendor",
-    title: "Rental assistance waitlist sorter (vendor product)",
+    title: "High-risk: Rental assistance waitlist sorter (vendor product)",
     description: "A vendor product sorts rental-assistance applicants. Review covers a sample, and several controls are still open.",
     profile: "strong",
     agency: "Maryland Rent Aid Sorting Office (fictional)",
@@ -481,7 +482,7 @@ export const EXAMPLES: ExampleSpec[] = [
   {
     id: "vendor-license-score",
     group: "vendor",
-    title: "Occupational license score (vendor product)",
+    title: "High-risk: Occupational license score (vendor product)",
     description: "A vendor score can hold up a license file. Review, data level, and procurement timing are not determined.",
     profile: "thin",
     agency: "Maryland Trade License Review Desk (fictional)",
@@ -541,7 +542,7 @@ export const EXAMPLES: ExampleSpec[] = [
   {
     id: "path-high-benefits",
     group: "path",
-    title: "Path example: benefits queue (High)",
+    title: "High-risk: Benefits queue (path example)",
     description: "Staff use a state-built score to order benefit files. A supervisor decides each file.",
     profile: "strong",
     agency: "Maryland Benefit Queue Office (fictional)",
@@ -581,7 +582,7 @@ export const EXAMPLES: ExampleSpec[] = [
   {
     id: "path-general-grounds",
     group: "path",
-    title: "Path example: grounds forecast (General)",
+    title: "General Impact Assessment: Grounds forecast (path example)",
     description: "Crew leads see a state-built forecast of mowing time. It does not decide a service for a person.",
     profile: "strong",
     agency: "Maryland Civic Grounds Office (fictional)",
@@ -621,7 +622,7 @@ export const EXAMPLES: ExampleSpec[] = [
   {
     id: "path-prohibited-score",
     group: "path",
-    title: "Path example: social scoring tool (Prohibited)",
+    title: "Prohibited: Social scoring tool (path example)",
     description: "A state-built tool scores personal traits. That use is on the prohibited list.",
     profile: "strong",
     agency: "Maryland Resident Scoring Desk (fictional)",
@@ -662,7 +663,7 @@ export const EXAMPLES: ExampleSpec[] = [
   {
     id: "path-cert-vendor",
     group: "path",
-    title: "Path example: certified hold forecast (General, in-scope certificates)",
+    title: "General Impact Assessment: Certified hold forecast (path example, in-scope certificates)",
     description: "A vendor forecast shows hold time. SOC 2 and ISO/IEC 27001 cover this product. The path stays General.",
     profile: "strong",
     agency: "Maryland Branch Reading Services (fictional)",

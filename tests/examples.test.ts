@@ -4,6 +4,7 @@ import { SECTIONS } from "../src/content/form";
 import { STATEMENT_BY_ID } from "../src/content/statements";
 import { BLUF_OUTCOME, buildBluf } from "../src/engine/bluf";
 import { evaluate } from "../src/engine/evaluate";
+import { deriveAssessmentPath } from "../src/engine/path";
 import { buildReport } from "../src/engine/report";
 import { buildExample } from "../src/examples/build";
 import { EXAMPLE_GROUP_LABELS, EXAMPLES } from "../src/examples/catalog";
@@ -12,12 +13,29 @@ import { missing } from "../src/ui/app";
 
 const OPEN = new Set(["Gap", "Partial", "Not yet", "Partly in place"]);
 
+const PATH_TITLE: Record<"high" | "general" | "prohibited", string> = {
+  high: "High-risk:",
+  general: "General Impact Assessment:",
+  prohibited: "Prohibited:",
+};
+
 function openFindings(id: string): number {
   const result = evaluate(loadExampleFile(`${id}.json`));
   return [...result.criteria, ...result.rp].filter((item) => OPEN.has(item.status)).length;
 }
 
 describe("loadable examples", () => {
+  it("names High-risk, General Impact Assessment, or Prohibited in each example title", () => {
+    for (const spec of EXAMPLES) {
+      const derived = deriveAssessmentPath(buildExample(spec).answers);
+      expect(derived.path, spec.id).not.toBe("undetermined");
+      if (derived.path === "undetermined") continue;
+      expect(spec.title.startsWith(PATH_TITLE[derived.path]), `${spec.id} ${derived.path}`).toBe(true);
+      const listed = exampleIndex.groups.flatMap((group) => group.examples).find((item) => item.id === spec.id);
+      expect(listed?.title, spec.id).toBe(spec.title);
+    }
+  });
+
   it("ships the state, vendor, and path example groups", () => {
     expect(exampleIndex.groups.map((group) => group.label)).toEqual([
       EXAMPLE_GROUP_LABELS.state,
@@ -56,6 +74,12 @@ describe("loadable examples", () => {
       expect(bluf).toContain("The outcome is");
       expect(bluf).toContain("The path is");
       expect(bluf).not.toContain("The risk level is High-risk.");
+      expect(bluf).not.toMatch(/intake|\bQ1\b/i);
+      if (result.path === "high") {
+        expect(bluf, spec.id).toMatch(/High-risk because it impacts rights|High-risk because it impacts safety|High-risk because it impacts rights and safety|Unknown answer forces that path|basis for a decision or action/);
+        expect(bluf, spec.id).toMatch(/Q8|Q10|Q6|Q7/);
+        expect(bluf, spec.id).not.toMatch(/not in place|partly in place|do not agree/);
+      }
       expect(`${spec.title} ${spec.description} ${loaded.example_label ?? ""}`.toLowerCase()).not.toMatch(/\b(good|poor)\b/);
     }
   });

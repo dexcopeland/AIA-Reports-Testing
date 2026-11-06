@@ -125,9 +125,9 @@
   },
   "assessment_path": "high",
   "assessment_path_reasons": [
-    "The use is safety-impacting.",
-    "A rights area applies and the output is a basis for a decision or action.",
-    "Biometric identification or individual ranking is a basis for a decision or action."
+    "Q8 names People's physical safety, so this is a safety impact.",
+    "Q8 names Police, corrections or community supervision, and Q10 says the output decides or acts without a person approving each one, so this is a rights impact and the output is a basis for a decision or action.",
+    "Q6 ranks or prioritizes individuals, and Q10 says the output decides or acts without a person approving each one, so individual ranking is a basis for a decision or action."
   ],
   "cert_credits": {
     "active": false,

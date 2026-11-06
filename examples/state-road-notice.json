@@ -118,7 +118,7 @@
   },
   "assessment_path": "high",
   "assessment_path_reasons": [
-    "The use is safety-impacting."
+    "Q8 names People's physical safety, so this is a safety impact."
   ],
   "cert_credits": {
     "active": false,

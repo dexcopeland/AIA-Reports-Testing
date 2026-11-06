@@ -6,31 +6,31 @@
       "examples": [
         {
           "id": "state-subsidy-review",
-          "title": "Child-care subsidy review desk (state-built system)",
+          "title": "High-risk: Child-care subsidy review desk (state-built system)",
           "description": "Staff use a state-built score to order child-care subsidy files before a supervisor decides.",
           "file": "state-subsidy-review.json"
         },
         {
           "id": "state-road-notice",
-          "title": "Road-closure notice drafter (state-built system)",
+          "title": "High-risk: Road-closure notice drafter (state-built system)",
           "description": "A state-built drafter proposes road-closure notices that a traffic supervisor edits before posting.",
           "file": "state-road-notice.json"
         },
         {
           "id": "state-park-schedule",
-          "title": "Park mowing schedule helper (state-built system)",
+          "title": "General Impact Assessment: Park mowing schedule helper (state-built system)",
           "description": "Crew leads use a state-built forecast of mowing time. It does not decide a service for a person.",
           "file": "state-park-schedule.json"
         },
         {
           "id": "state-visit-window",
-          "title": "Visitation window suggester (state-built system)",
+          "title": "High-risk: Visitation window suggester (state-built system)",
           "description": "A state-built scheduler, calling an outside model, suggests visitation windows for a custody supervisor to accept or change.",
           "file": "state-visit-window.json"
         },
         {
           "id": "state-appeal-ranker",
-          "title": "Benefits appeal ranker (state-built system)",
+          "title": "High-risk: Benefits appeal ranker (state-built system)",
           "description": "Appeal files are ranked by a state-built tool. The saved answers say planning, while a start date is already filled in, and most safeguards are blank.",
           "file": "state-appeal-ranker.json"
         }
@@ -42,31 +42,31 @@
       "examples": [
         {
           "id": "vendor-eligibility-triage",
-          "title": "Benefits eligibility triage (vendor product)",
+          "title": "High-risk: Benefits eligibility triage (vendor product)",
           "description": "Eligibility staff review a vendor score before any benefit file moves forward.",
           "file": "vendor-eligibility-triage.json"
         },
         {
           "id": "vendor-injury-summary",
-          "title": "Workplace injury summary assistant (vendor product)",
+          "title": "High-risk: Workplace injury summary assistant (vendor product)",
           "description": "An agency-extended vendor assistant drafts injury summaries that a safety reviewer checks.",
           "file": "vendor-injury-summary.json"
         },
         {
           "id": "vendor-library-forecast",
-          "title": "Library hold-time forecast (vendor product)",
+          "title": "General Impact Assessment: Library hold-time forecast (vendor product)",
           "description": "Branch leads see a vendor forecast of how long a hold might take. No case decision is made.",
           "file": "vendor-library-forecast.json"
         },
         {
           "id": "vendor-waitlist",
-          "title": "Rental assistance waitlist sorter (vendor product)",
+          "title": "High-risk: Rental assistance waitlist sorter (vendor product)",
           "description": "A vendor product sorts rental-assistance applicants. Review covers a sample, and several controls are still open.",
           "file": "vendor-waitlist.json"
         },
         {
           "id": "vendor-license-score",
-          "title": "Occupational license score (vendor product)",
+          "title": "High-risk: Occupational license score (vendor product)",
           "description": "A vendor score can hold up a license file. Review, data level, and procurement timing are not determined.",
           "file": "vendor-license-score.json"
         }
@@ -78,25 +78,25 @@
       "examples": [
         {
           "id": "path-high-benefits",
-          "title": "Path example: benefits queue (High)",
+          "title": "High-risk: Benefits queue (path example)",
           "description": "Staff use a state-built score to order benefit files. A supervisor decides each file.",
           "file": "path-high-benefits.json"
         },
         {
           "id": "path-general-grounds",
-          "title": "Path example: grounds forecast (General)",
+          "title": "General Impact Assessment: Grounds forecast (path example)",
           "description": "Crew leads see a state-built forecast of mowing time. It does not decide a service for a person.",
           "file": "path-general-grounds.json"
         },
         {
           "id": "path-prohibited-score",
-          "title": "Path example: social scoring tool (Prohibited)",
+          "title": "Prohibited: Social scoring tool (path example)",
           "description": "A state-built tool scores personal traits. That use is on the prohibited list.",
           "file": "path-prohibited-score.json"
         },
         {
           "id": "path-cert-vendor",
-          "title": "Path example: certified hold forecast (General, in-scope certificates)",
+          "title": "General Impact Assessment: Certified hold forecast (path example, in-scope certificates)",
           "description": "A vendor forecast shows hold time. SOC 2 and ISO/IEC 27001 cover this product. The path stays General.",
           "file": "path-cert-vendor.json"
         }
