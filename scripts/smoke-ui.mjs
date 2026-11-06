@@ -26,10 +26,17 @@ await page.screenshot({ path: `${outDir}/01-home.png` });
 
 const sticky = await page.$eval("#site-header", (node) => getComputedStyle(node).position);
 if (sticky !== "sticky") failures.push(`Header is ${sticky}, expected sticky.`);
-const saveCount = await page.$$eval("header button", (nodes) => nodes.filter((node) => node.textContent === "Save draft").length);
+const saveCount = await page.$$eval("#save-draft", (nodes) => nodes.length);
 if (saveCount !== 1) failures.push(`Expected one Save draft button, found ${saveCount}.`);
-const saveInHeader = await page.$eval("#save-draft", (node) => Boolean(node.closest("header")));
-if (!saveInHeader) failures.push("Save draft is not in the header.");
+const saveInRail = await page.$eval("#save-draft", (node) => Boolean(node.closest("#progress-rail")));
+if (!saveInRail) failures.push("Save draft is not at the bottom of the progress rail.");
+const zipInRail = await page.$eval("#download-zip", (node) => {
+  const rail = node.closest("#progress-rail");
+  if (!rail) return false;
+  const actions = rail.lastElementChild;
+  return actions instanceof HTMLElement && actions.contains(node) && actions.contains(rail.querySelector("#save-draft"));
+});
+if (!zipInRail) failures.push("Save and zip are not together at the bottom of the progress rail.");
 
 await page.click("#example-select");
 await page.waitForSelector("[data-slot='select-item']");
@@ -55,20 +62,26 @@ if (!section?.includes("About this request")) failures.push(`Unexpected section:
 
 const agency = await page.$eval("#q2_agency", (node) => node.value);
 if (!agency.includes("fictional")) failures.push("Example agency was not loaded.");
-const headerStuck = await page.$eval("#header-progress", (node) => !node.hidden && node.querySelector("[role='progressbar']") !== null);
-if (!headerStuck) failures.push("Progress is not in the sticky header.");
+const railProgress = await page.$eval("#progress-rail", (node) => node.querySelector("[role='progressbar']") !== null);
+if (!railProgress) failures.push("Progress is not in the left rail.");
 const stepVisible = await page.evaluate(() => {
   const nav = document.querySelector("[aria-label='Sections']");
   const current = nav?.querySelector("[aria-current='step']");
   if (!(nav instanceof HTMLElement) || !(current instanceof HTMLElement)) return false;
   const navBox = nav.getBoundingClientRect();
   const box = current.getBoundingClientRect();
-  return box.left >= navBox.left - 1 && box.right <= navBox.right + 1 && (current.textContent ?? "").includes("About this request");
+  return box.top >= navBox.top - 1 && box.bottom <= navBox.bottom + 1 && box.left >= navBox.left - 1 && box.right <= navBox.right + 1 && (current.textContent ?? "").includes("About this request");
 });
-if (!stepVisible) failures.push("Current section step is clipped in the header.");
+if (!stepVisible) failures.push("Current section step is clipped in the progress rail.");
+const questionCards = await page.$$eval("[data-question]", (nodes) => nodes.length);
+if (questionCards < 2) failures.push(`Expected question cards, found ${questionCards}.`);
+const widened = await page.$eval("#assessment-column", (node) => Number.parseFloat(getComputedStyle(node).maxWidth) > 52 * 16);
+if (!widened) failures.push("Main column is still the narrow 52rem measure.");
 await page.screenshot({ path: `${outDir}/02-example-section.png` });
 
 await page.click('button[aria-current="step"]');
+const stored = await page.evaluate(() => localStorage.getItem("md-aia-draft-v1") ?? "");
+if (!stored.includes("fictional")) failures.push("Section navigation did not keep the saved draft.");
 const focused = await page.evaluate(() => document.activeElement?.id || document.activeElement?.textContent || "");
 await page.keyboard.press("Tab");
 const afterTab = await page.evaluate(() => document.activeElement?.tagName);
