@@ -1,0 +1,132 @@
+{
+  "schema_version": "1.0.0",
+  "form_version": "v2-structured-1.0.0",
+  "rules_version": "1.2.0",
+  "saved_at": "2026-11-02T00:00:00.000Z",
+  "example": true,
+  "example_label": "Example data. Fictional agency and AI system. Not a real assessment.",
+  "answers": {
+    "response_id": "EXAMPLE-path-prohibited-score",
+    "q1_intake": "EXAMPLE-HR-2026-path-prohibited-score",
+    "q2_agency": "Maryland Resident Scoring Desk (fictional)",
+    "q2_unit": "Scoring unit (fictional)",
+    "q2_role": "Agency Lead",
+    "q3_is_lead": "yes",
+    "q4_name": "Resident Trait Score (fictional)",
+    "q5_changes": "State staff configured the score. No vendor and no outside model.",
+    "q7b_prohibited": [
+      "social_scoring"
+    ],
+    "q9_other": "",
+    "q15_same_place": "yes",
+    "q20_types": [
+      "bias_harm"
+    ],
+    "q23_monitor": "program manager",
+    "q23_incident": "security specialist",
+    "q23_reassess": "Agency Lead",
+    "q25_confirm": [
+      "confirm"
+    ],
+    "q5_builder": "state_built",
+    "q6_capabilities": [
+      "classifies_scores"
+    ],
+    "q6_design_facts": [
+      "no_free_text_input"
+    ],
+    "q6_method": "statistical",
+    "q6_hosting": "state_data_center",
+    "q6_description": "The tool scores personal traits from a resident file. It runs in the state data center. Fictional system.",
+    "q7_purpose": "The unit wanted a single trait score for a resident file. Fictional purpose.",
+    "q8_areas": [
+      "regulatory_inspection"
+    ],
+    "q8_target": "individuals",
+    "q8_how": "The score labels a person.",
+    "q9_groups": [
+      "general_public"
+    ],
+    "q9_rel__general_public": "acted_on_individually",
+    "q10_role": "info_only",
+    "q11_reviewer": "program manager",
+    "q12_outside": "yes",
+    "q13_level": "L3",
+    "q14_data_types": [
+      "personal_info"
+    ],
+    "q14_overlays": [
+      "none"
+    ],
+    "q14_sources": "Resident files held by the scoring unit.",
+    "q17_status": "planning",
+    "q20_harm": "A trait score can follow a person into a later decision. The person bears that label.",
+    "st11a": "every_written",
+    "st11a__evidence": "Scoring control file RS-01 record for 11a, tested 12 March 2026, owner: program manager. The record supports the selected statement.",
+    "st11b": "both",
+    "st11b__evidence": "Scoring control file RS-01 record for 11b, tested 12 March 2026, owner: program manager. The record supports the selected statement.",
+    "st11c": "every",
+    "st11c__evidence": "Scoring control file RS-01 record for 11c, tested 12 March 2026, owner: program manager. The record supports the selected statement.",
+    "st11d": "full",
+    "st11d__evidence": "Scoring control file RS-01 record for 11d, tested 12 March 2026, owner: program manager. The record supports the selected statement.",
+    "st12a": "at_decision",
+    "st12a__evidence": "Scoring control file RS-01 record for 12a, tested 12 March 2026, owner: program manager. The record supports the selected statement.",
+    "st12b": "set_path",
+    "st12b__evidence": "Scoring control file RS-01 record for 12b, tested 12 March 2026, owner: program manager. The record supports the selected statement.",
+    "st12c": "reviewed",
+    "st12c__evidence": "Scoring control file RS-01 record for 12c, tested 12 March 2026, owner: program manager. The record supports the selected statement.",
+    "st12e__general_public": "fits",
+    "st14a": "scheduled",
+    "st14a__evidence": "Scoring control file RS-01 record for 14a, tested 12 March 2026, owner: program manager. The record supports the selected statement.",
+    "st14b": "logged",
+    "st14b__evidence": "Scoring control file RS-01 record for 14b, tested 12 March 2026, owner: program manager. The record supports the selected statement.",
+    "st15a": "everywhere",
+    "st15a__evidence": "Scoring control file RS-01 record for 15a, tested 12 March 2026, owner: program manager. The record supports the selected statement.",
+    "st15b": "controls",
+    "st15b__evidence": "Scoring control file RS-01 record for 15b, tested 12 March 2026, owner: program manager. The record supports the selected statement.",
+    "st15c": "done",
+    "st15c__evidence": "Scoring control file RS-01 record for 15c, tested 12 March 2026, owner: program manager. The record supports the selected statement.",
+    "st15d": "on_schedule",
+    "st20a": "written",
+    "st21a": "recorded",
+    "st21a__evidence": "Scoring control file RS-01 record for 21a, tested 12 March 2026, owner: program manager. The record supports the selected statement.",
+    "st21b": "audited",
+    "st21b__evidence": "Scoring control file RS-01 record for 21b, tested 12 March 2026, owner: program manager. The record supports the selected statement.",
+    "st21c": "threshold",
+    "st21c__evidence": "Scoring control file RS-01 record for 21c, tested 12 March 2026, owner: program manager. The record supports the selected statement.",
+    "st21d": "full",
+    "st21d__evidence": "Scoring control file RS-01 record for 21d, tested 12 March 2026, owner: program manager. The record supports the selected statement.",
+    "st21e": "both",
+    "st21e__evidence": "Scoring control file RS-01 record for 21e, tested 12 March 2026, owner: program manager. The record supports the selected statement.",
+    "st22__prompt_injection": "all",
+    "st22__prompt_injection__evidence": "Scoring control file RS-01 record for prompt_injection (22), tested 12 March 2026, owner: program manager. The record supports the selected statement.",
+    "st22__poisoned_data": "all",
+    "st22__poisoned_data__evidence": "Scoring control file RS-01 record for poisoned_data (22), tested 12 March 2026, owner: program manager. The record supports the selected statement.",
+    "st22__model_theft": "all",
+    "st22__model_theft__evidence": "Scoring control file RS-01 record for model_theft (22), tested 12 March 2026, owner: program manager. The record supports the selected statement.",
+    "st22__output_leakage": "all",
+    "st22__output_leakage__evidence": "Scoring control file RS-01 record for output_leakage (22), tested 12 March 2026, owner: program manager. The record supports the selected statement.",
+    "st22__unsafe_output_handling": "all",
+    "st22__unsafe_output_handling__evidence": "Scoring control file RS-01 record for unsafe_output_handling (22), tested 12 March 2026, owner: program manager. The record supports the selected statement.",
+    "st22f": "tested",
+    "st22f__evidence": "Scoring control file RS-01 record for 22f, tested 12 March 2026, owner: program manager. The record supports the selected statement.",
+    "st23a": "yearly",
+    "st23a__evidence": "Scoring control file RS-01 record for 23a, tested 12 March 2026, owner: program manager. The record supports the selected statement.",
+    "st23b": "set",
+    "st23b__evidence": "Scoring control file RS-01 record for 23b, tested 12 March 2026, owner: program manager. The record supports the selected statement.",
+    "st23c": "told",
+    "st24a": "all_four",
+    "st24b": "full"
+  },
+  "assessment_path": "prohibited",
+  "assessment_path_reasons": [
+    "A prohibited use is selected."
+  ],
+  "cert_credits": {
+    "active": false,
+    "certs": [],
+    "product_in_scope": false,
+    "shortened": [],
+    "softened_mitigations": []
+  }
+}

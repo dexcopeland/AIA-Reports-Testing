@@ -1,0 +1,173 @@
+{
+  "schema_version": "1.0.0",
+  "form_version": "v2-structured-1.0.0",
+  "rules_version": "1.2.0",
+  "saved_at": "2026-11-02T00:00:00.000Z",
+  "example": true,
+  "example_label": "Example data. Fictional agency and AI system. Not a real assessment.",
+  "answers": {
+    "response_id": "EXAMPLE-path-cert-vendor",
+    "q1_intake": "EXAMPLE-HR-2026-path-cert-vendor",
+    "q2_agency": "Maryland Branch Reading Services (fictional)",
+    "q2_unit": "Branch operations unit (fictional)",
+    "q2_role": "Agency Lead",
+    "q3_is_lead": "yes",
+    "q4_name": "Certified Hold Forecast (fictional)",
+    "q5_changes": "None. Branch leads view the vendor forecast as sold.",
+    "q7b_prohibited": [
+      "none"
+    ],
+    "q9_other": "",
+    "q15_same_place": "yes",
+    "q20_types": [
+      "wrong_decision"
+    ],
+    "q23_monitor": "branch coordinator",
+    "q23_incident": "security specialist",
+    "q23_reassess": "Agency Lead",
+    "q25_confirm": [
+      "confirm"
+    ],
+    "q5_builder": "vendor_product",
+    "q5_vendor": "Cedar Shelf Labs (fictional)",
+    "q5_product": "HoldForecast",
+    "q5_version": "2.0-example",
+    "q6_capabilities": [
+      "predicts"
+    ],
+    "q6_design_facts": [
+      "no_free_text_input",
+      "no_personal_info",
+      "public_inputs_only",
+      "outputs_not_passed"
+    ],
+    "q6_method": "statistical",
+    "q6_hosting": "vendor_cloud",
+    "q6_description": "HoldForecast estimates how many days a public hold might take. It is a vendor product in the vendor cloud. Fictional system.",
+    "q7_purpose": "Branch leads now guess hold time from last month's counts. The forecast shows a number. It does not decide who receives a book. Fictional purpose.",
+    "q8_areas": [
+      "regulatory_inspection"
+    ],
+    "q8_target": "neither",
+    "q8_how": "It shows a time estimate for a branch. It does not pick a person.",
+    "q9_groups": [
+      "general_public"
+    ],
+    "q9_rel__general_public": "affected_in_general",
+    "q10_role": "info_only",
+    "q11_reviewer": "branch coordinator",
+    "q12_outside": "yes",
+    "q13_level": "L2",
+    "q14_data_types": [
+      "internal_data"
+    ],
+    "q14_overlays": [
+      "none"
+    ],
+    "q14_sources": "Public monthly circulation tables.",
+    "q16_assurances": [
+      "soc2",
+      "iso27001",
+      "aiuc1"
+    ],
+    "q16_cert_scope": "yes",
+    "q17_status": "planning",
+    "q18_procured": "not_yet",
+    "q20_harm": "A high estimate could make a branch order extra copies it does not need. The cost is a wasted purchase.",
+    "st11a": "every_written",
+    "st11a__evidence": "Library control file CH-09 record for 11a, tested 12 March 2026, owner: branch coordinator. The record supports the selected statement.",
+    "st11b": "both",
+    "st11b__evidence": "Library control file CH-09 record for 11b, tested 12 March 2026, owner: branch coordinator. The record supports the selected statement.",
+    "st11c": "every",
+    "st11c__evidence": "Library control file CH-09 record for 11c, tested 12 March 2026, owner: branch coordinator. The record supports the selected statement.",
+    "st11d": "full",
+    "st11d__evidence": "Library control file CH-09 record for 11d, tested 12 March 2026, owner: branch coordinator. The record supports the selected statement.",
+    "st12a": "at_decision",
+    "st12a__evidence": "Library control file CH-09 record for 12a, tested 12 March 2026, owner: branch coordinator. The record supports the selected statement.",
+    "st12b": "set_path",
+    "st12b__evidence": "Library control file CH-09 record for 12b, tested 12 March 2026, owner: branch coordinator. The record supports the selected statement.",
+    "st12c": "reviewed",
+    "st12c__evidence": "Library control file CH-09 record for 12c, tested 12 March 2026, owner: branch coordinator. The record supports the selected statement.",
+    "st12e__general_public": "fits",
+    "st14a": "scheduled",
+    "st14a__evidence": "Library control file CH-09 record for 14a, tested 12 March 2026, owner: branch coordinator. The record supports the selected statement.",
+    "st14b": "logged",
+    "st14b__evidence": "Library control file CH-09 record for 14b, tested 12 March 2026, owner: branch coordinator. The record supports the selected statement.",
+    "st15a": "everywhere",
+    "st15a__evidence": "Library control file CH-09 record for 15a, tested 12 March 2026, owner: branch coordinator. The record supports the selected statement.",
+    "st15b": "controls",
+    "st15b__evidence": "Library control file CH-09 record for 15b, tested 12 March 2026, owner: branch coordinator. The record supports the selected statement.",
+    "st15d": "on_schedule",
+    "st16a": "banned",
+    "st16a__evidence": "Signed agreement Library control file CH-09 clause 8.4, executed 3 January 2026, owner: procurement officer. The clause bars training on State data.",
+    "st16b__responsibilities": "signed",
+    "st16b__responsibilities__evidence": "Signed agreement Library control file CH-09 clause 6.1, executed 3 January 2026, owner: procurement officer. responsibilities is in the executed contract.",
+    "st16b__model_change_notice": "signed",
+    "st16b__model_change_notice__evidence": "Signed agreement Library control file CH-09 clause 6.2, executed 3 January 2026, owner: procurement officer. model_change_notice is in the executed contract.",
+    "st16b__incident_notice": "signed",
+    "st16b__incident_notice__evidence": "Signed agreement Library control file CH-09 clause 6.3, executed 3 January 2026, owner: procurement officer. incident_notice is in the executed contract.",
+    "st20a": "written",
+    "st21a": "recorded",
+    "st21a__evidence": "Library control file CH-09 record for 21a, tested 12 March 2026, owner: branch coordinator. The record supports the selected statement.",
+    "st21b": "audited",
+    "st21b__evidence": "Library control file CH-09 record for 21b, tested 12 March 2026, owner: branch coordinator. The record supports the selected statement.",
+    "st21c": "threshold",
+    "st21c__evidence": "Library control file CH-09 record for 21c, tested 12 March 2026, owner: branch coordinator. The record supports the selected statement.",
+    "st21d": "full",
+    "st21d__evidence": "Library control file CH-09 record for 21d, tested 12 March 2026, owner: branch coordinator. The record supports the selected statement.",
+    "st21e": "both",
+    "st21e__evidence": "Library control file CH-09 record for 21e, tested 12 March 2026, owner: branch coordinator. The record supports the selected statement.",
+    "st22__prompt_injection": "all",
+    "st22__prompt_injection__evidence": "Library control file CH-09 record for prompt_injection (22), tested 12 March 2026, owner: branch coordinator. The record supports the selected statement.",
+    "st22__poisoned_data": "all",
+    "st22__poisoned_data__evidence": "Library control file CH-09 record for poisoned_data (22), tested 12 March 2026, owner: branch coordinator. The record supports the selected statement.",
+    "st22__model_theft": "all",
+    "st22__model_theft__evidence": "Library control file CH-09 record for model_theft (22), tested 12 March 2026, owner: branch coordinator. The record supports the selected statement.",
+    "st22__output_leakage": "all",
+    "st22__output_leakage__evidence": "Library control file CH-09 record for output_leakage (22), tested 12 March 2026, owner: branch coordinator. The record supports the selected statement.",
+    "st22__unsafe_output_handling": "all",
+    "st22__unsafe_output_handling__evidence": "Library control file CH-09 record for unsafe_output_handling (22), tested 12 March 2026, owner: branch coordinator. The record supports the selected statement.",
+    "st22f": "tested",
+    "st22f__evidence": "Library control file CH-09 record for 22f, tested 12 March 2026, owner: branch coordinator. The record supports the selected statement.",
+    "st23a": "yearly",
+    "st23a__evidence": "Library control file CH-09 record for 23a, tested 12 March 2026, owner: branch coordinator. The record supports the selected statement.",
+    "st23b": "set",
+    "st23b__evidence": "Library control file CH-09 record for 23b, tested 12 March 2026, owner: branch coordinator. The record supports the selected statement.",
+    "st23c": "told",
+    "st24a": "all_four",
+    "st24b": "full"
+  },
+  "assessment_path": "general",
+  "assessment_path_reasons": [
+    "No High or Prohibited fact applies."
+  ],
+  "cert_credits": {
+    "active": true,
+    "certs": [
+      "soc2",
+      "iso27001",
+      "aiuc1"
+    ],
+    "product_in_scope": true,
+    "shortened": [
+      "st11d",
+      "st15a",
+      "st15b",
+      "st15d",
+      "st20a",
+      "st21c",
+      "st21d",
+      "st22",
+      "st22f",
+      "st24a"
+    ],
+    "softened_mitigations": [
+      "M-ACCURACY",
+      "M-ENCRYPT",
+      "M-IMPACT",
+      "M-LOG",
+      "M-SEC",
+      "M-TRAIN"
+    ]
+  }
+}

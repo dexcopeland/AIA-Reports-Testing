@@ -1,0 +1,134 @@
+{
+  "schema_version": "1.0.0",
+  "form_version": "v2-structured-1.0.0",
+  "rules_version": "1.2.0",
+  "saved_at": "2026-11-02T00:00:00.000Z",
+  "example": true,
+  "example_label": "Example data. Fictional agency and AI system. Not a real assessment.",
+  "answers": {
+    "response_id": "EXAMPLE-path-high-benefits",
+    "q1_intake": "EXAMPLE-HR-2026-path-high-benefits",
+    "q2_agency": "Maryland Benefit Queue Office (fictional)",
+    "q2_unit": "Queue unit (fictional)",
+    "q2_role": "Agency Lead",
+    "q3_is_lead": "yes",
+    "q4_name": "Benefits Queue Helper (fictional)",
+    "q5_changes": "State staff set the queue weights. No vendor and no outside model.",
+    "q7b_prohibited": [
+      "none"
+    ],
+    "q9_other": "",
+    "q15_same_place": "yes",
+    "q20_types": [
+      "missed_service"
+    ],
+    "q23_monitor": "benefits supervisor",
+    "q23_incident": "security specialist",
+    "q23_reassess": "Agency Lead",
+    "q25_confirm": [
+      "confirm"
+    ],
+    "q5_builder": "state_built",
+    "q6_capabilities": [
+      "ranks"
+    ],
+    "q6_design_facts": [
+      "no_free_text_input",
+      "outputs_not_passed"
+    ],
+    "q6_method": "statistical",
+    "q6_hosting": "state_data_center",
+    "q6_description": "The helper orders benefit files for a supervisor. It runs in the state data center. Fictional system.",
+    "q7_purpose": "Supervisors now pull the oldest file. The helper proposes an order. Staff still decide each file. Fictional purpose.",
+    "q8_areas": [
+      "benefits_services"
+    ],
+    "q8_target": "individuals",
+    "q8_how": "It orders benefit files. A supervisor decides each award.",
+    "q9_groups": [
+      "low_income"
+    ],
+    "q9_rel__low_income": "acted_on_individually",
+    "q10_role": "recommends",
+    "q11_reviewer": "benefits supervisor",
+    "q12_outside": "yes",
+    "q13_level": "L3",
+    "q14_data_types": [
+      "personal_info"
+    ],
+    "q14_overlays": [
+      "none"
+    ],
+    "q14_sources": "Benefit applications held by the queue unit.",
+    "q17_status": "planning",
+    "q20_harm": "A wrong order could delay a complete file. The applicant waits. The supervisor can change the order.",
+    "st11a": "every_written",
+    "st11a__evidence": "Queue control file BQ-02 record for 11a, tested 12 March 2026, owner: benefits supervisor. The record supports the selected statement.",
+    "st11b": "both",
+    "st11b__evidence": "Queue control file BQ-02 record for 11b, tested 12 March 2026, owner: benefits supervisor. The record supports the selected statement.",
+    "st11c": "every",
+    "st11c__evidence": "Queue control file BQ-02 record for 11c, tested 12 March 2026, owner: benefits supervisor. The record supports the selected statement.",
+    "st11d": "full",
+    "st11d__evidence": "Queue control file BQ-02 record for 11d, tested 12 March 2026, owner: benefits supervisor. The record supports the selected statement.",
+    "st12a": "at_decision",
+    "st12a__evidence": "Queue control file BQ-02 record for 12a, tested 12 March 2026, owner: benefits supervisor. The record supports the selected statement.",
+    "st12b": "set_path",
+    "st12b__evidence": "Queue control file BQ-02 record for 12b, tested 12 March 2026, owner: benefits supervisor. The record supports the selected statement.",
+    "st12c": "reviewed",
+    "st12c__evidence": "Queue control file BQ-02 record for 12c, tested 12 March 2026, owner: benefits supervisor. The record supports the selected statement.",
+    "st12e__low_income": "fits",
+    "st14a": "scheduled",
+    "st14a__evidence": "Queue control file BQ-02 record for 14a, tested 12 March 2026, owner: benefits supervisor. The record supports the selected statement.",
+    "st14b": "logged",
+    "st14b__evidence": "Queue control file BQ-02 record for 14b, tested 12 March 2026, owner: benefits supervisor. The record supports the selected statement.",
+    "st15a": "everywhere",
+    "st15a__evidence": "Queue control file BQ-02 record for 15a, tested 12 March 2026, owner: benefits supervisor. The record supports the selected statement.",
+    "st15b": "controls",
+    "st15b__evidence": "Queue control file BQ-02 record for 15b, tested 12 March 2026, owner: benefits supervisor. The record supports the selected statement.",
+    "st15c": "done",
+    "st15c__evidence": "Queue control file BQ-02 record for 15c, tested 12 March 2026, owner: benefits supervisor. The record supports the selected statement.",
+    "st15d": "on_schedule",
+    "st20a": "written",
+    "st21a": "recorded",
+    "st21a__evidence": "Queue control file BQ-02 record for 21a, tested 12 March 2026, owner: benefits supervisor. The record supports the selected statement.",
+    "st21b": "audited",
+    "st21b__evidence": "Queue control file BQ-02 record for 21b, tested 12 March 2026, owner: benefits supervisor. The record supports the selected statement.",
+    "st21c": "threshold",
+    "st21c__evidence": "Queue control file BQ-02 record for 21c, tested 12 March 2026, owner: benefits supervisor. The record supports the selected statement.",
+    "st21d": "full",
+    "st21d__evidence": "Queue control file BQ-02 record for 21d, tested 12 March 2026, owner: benefits supervisor. The record supports the selected statement.",
+    "st21e": "both",
+    "st21e__evidence": "Queue control file BQ-02 record for 21e, tested 12 March 2026, owner: benefits supervisor. The record supports the selected statement.",
+    "st22__prompt_injection": "all",
+    "st22__prompt_injection__evidence": "Queue control file BQ-02 record for prompt_injection (22), tested 12 March 2026, owner: benefits supervisor. The record supports the selected statement.",
+    "st22__poisoned_data": "all",
+    "st22__poisoned_data__evidence": "Queue control file BQ-02 record for poisoned_data (22), tested 12 March 2026, owner: benefits supervisor. The record supports the selected statement.",
+    "st22__model_theft": "all",
+    "st22__model_theft__evidence": "Queue control file BQ-02 record for model_theft (22), tested 12 March 2026, owner: benefits supervisor. The record supports the selected statement.",
+    "st22__output_leakage": "all",
+    "st22__output_leakage__evidence": "Queue control file BQ-02 record for output_leakage (22), tested 12 March 2026, owner: benefits supervisor. The record supports the selected statement.",
+    "st22__unsafe_output_handling": "all",
+    "st22__unsafe_output_handling__evidence": "Queue control file BQ-02 record for unsafe_output_handling (22), tested 12 March 2026, owner: benefits supervisor. The record supports the selected statement.",
+    "st22f": "tested",
+    "st22f__evidence": "Queue control file BQ-02 record for 22f, tested 12 March 2026, owner: benefits supervisor. The record supports the selected statement.",
+    "st23a": "yearly",
+    "st23a__evidence": "Queue control file BQ-02 record for 23a, tested 12 March 2026, owner: benefits supervisor. The record supports the selected statement.",
+    "st23b": "set",
+    "st23b__evidence": "Queue control file BQ-02 record for 23b, tested 12 March 2026, owner: benefits supervisor. The record supports the selected statement.",
+    "st23c": "told",
+    "st24a": "all_four",
+    "st24b": "full"
+  },
+  "assessment_path": "high",
+  "assessment_path_reasons": [
+    "A rights area applies and the output is a basis for a decision or action.",
+    "Biometric identification or individual ranking is a basis for a decision or action."
+  ],
+  "cert_credits": {
+    "active": false,
+    "certs": [],
+    "product_in_scope": false,
+    "shortened": [],
+    "softened_mitigations": []
+  }
+}

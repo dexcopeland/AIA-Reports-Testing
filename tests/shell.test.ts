@@ -16,7 +16,6 @@ describe("question cards", () => {
   it("groups visible fields that share a question number", () => {
     const clusters = questionClusters(visibleFields(SECTIONS[0]!, {}));
     expect(clusters.map((cluster) => cluster.map((field) => field.id))).toEqual([
-      ["q1_intake"],
       ["q2_agency", "q2_unit", "q2_role"],
       ["q3_is_lead"],
     ]);

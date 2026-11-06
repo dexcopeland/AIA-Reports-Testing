@@ -18,15 +18,16 @@ function openFindings(id: string): number {
 }
 
 describe("loadable examples", () => {
-  it("ships two path groups under the names the form already uses", () => {
+  it("ships the state, vendor, and path example groups", () => {
     expect(exampleIndex.groups.map((group) => group.label)).toEqual([
       EXAMPLE_GROUP_LABELS.state,
       EXAMPLE_GROUP_LABELS.vendor,
+      EXAMPLE_GROUP_LABELS.path,
     ]);
-    expect(exampleIndex.groups.map((group) => group.id)).toEqual(["state", "vendor"]);
+    expect(exampleIndex.groups.map((group) => group.id)).toEqual(["state", "vendor", "path"]);
     const listed = exampleIndex.groups.flatMap((group) => group.examples.map((item) => item.id));
     expect(listed).toEqual(EXAMPLES.map((spec) => spec.id));
-    expect(listed).toHaveLength(10);
+    expect(listed).toHaveLength(14);
   });
 
   it("reloads a fresh copy after an example is edited", () => {
@@ -58,8 +59,8 @@ describe("loadable examples", () => {
     }
   });
 
-  it("runs from few residual risks to many, with different outcomes, inside each path", () => {
-    for (const group of exampleIndex.groups) {
+  it("runs from few residual risks to many, with different outcomes, inside each original path", () => {
+    for (const group of exampleIndex.groups.filter((item) => item.id === "state" || item.id === "vendor")) {
       const rows = group.examples.map((entry) => {
         const file = loadExampleFile(entry.file);
         const result = evaluate(file);
@@ -95,7 +96,7 @@ describe("loadable examples", () => {
   });
 
   it("gives the low-residual examples evidence for every evidence prompt, and thin evidence at the other end", () => {
-    for (const group of exampleIndex.groups) {
+    for (const group of exampleIndex.groups.filter((item) => item.id === "state" || item.id === "vendor")) {
       const strong = evaluate(loadExampleFile(group.examples[0].file));
       const evidenced = strong.items.filter((item) => {
         if (item.q6Excluded || item.notApplicable) return false;

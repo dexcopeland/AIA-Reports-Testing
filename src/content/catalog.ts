@@ -94,6 +94,7 @@ export const ASSURANCES = [
   { id: "stateramp", label: "StateRAMP" },
   { id: "iso27001", label: "ISO/IEC 27001" },
   { id: "iso42001", label: "ISO/IEC 42001" },
+  { id: "aiuc1", label: "AIUC-1" },
   { id: "none", label: "None" },
   { id: "unknown", label: "Unknown" },
 ];

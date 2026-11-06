@@ -135,5 +135,18 @@
     "st23c": "told",
     "st24a": "all_four",
     "st24b": "full"
+  },
+  "assessment_path": "high",
+  "assessment_path_reasons": [
+    "The use is safety-impacting."
+  ],
+  "cert_credits": {
+    "active": false,
+    "certs": [
+      "soc2"
+    ],
+    "product_in_scope": false,
+    "shortened": [],
+    "softened_mitigations": []
   }
 }

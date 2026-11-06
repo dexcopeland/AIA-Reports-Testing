@@ -1,11 +1,12 @@
 import { FORM_VERSION, RULES_VERSION, SCHEMA_VERSION, type AnswerFile, type StatementDef } from "../content/types";
 import { STATEMENT_BY_ID } from "../content/statements";
+import { stampAssessment } from "../engine/draft-state";
 import type { Answers } from "../engine/answers";
 import { instanceKeys } from "../engine/evaluate";
 
 export interface ExampleSpec {
   id: string;
-  group: "state" | "vendor";
+  group: "state" | "vendor" | "path";
   title: string;
   description: string;
   profile: "strong" | "thin";
@@ -102,7 +103,7 @@ export function buildExample(spec: ExampleSpec): AnswerFile {
     }
   }
 
-  return {
+  return stampAssessment({
     schema_version: SCHEMA_VERSION,
     form_version: FORM_VERSION,
     rules_version: RULES_VERSION,
@@ -110,5 +111,5 @@ export function buildExample(spec: ExampleSpec): AnswerFile {
     example: true,
     example_label: "Example data. Fictional agency and AI system. Not a real assessment.",
     answers,
-  };
+  });
 }

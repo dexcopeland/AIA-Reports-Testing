@@ -122,5 +122,18 @@
     "st23c": "told",
     "st24a": "none",
     "st24b": "none"
+  },
+  "assessment_path": "high",
+  "assessment_path_reasons": [
+    "The use is safety-impacting.",
+    "A rights area applies and the output is a basis for a decision or action.",
+    "Biometric identification or individual ranking is a basis for a decision or action."
+  ],
+  "cert_credits": {
+    "active": false,
+    "certs": [],
+    "product_in_scope": false,
+    "shortened": [],
+    "softened_mitigations": []
   }
 }

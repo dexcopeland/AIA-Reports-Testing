@@ -102,5 +102,16 @@
     "st23c": "unknown",
     "st24a": "unknown",
     "st24b": "unknown"
+  },
+  "assessment_path": "high",
+  "assessment_path_reasons": [
+    "A rights area applies and the output is a basis for a decision or action."
+  ],
+  "cert_credits": {
+    "active": false,
+    "certs": [],
+    "product_in_scope": false,
+    "shortened": [],
+    "softened_mitigations": []
   }
 }
