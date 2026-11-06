@@ -3,6 +3,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldLabel } from "@/components/ui/field";
+import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -13,12 +14,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { SECTIONS, visibleFields } from "../content/form";
-import type { AnswerFile } from "../content/types";
+import { SECTIONS, visibleFields, type Field as FormField } from "../content/form";
+import type { AnswerFile, AnswerValue } from "../content/types";
+import type { Answers } from "../engine/answers";
 import { exampleIndex } from "../examples/load";
 import { FieldControl } from "./fields";
 import { touchTarget } from "./form-model";
-import type { AnswerValue } from "../content/types";
+import { clusterSpansFull, clusterUsesColumns, questionClusters } from "./shell";
 
 const exampleItems = [
   { value: null, label: "Choose an example" },
@@ -128,6 +130,33 @@ export function LoadFileCard({ onLoadFile, message }: { onLoadFile: (file: File)
   );
 }
 
+function QuestionCard({
+  fields,
+  answers,
+  onAnswer,
+}: {
+  fields: FormField[];
+  answers: Answers;
+  onAnswer: (key: string, value: AnswerValue) => void;
+}) {
+  const question = fields[0]?.legacyQ;
+  const columns = clusterUsesColumns(fields);
+  return (
+    <Card className={clusterSpansFull(fields) ? "2xl:col-span-2" : undefined} data-question={question}>
+      <CardHeader className="border-b">
+        <CardTitle>Question {question}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className={columns ? "grid grid-cols-1 gap-4 md:grid-cols-2" : "flex flex-col gap-4"}>
+          {fields.map((field) => (
+            <FieldControl key={field.id} field={field} answers={answers} onAnswer={onAnswer} />
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export function FormScreen({
   file,
   sectionIndex,
@@ -148,41 +177,42 @@ export function FormScreen({
   const section = SECTIONS[sectionIndex];
   if (!section) return null;
   const last = sectionIndex === SECTIONS.length - 1;
+  const clusters = questionClusters(visibleFields(section, file.answers));
   return (
     <div className="flex flex-col gap-4">
-      <Card>
-        <CardHeader>
-          <h2 id="section-heading" tabIndex={-1} className="text-2xl font-semibold text-primary outline-none">{section.title}</h2>
-          {file.example && file.example_label ? <p>{file.example_label}</p> : null}
-        </CardHeader>
-        <CardContent>
-          <form
-            noValidate
-            className="flex flex-col gap-5"
-            onSubmit={(event) => {
-              event.preventDefault();
-              onNext();
-            }}
-          >
-            {visibleFields(section, file.answers).map((field) => (
-              <FieldControl key={field.id} field={field} answers={file.answers} onAnswer={onAnswer} />
-            ))}
-            {formError ? (
-              <Alert id="form-error" variant="destructive">
-                <AlertTitle>Still blank</AlertTitle>
-                <AlertDescription>{formError}</AlertDescription>
-              </Alert>
-            ) : null}
-            <div className="flex flex-wrap gap-2">
-              {sectionIndex > 0 ? (
-                <Button type="button" variant="outline" className={touchTarget} onClick={onBack}>Back</Button>
-              ) : null}
-              <Button type="button" className={touchTarget} onClick={onNext}>{last ? "Review and create draft" : "Save and continue"}</Button>
-            </div>
-          </form>
-          <p id="save-status" className="mt-3 min-h-6" aria-live="polite">{saveNote}</p>
-        </CardContent>
-      </Card>
+      <div>
+        <p className="text-sm font-semibold text-primary">Section {sectionIndex + 1} of {SECTIONS.length}</p>
+        <h2 id="section-heading" tabIndex={-1} className="text-2xl font-semibold text-primary outline-none">{section.title}</h2>
+        {file.example && file.example_label ? <p>{file.example_label}</p> : null}
+      </div>
+      <form
+        noValidate
+        className="flex flex-col gap-4"
+        onSubmit={(event) => {
+          event.preventDefault();
+          onNext();
+        }}
+      >
+        <div className="grid grid-cols-1 items-start gap-4 2xl:grid-cols-2">
+          {clusters.map((cluster) => (
+            <QuestionCard key={cluster[0]?.id ?? "question"} fields={cluster} answers={file.answers} onAnswer={onAnswer} />
+          ))}
+        </div>
+        {formError ? (
+          <Alert id="form-error" variant="destructive">
+            <AlertTitle>Still blank</AlertTitle>
+            <AlertDescription>{formError}</AlertDescription>
+          </Alert>
+        ) : null}
+        <Separator />
+        <div className="flex flex-wrap gap-2">
+          {sectionIndex > 0 ? (
+            <Button type="button" variant="outline" className={touchTarget} onClick={onBack}>Back</Button>
+          ) : null}
+          <Button type="button" className={touchTarget} onClick={onNext}>{last ? "Review and create draft" : "Save and continue"}</Button>
+        </div>
+      </form>
+      <p id="save-status" className="min-h-6" aria-live="polite">{saveNote}</p>
     </div>
   );
 }

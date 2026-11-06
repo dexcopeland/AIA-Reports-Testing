@@ -8,27 +8,23 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Progress, ProgressLabel } from "@/components/ui/progress";
 import { SECTIONS } from "../content/form";
-import { FORM_VERSION, RULES_VERSION, SCHEMA_VERSION, type AnswerFile, type AnswerValue } from "../content/types";
+import { type AnswerFile, type AnswerValue } from "../content/types";
 import { exampleIndex, loadExampleFile } from "../examples/load";
 import { ensureSignoff, upsertAck } from "../engine/signoff";
 import { missing } from "./app";
-import { sectionStepLabel, touchTarget } from "./form-model";
+import { touchTarget } from "./form-model";
+import { ProgressRail } from "./ProgressRail";
+import { downloadReportPackage } from "./report-package";
 import { ReportScreen } from "./ReportScreen";
 import { FormScreen, HomeScreen, LoadFileCard } from "./screens";
+import { initialMaxReached, persistAdvance } from "./shell";
 import { autosave, autoload, clearAutosave, downloadJson, emptyFile, normalizeFile } from "./storage";
 
 type Screen = "home" | "form" | "report";
 
-function stamp(file: AnswerFile): AnswerFile {
-  return {
-    ...file,
-    saved_at: new Date().toISOString(),
-    rules_version: RULES_VERSION,
-    form_version: FORM_VERSION,
-    schema_version: SCHEMA_VERSION,
-  };
+function reachedFor(file: AnswerFile): number {
+  return initialMaxReached(SECTIONS.map((section) => missing(section, file.answers).length));
 }
 
 export function AssessmentApp() {
@@ -42,9 +38,11 @@ export function AssessmentApp() {
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [loadMessage, setLoadMessage] = useState("");
   const [focusNonce, setFocusNonce] = useState(0);
+  const [maxReached, setMaxReached] = useState(0);
+  const [reportUnlocked, setReportUnlocked] = useState(false);
+  const [exportNote, setExportNote] = useState("");
   const fileRef = useRef(file);
   const headerRef = useRef<HTMLElement>(null);
-  const navRef = useRef<HTMLOListElement>(null);
 
   useEffect(() => {
     if (focusNonce === 0) return;
@@ -63,21 +61,9 @@ export function AssessmentApp() {
     return () => observer.disconnect();
   }, [screen, sectionIndex]);
 
-  useEffect(() => {
-    const frame = requestAnimationFrame(() => {
-      const nav = navRef.current;
-      const current = nav?.querySelector("[aria-current='step']");
-      if (!(current instanceof HTMLElement) || !nav) return;
-      const delta = current.getBoundingClientRect().left - nav.getBoundingClientRect().left;
-      nav.scrollLeft += delta - 8;
-    });
-    return () => cancelAnimationFrame(frame);
-  }, [screen, sectionIndex]);
-
   function commit(next: AnswerFile, note = "Saved in this browser."): AnswerFile {
-    const stamped = stamp(next);
+    const stamped = persistAdvance(next, autosave);
     fileRef.current = stamped;
-    autosave(stamped);
     setFile(stamped);
     setSaveNote(note);
     return stamped;
@@ -114,13 +100,24 @@ export function AssessmentApp() {
   }
 
   function openSection(index: number): void {
+    if (index < 0 || index >= SECTIONS.length) return;
+    commit(fileRef.current, "Saved in this browser.");
     setSectionIndex(index);
     setFormError("");
     setScreen("form");
     focusNext();
   }
 
+  function showReport(): void {
+    if (!reportUnlocked) return;
+    commit(fileRef.current, "Saved in this browser.");
+    setFormError("");
+    setScreen("report");
+    focusNext();
+  }
+
   function goNext(): void {
+    commit(fileRef.current, "Saved in this browser.");
     const blanks = missing(SECTIONS[sectionIndex]!, fileRef.current.answers);
     if (blanks.length > 0 && sectionIndex < SECTIONS.length - 1) {
       const message = `Still blank: ${blanks.join("; ")}. You can continue. A blank answer counts as a gap.`;
@@ -131,10 +128,13 @@ export function AssessmentApp() {
     }
     setFormError("");
     if (sectionIndex < SECTIONS.length - 1) {
-      setSectionIndex(sectionIndex + 1);
+      const nextIndex = sectionIndex + 1;
+      setSectionIndex(nextIndex);
+      setMaxReached((current) => Math.max(current, nextIndex));
       focusNext();
       return;
     }
+    setReportUnlocked(true);
     setScreen("report");
     focusNext();
   }
@@ -146,6 +146,9 @@ export function AssessmentApp() {
     setFile(next);
     setDirty(false);
     setSectionIndex(0);
+    setMaxReached(0);
+    setReportUnlocked(false);
+    setExportNote("");
     setFormError("");
     setSaveNote("Nothing is stored on a server.");
     setScreen("form");
@@ -159,6 +162,9 @@ export function AssessmentApp() {
     setFile(saved);
     setDirty(false);
     setSectionIndex(0);
+    setMaxReached(reachedFor(saved));
+    setReportUnlocked(false);
+    setExportNote("");
     setFormError("");
     setScreen("form");
     focusNext();
@@ -167,9 +173,13 @@ export function AssessmentApp() {
   function loadExample(id: string): void {
     const entry = exampleIndexEntry(id);
     if (!entry) return;
-    commit(loadExampleFile(entry.file), "Example loaded. Saved in this browser.");
+    const next = loadExampleFile(entry.file);
+    commit(next, "Example loaded. Saved in this browser.");
     setDirty(false);
     setSectionIndex(0);
+    setMaxReached(reachedFor(next));
+    setReportUnlocked(false);
+    setExportNote("");
     setFormError("");
     setScreen("form");
     focusNext();
@@ -183,6 +193,9 @@ export function AssessmentApp() {
         commit(next);
         setDirty(false);
         setSectionIndex(0);
+        setMaxReached(reachedFor(next));
+        setReportUnlocked(false);
+        setExportNote("");
         setLoadMessage("File loaded.");
         setScreen("form");
         focusNext();
@@ -200,6 +213,11 @@ export function AssessmentApp() {
     downloadJson(stamped);
     setDirty(false);
     setHeaderNote("Draft file downloaded.");
+  }
+
+  async function downloadPackage(): Promise<void> {
+    const note = await downloadReportPackage(fileRef.current);
+    setExportNote(note);
   }
 
   function finishHome(message?: string): void {
@@ -220,94 +238,69 @@ export function AssessmentApp() {
 
   const saved = autoload();
   const noAnswers = Object.keys(file.answers).length === 0;
-  const done = SECTIONS.filter((item) => missing(item, file.answers).length === 0).length;
-  const shown = screen === "report" ? SECTIONS.length : sectionIndex + 1;
-  const progressText = screen === "report"
-    ? `Draft report. ${done} sections have no blank required answers.`
-    : `Section ${sectionIndex + 1} of ${SECTIONS.length}. ${done} sections have no blank required answers.`;
 
   return (
     <>
       <a className="skip" href="#main">Skip to content</a>
       <header id="site-header" ref={headerRef} className="sticky top-0 z-30 bg-primary text-primary-foreground shadow-[0_1px_0_rgb(0_0_0/0.28)]">
-        <div className="mx-auto flex max-w-[52rem] flex-wrap items-start justify-between gap-x-5 gap-y-3 px-4 py-3 max-[42rem]:flex-col">
-          <div className="min-w-[min(100%,18rem)] flex-1">
-            <h1 className="text-[1.6rem] leading-tight font-bold max-[42rem]:text-lg">Algorithmic Impact Assessment</h1>
-            <p className="mt-1 max-w-2xl max-[42rem]:hidden">A draft for Maryland agencies. You answer in this browser. The report is built with fixed rules. Nothing is sent to a server.</p>
+        <div className="flex flex-wrap items-center justify-between gap-x-5 gap-y-2 px-4 py-3 lg:px-6">
+          <div className="min-w-[min(100%,16rem)] flex-1">
+            <h1 className="text-xl leading-tight font-bold sm:text-[1.65rem]">Algorithmic Impact Assessment</h1>
+            <p className="mt-1 hidden max-w-3xl text-sm leading-snug min-[42rem]:block">A draft for Maryland agencies. You answer in this browser. The report is built with fixed rules. Nothing is sent to a server.</p>
           </div>
           <div className="flex flex-wrap items-center gap-2 max-[42rem]:w-full">
-            <Button id="go-home" type="button" variant="secondary" className={`${touchTarget} max-[42rem]:flex-1`} disabled={screen === "home"} onClick={requestHome}>Home</Button>
-            <Button id="save-draft" type="button" variant="secondary" className={`${touchTarget} max-[42rem]:flex-1`} disabled={noAnswers} onClick={saveDraft}>Save draft</Button>
+            <Button id="go-home" type="button" variant="secondary" className={`${touchTarget} max-[42rem]:w-full`} disabled={screen === "home"} onClick={requestHome}>Home</Button>
             <p id="header-save-status" className="sr-only" aria-live="polite">{headerNote}</p>
           </div>
         </div>
-        <div id="header-progress" className="border-b border-border bg-card text-foreground" hidden={screen === "home"}>
-          {screen === "home" ? null : (
-            <div className="mx-auto flex max-w-[52rem] flex-col gap-2 px-4 py-2">
-              <Progress value={shown} max={SECTIONS.length} aria-valuetext={progressText} aria-label={progressText}>
-                <ProgressLabel className="sr-only">{progressText}</ProgressLabel>
-              </Progress>
-              <ol ref={navRef} className="flex gap-1 overflow-x-auto" aria-label="Sections">
-                {SECTIONS.map((item, index) => {
-                  const current = screen === "form" && index === sectionIndex;
-                  return (
-                    <li key={item.id} className="shrink-0">
-                      <Button
-                        type="button"
-                        variant={current ? "default" : "outline"}
-                        className="min-h-11 px-2 text-sm whitespace-nowrap"
-                        aria-current={current ? "step" : undefined}
-                        onClick={() => openSection(index)}
-                      >
-                        {sectionStepLabel(index, item.title)}
-                      </Button>
-                    </li>
-                  );
-                })}
-                {screen === "report" ? (
-                  <li className="shrink-0">
-                    <Button type="button" className="min-h-11 px-2 text-sm whitespace-nowrap" aria-current="step">Report</Button>
-                  </li>
-                ) : null}
-              </ol>
-            </div>
-          )}
-        </div>
+        <div className="banner border-t border-primary-foreground/20 bg-banner px-4 py-2 text-sm text-banner-foreground lg:px-6">Draft for DoIT AI Governance review. This tool does not approve an AI system.</div>
       </header>
-      <div className="banner border-b border-banner-border bg-banner text-banner-foreground">
-        <div className="mx-auto max-w-[52rem] px-4 py-2.5">Draft for DoIT AI Governance review. This tool does not approve an AI system.</div>
+      <div id="app-shell" className="grid items-start lg:grid-cols-[18.5rem_minmax(0,1fr)]">
+        <ProgressRail
+          screen={screen}
+          sectionIndex={sectionIndex}
+          answers={file.answers}
+          maxReached={maxReached}
+          reportUnlocked={reportUnlocked}
+          actionsDisabled={noAnswers}
+          exportNote={exportNote}
+          onOpenSection={openSection}
+          onOpenReport={showReport}
+          onSave={saveDraft}
+          onZip={() => void downloadPackage()}
+        />
+        <main id="main" className="min-w-0 px-4 py-5 pb-14 lg:px-8">
+          <div id="assessment-column" className="mx-auto flex w-full max-w-[76rem] flex-col gap-4">
+            {screen === "home" ? (
+              <HomeScreen
+                saved={saved}
+                onStart={startNew}
+                onContinue={continueDraft}
+                onLoadExample={loadExample}
+                onLoadFile={readFile}
+                loadMessage={loadMessage}
+              />
+            ) : null}
+            {screen === "form" ? (
+              <>
+                <FormScreen
+                  file={file}
+                  sectionIndex={sectionIndex}
+                  formError={formError}
+                  saveNote={saveNote}
+                  onAnswer={setAnswer}
+                  onBack={() => openSection(sectionIndex - 1)}
+                  onNext={goNext}
+                />
+                <LoadFileCard onLoadFile={readFile} message={loadMessage} />
+              </>
+            ) : null}
+            {screen === "report" ? (
+              <ReportScreen file={file} exportNote={exportNote} onBack={() => openSection(sectionIndex)} onEdit={editSignoff} />
+            ) : null}
+          </div>
+        </main>
       </div>
-      <main id="main" className="mx-auto max-w-[52rem] px-4 pt-4 pb-12">
-        {screen === "home" ? (
-          <HomeScreen
-            saved={saved}
-            onStart={startNew}
-            onContinue={continueDraft}
-            onLoadExample={loadExample}
-            onLoadFile={readFile}
-            loadMessage={loadMessage}
-          />
-        ) : null}
-        {screen === "form" ? (
-          <>
-            <FormScreen
-              file={file}
-              sectionIndex={sectionIndex}
-              formError={formError}
-              saveNote={saveNote}
-              onAnswer={setAnswer}
-              onBack={() => openSection(sectionIndex - 1)}
-              onNext={goNext}
-            />
-            <div className="mt-4">
-              <LoadFileCard onLoadFile={readFile} message={loadMessage} />
-            </div>
-          </>
-        ) : null}
-        {screen === "report" ? (
-          <ReportScreen file={file} onBack={() => openSection(sectionIndex)} onEdit={editSignoff} />
-        ) : null}
-      </main>
       <Dialog open={leaveOpen} onOpenChange={(open) => { if (!open) setLeaveOpen(false); }}>
         <DialogContent id="leave-dialog" className="sm:max-w-lg">
           <DialogHeader>
