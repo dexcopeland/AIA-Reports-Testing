@@ -113,6 +113,39 @@ describe("fact-derived path", () => {
     }).path).toBe("prohibited");
   });
 
+  it("names the Q8, Q10, or Q6 check that makes the path High", () => {
+    const safety = deriveAssessmentPath({ ...gate, q8_areas: ["safety"], q10_role: "info_only" });
+    expect(safety.reasons.join(" ")).toContain("Q8");
+    expect(safety.reasons.join(" ")).toContain("People's physical safety");
+    expect(safety.reasons.join(" ")).toContain("safety impact");
+
+    const rights = deriveAssessmentPath({ ...gate, q8_areas: ["benefits_services"], q10_role: "recommends" });
+    expect(rights.reasons.join(" ")).toContain("Q8");
+    expect(rights.reasons.join(" ")).toContain("Q10");
+    expect(rights.reasons.join(" ")).toContain("rights impact");
+    expect(rights.reasons.join(" ")).toContain("Benefits or public services");
+
+    const both = deriveAssessmentPath({ ...gate, q8_areas: ["safety", "jobs"], q10_role: "decides" });
+    expect(both.reasons.some((reason) => reason.includes("safety impact"))).toBe(true);
+    expect(both.reasons.some((reason) => reason.includes("rights impact"))).toBe(true);
+
+    const ranking = deriveAssessmentPath({
+      ...gate,
+      q6_capabilities: ["ranks"],
+      q8_target: "individuals",
+      q10_role: "decides",
+    });
+    expect(ranking.reasons.join(" ")).toContain("Q6");
+    expect(ranking.reasons.join(" ")).toContain("Q10");
+    expect(ranking.reasons.join(" ")).toContain("individual ranking is a basis for a decision or action");
+
+    const unknown = deriveAssessmentPath({ ...gate, q10_role: "unknown" });
+    expect(unknown.path).toBe("high");
+    expect(unknown.reasons.every((reason) => reason.endsWith("Unknown."))).toBe(true);
+    expect(unknown.reasons.join(" ")).toContain("Q10");
+    expect(unknown.reasons.join(" ")).not.toMatch(/intake|\bQ1\b/);
+  });
+
   it("keeps a High path when in-scope certificates are selected", () => {
     const high = {
       ...gate,

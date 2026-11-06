@@ -113,8 +113,8 @@
   },
   "assessment_path": "high",
   "assessment_path_reasons": [
-    "Prohibited use is Unknown.",
-    "A rights area applies and the output is a basis for a decision or action."
+    "Q7 does not say whether a prohibited use applies, so prohibited use is Unknown.",
+    "Q8 names Money or legal rights and Jobs or employment, and Q10 says the output decides or acts without a person approving each one, so this is a rights impact and the output is a basis for a decision or action."
   ],
   "cert_credits": {
     "active": false,

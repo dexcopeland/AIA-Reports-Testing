@@ -44,8 +44,11 @@ if (!zipInRail) failures.push("Save and zip are not together at the bottom of th
 
 await page.click("#example-select");
 await page.waitForSelector("[data-slot='select-item']");
-const exampleCount = await page.$$eval("[data-slot='select-item']", (nodes) => nodes.length);
-if (exampleCount !== 14) failures.push(`Expected 14 examples, found ${exampleCount}.`);
+const exampleLabels = await page.$$eval("[data-slot='select-item']", (nodes) => nodes.map((node) => node.textContent ?? ""));
+if (exampleLabels.length !== 14) failures.push(`Expected 14 examples, found ${exampleLabels.length}.`);
+if (!exampleLabels.some((label) => label.includes("High-risk:"))) failures.push("Example menu does not label a High-risk example.");
+if (!exampleLabels.some((label) => label.includes("General Impact Assessment:"))) failures.push("Example menu does not label a General Impact Assessment example.");
+if (!exampleLabels.some((label) => label.includes("Prohibited:"))) failures.push("Example menu does not label a Prohibited example.");
 await page.click("[data-slot='select-item']::-p-text(Benefits eligibility triage)");
 await page.waitForFunction(() => {
   const button = document.querySelector("#load-example");
@@ -113,6 +116,8 @@ if (!reportText.includes(banner)) failures.push("Draft banner missing.");
 if (reportText.includes("Draft for DoIT AI Governance review.")) failures.push("Old DoIT-review banner is still in the report.");
 if (reportText.includes("The risk level is High-risk.")) failures.push("BLUF still says every draft is High-risk.");
 if (!reportText.includes("The path is High.")) failures.push("High BLUF path line missing.");
+if (!reportText.includes("High-risk because it impacts rights")) failures.push("High BLUF does not say the use impacts rights.");
+if (!reportText.includes("Q8 names Benefits or public services")) failures.push("High BLUF does not name the Q8 rights check.");
 if (!reportText.includes("Capabilities:")) failures.push("High executive summary is missing capabilities.");
 if (!reportText.includes("Inventory under SF&P § 3.5-803(b)")) failures.push("High inventory table heading missing.");
 if (!reportText.includes("Keep the full report package in the agency's records.")) failures.push("Executive purpose paragraph missing.");
@@ -136,7 +141,7 @@ await page.click("#go-home");
 await page.waitForSelector("#example-select");
 await page.click("#example-select");
 await page.waitForSelector("[data-slot='select-item']");
-await page.click("[data-slot='select-item']::-p-text(Path example: grounds forecast)");
+await page.click("[data-slot='select-item']::-p-text(General Impact Assessment: Grounds forecast)");
 await page.waitForFunction(() => {
   const button = document.querySelector("#load-example");
   return button instanceof HTMLButtonElement && !button.disabled;
@@ -164,6 +169,7 @@ await page.waitForSelector("#report");
 const generalReport = await page.$eval("#report", (node) => node.innerText);
 if (!generalReport.includes(banner)) failures.push("General report banner missing.");
 if (!generalReport.includes("The path is General.")) failures.push("General BLUF path line missing.");
+if (!generalReport.includes("no High or Prohibited fact applies")) failures.push("General BLUF reason missing.");
 if (!generalReport.includes("Capabilities:")) failures.push("General executive summary is missing capabilities.");
 if (generalReport.includes("Inventory under SF&P § 3.5-803(b)")) failures.push("General report includes the High inventory table.");
 if (generalReport.includes("The risk level is High-risk.")) failures.push("General BLUF still says High-risk.");

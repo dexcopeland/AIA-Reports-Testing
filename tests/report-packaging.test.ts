@@ -102,6 +102,18 @@ describe("report packaging", () => {
       expect(bluf.sentences[1], item.outcome).toBe(pathSentence(result.path));
       expect(bluf.sentences[2], item.outcome).toContain("The single most important reason is");
       expect(bluf.sentences.join(" "), item.outcome).not.toContain("The risk level is High-risk.");
+      expect(bluf.sentences.join(" "), item.outcome).not.toMatch(/intake|\bQ1\b/i);
+      if (item.path === "The path is High.") {
+        expect(bluf.sentences[2], item.outcome).toContain("High-risk because");
+        expect(bluf.sentences[2], item.outcome).not.toMatch(/not in place|partly in place/);
+        if (item.outcome === BLUF_OUTCOME.highUnknowns) {
+          expect(bluf.sentences[2], item.outcome).toMatch(/Unknown/);
+          expect(bluf.sentences[2], item.outcome).toMatch(/Q8|Q10|Q7/);
+        } else {
+          expect(bluf.sentences[2], item.outcome).toMatch(/impacts rights|impacts safety/);
+          expect(bluf.sentences[2], item.outcome).toContain("Q8");
+        }
+      }
       const report = buildReport(item.file);
       expect(report.checks.find((check) => check.id === "bluf")?.ok, item.outcome).toBe(true);
     }
