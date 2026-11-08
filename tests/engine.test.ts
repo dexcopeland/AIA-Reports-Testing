@@ -7,7 +7,14 @@ import { findingTemplates } from "../src/engine/findings";
 import { STATEMENTS } from "../src/content/statements";
 import { BLUF_OUTCOME, buildBluf } from "../src/engine/bluf";
 import { evaluate } from "../src/engine/evaluate";
-import { displayedSamePlace, priorAssessment, processingPlace, showProcessingPlace, statusConflict, threatApplies } from "../src/engine/visibility";
+import {
+  displayedSamePlace,
+  priorAssessment,
+  processingPlace,
+  showProcessingPlace,
+  statusConflict,
+  threatApplies,
+} from "../src/engine/visibility";
 import { buildReport } from "../src/engine/report";
 import { buildScenario } from "../src/scenarios/build";
 import { SCENARIOS } from "../src/scenarios/catalog";
@@ -68,7 +75,8 @@ describe("evaluation engine", () => {
       expect(templates.criteria[id]["Impact: No"]).toEqual(expect.any(String));
     }
     for (const id of ["C4", "C5", "C6", "C7", "C8", "C9", "C10", "C11", "C12"]) {
-      for (const status of ["Met", "Partial", "Gap"]) expect(templates.criteria[id][status]).toEqual(expect.any(String));
+      for (const status of ["Met", "Partial", "Gap"])
+        expect(templates.criteria[id][status]).toEqual(expect.any(String));
     }
     for (const id of ["RP1", "RP2", "RP3", "RP4", "RP5", "RP6", "RP7", "RP8"]) {
       for (const status of ["In place", "Partly in place", "Not yet", "Not applicable"]) {
@@ -78,14 +86,18 @@ describe("evaluation engine", () => {
   });
 
   it("publishes a rules index that matches the modules", () => {
-    const index = JSON.parse(readFileSync(new URL("../content/rules-index.json", import.meta.url), "utf8")) as {
+    const index = JSON.parse(
+      readFileSync(new URL("../content/rules-index.json", import.meta.url), "utf8"),
+    ) as {
       rules_version: string;
       statement_count: number;
       proposed_rules: { id: string }[];
     };
     expect(index.rules_version).toBe(RULES_VERSION);
     expect(index.statement_count).toBe(STATEMENTS.length);
-    expect(index.proposed_rules.map((item) => item.id)).toEqual(PROPOSED_RULES.map((item) => item.id));
+    expect(index.proposed_rules.map((item) => item.id)).toEqual(
+      PROPOSED_RULES.map((item) => item.id),
+    );
     expect(index.proposed_rules.map((item) => item.id)).not.toContain("biometric-combo");
   });
 
@@ -142,14 +154,32 @@ describe("evaluation engine", () => {
     const body = report.blocks.map((block) => block.text).join("\n");
     expect(body).not.toContain(".;");
     expect(body).not.toContain("..");
-    expect(body).not.toContain(".\".\n");
+    expect(body).not.toContain('.".\n');
     expect(body).toContain("Answer relied on (Q11):");
-    expect(report.blocks.some((block) => block.type === "bullet" && block.text.startsWith("Human review before an output takes effect: A named role reviews every output before it takes effect, following a written procedure."))).toBe(true);
-    expect(report.blocks.filter((block) => block.type === "bullet").every((block) => !block.text.startsWith("- "))).toBe(true);
-    expect(body).toContain("Evidence: Example agency file shows the control for this fictional assessment.");
+    expect(
+      report.blocks.some(
+        (block) =>
+          block.type === "bullet" &&
+          block.text.startsWith(
+            "Human review before an output takes effect: A named role reviews every output before it takes effect, following a written procedure.",
+          ),
+      ),
+    ).toBe(true);
+    expect(
+      report.blocks
+        .filter((block) => block.type === "bullet")
+        .every((block) => !block.text.startsWith("- ")),
+    ).toBe(true);
+    expect(body).toContain(
+      "Evidence: Example agency file shows the control for this fictional assessment.",
+    );
     const answerLeads = report.blocks.filter((block) => block.text.startsWith("Answer relied on"));
     expect(answerLeads.every((block) => block.text.endsWith("):"))).toBe(true);
-    expect(report.blocks.filter((block) => block.type === "bullet" || block.type === "sub").some((block) => /\(Q\d/.test(block.text))).toBe(false);
+    expect(
+      report.blocks
+        .filter((block) => block.type === "bullet" || block.type === "sub")
+        .some((block) => /\(Q\d/.test(block.text)),
+    ).toBe(false);
     const rp2 = result.rp.find((item) => item.id === "RP2");
     expect(rp2?.answerLines.map((line) => line.label)).toEqual([
       "Split of responsibilities",
@@ -157,43 +187,55 @@ describe("evaluation engine", () => {
       "Notice of AI security incidents",
     ]);
     expect(body).toContain("Answer relied on (Q16):");
-    expect(report.blocks.some((block) => block.type === "bullet" && block.text.startsWith("Split of responsibilities: It is in the signed contract."))).toBe(true);
+    expect(
+      report.blocks.some(
+        (block) =>
+          block.type === "bullet" &&
+          block.text.startsWith("Split of responsibilities: It is in the signed contract."),
+      ),
+    ).toBe(true);
   });
 
   it("treats an unknown review as a Gap and keeps the S04-like gates and deadline", () => {
-    const result = evaluate(file({
-      ...base,
-      q6_capabilities: ["predicts", "acts_in_other_systems"],
-      q10_role: "decides",
-      q17_status: "procuring",
-      st16b__model_change_notice: "requested",
-    }));
+    const result = evaluate(
+      file({
+        ...base,
+        q6_capabilities: ["predicts", "acts_in_other_systems"],
+        q10_role: "decides",
+        q17_status: "procuring",
+        st16b__model_change_notice: "requested",
+      }),
+    );
     expect(result.gates.map((gate) => gate.id)).toEqual(expect.arrayContaining(["G2", "G4"]));
     expect(result.criteria.find((item) => item.id === "C9")?.status).toBe("Gap");
     expect(result.criteria.find((item) => item.id === "C4")?.status).toBe("Gap");
     expect(result.deadlineDate).toBe("31 December 2026");
     expect(result.items.find((item) => item.instanceId === "21b")?.status).toBe("Gap");
-    expect(result.items.find((item) => item.instanceId === "16b__model_change_notice")?.status).toBe("Partly in place");
+    expect(
+      result.items.find((item) => item.instanceId === "16b__model_change_notice")?.status,
+    ).toBe("Partly in place");
     expect(result.followups.some((item) => item.q === 11)).toBe(true);
     expect(result.prohibited).toBe(false);
   });
 
   it("drops thin evidence to Partial and does not set G4 when every output is reviewed", () => {
-    const result = evaluate(file({
-      ...base,
-      q8_areas: ["benefits_services"],
-      q8_target: "places_or_groups",
-      q10_role: "recommends",
-      q12_outside: "yes",
-      q17_status: "live",
-      q18_procured: "before_2026_02_01",
-      q19_start: "2025-09-01",
-      q19_prior: "yes",
-      st11a: "every_written",
-      st11a__evidence: "Example agency file shows the written review procedure.",
-      st21b: "audited",
-      st21b__evidence: "yes",
-    }));
+    const result = evaluate(
+      file({
+        ...base,
+        q8_areas: ["benefits_services"],
+        q8_target: "places_or_groups",
+        q10_role: "recommends",
+        q12_outside: "yes",
+        q17_status: "live",
+        q18_procured: "before_2026_02_01",
+        q19_start: "2025-09-01",
+        q19_prior: "yes",
+        st11a: "every_written",
+        st11a__evidence: "Example agency file shows the written review procedure.",
+        st21b: "audited",
+        st21b__evidence: "yes",
+      }),
+    );
     expect(result.gates.map((gate) => gate.id)).toEqual(expect.arrayContaining(["G1", "G5"]));
     expect(result.gates.map((gate) => gate.id)).not.toContain("G4");
     expect(result.deadlineDate).toBe("1 July 2027");
@@ -203,24 +245,32 @@ describe("evaluation engine", () => {
   });
 
   it("does not ask a follow-up when a planned item has a date", () => {
-    const dated = evaluate(file({ ...base, st11a: "planned", st11a__date: "2026-12-01", q10_role: "recommends" }));
+    const dated = evaluate(
+      file({ ...base, st11a: "planned", st11a__date: "2026-12-01", q10_role: "recommends" }),
+    );
     const open = evaluate(file({ ...base, st11a: "planned", q10_role: "recommends" }));
     expect(dated.items.find((item) => item.instanceId === "11a")?.needsFollowup).toBe(false);
     expect(open.items.find((item) => item.instanceId === "11a")?.needsFollowup).toBe(true);
   });
 
   it("keeps G5 off for individuals and G3 off for regulatory inspection alone", () => {
-    const places = evaluate(file({ ...base, q8_target: "individuals", q8_areas: ["regulatory_inspection", "safety"] }));
+    const places = evaluate(
+      file({ ...base, q8_target: "individuals", q8_areas: ["regulatory_inspection", "safety"] }),
+    );
     expect(places.gates.map((gate) => gate.id)).not.toContain("G5");
     expect(places.gates.map((gate) => gate.id)).not.toContain("G3");
     expect(places.gates.map((gate) => gate.id)).toContain("G2");
   });
 
   it("opens the privacy track for an unknown level and does not invent one", () => {
-    const result = evaluate(file({ ...base, q13_level: "unknown", q14_data_types: ["personal_info"] }));
+    const result = evaluate(
+      file({ ...base, q13_level: "unknown", q14_data_types: ["personal_info"] }),
+    );
     expect(result.privacyTrack).toBe(true);
     expect(result.criteria.find((item) => item.id === "C10")?.status).toBe("Gap");
-    expect(result.criteria.find((item) => item.id === "C10")?.found).toContain("Unknown (not assigned)");
+    expect(result.criteria.find((item) => item.id === "C10")?.found).toContain(
+      "Unknown (not assigned)",
+    );
     expect(result.suggestedLevel).toBe("L3");
   });
 
@@ -247,21 +297,33 @@ describe("evaluation engine", () => {
     expect(body).not.toContain("depends on the procurement date");
     expect(body).not.toContain("was procured");
     expect(body).not.toContain("not yet procured");
-    expect(body).toContain("Not applicable. Built by the State with no vendor and no outside model.");
+    expect(body).toContain(
+      "Not applicable. Built by the State with no vendor and no outside model.",
+    );
     const status = SECTIONS.find((section) => section.id === "status");
-    expect(visibleFields(status!, answers.answers).some((field) => field.id === "q18_procured")).toBe(false);
-    expect(result.mitigations.every((item) => item.timing === "Before use" || item.timing === "Ongoing")).toBe(true);
+    expect(
+      visibleFields(status!, answers.answers).some((field) => field.id === "q18_procured"),
+    ).toBe(false);
+    expect(
+      result.mitigations.every((item) => item.timing === "Before use" || item.timing === "Ongoing"),
+    ).toBe(true);
     expect(result.rp.find((item) => item.id === "RP2")?.status).toBe("Not applicable");
   });
 
   it("does not treat an outside model as State-built for RP2", () => {
-    const answers = file({ ...base, q5_builder: "state_built_outside_model", q18_procured: "state_built" });
+    const answers = file({
+      ...base,
+      q5_builder: "state_built_outside_model",
+      q18_procured: "state_built",
+    });
     const result = evaluate(answers);
     expect(result.rp.find((item) => item.id === "RP2")?.status).not.toBe("Not applicable");
     expect(result.deadlineDate).toBeNull();
     expect(result.deadlineLine).toContain("DoIT AI Governance will confirm it");
     const status = SECTIONS.find((section) => section.id === "status");
-    expect(visibleFields(status!, answers.answers).some((field) => field.id === "q18_procured")).toBe(true);
+    expect(
+      visibleFields(status!, answers.answers).some((field) => field.id === "q18_procured"),
+    ).toBe(true);
   });
 
   it("treats planning and procuring as not applicable for Q19 and still flags a saved start date", () => {
@@ -277,36 +339,69 @@ describe("evaluation engine", () => {
     expect(shown).not.toContain("q19_prior");
     const report = buildReport(saved);
     const body = report.blocks.map((block) => block.text).join("\n");
-    expect(body).toContain("Impact assessment before deployment: Not applicable. Use has not started.");
+    expect(body).toContain(
+      "Impact assessment before deployment: Not applicable. Use has not started.",
+    );
     expect(body).toContain("Not yet deployed");
 
-    const conflicted = file({ ...base, q17_status: "procuring", q19_start: "2025-01-15", q19_prior: "unknown" });
+    const conflicted = file({
+      ...base,
+      q17_status: "procuring",
+      q19_start: "2025-01-15",
+      q19_prior: "unknown",
+    });
     const conflict = evaluate(conflicted);
     expect(statusConflict(conflicted.answers)).toBe(true);
     expect(conflict.statusConflict).toBe(true);
     expect(conflict.priorDeployment).toContain("before the stated start date");
-    expect(visibleFields(status!, conflicted.answers).some((field) => field.id === "q19_start")).toBe(false);
+    expect(
+      visibleFields(status!, conflicted.answers).some((field) => field.id === "q19_start"),
+    ).toBe(false);
     expect(conflicted.answers.q19_start).toBe("2025-01-15");
   });
 
   it("uses Q6 for the processing place unless the agency says no, and keeps an older q15_where", () => {
-    const same = file({ ...base, q6_hosting: "agency_network", q15_same_place: "yes", q15_where: "vendor_cloud" });
+    const same = file({
+      ...base,
+      q6_hosting: "agency_network",
+      q15_same_place: "yes",
+      q15_where: "vendor_cloud",
+    });
     expect(processingPlace(same.answers)).toEqual({ id: "agency_network", sameAsRun: true });
-    expect(buildReport(same).blocks.map((block) => block.text).join("\n")).toContain("Where processed: Agency network (same place it runs)");
+    expect(
+      buildReport(same)
+        .blocks.map((block) => block.text)
+        .join("\n"),
+    ).toContain("Where processed: Agency network (same place it runs)");
 
-    const different = file({ ...base, q6_hosting: "state_data_center", q15_same_place: "no", q15_where: "vendor_cloud" });
+    const different = file({
+      ...base,
+      q6_hosting: "state_data_center",
+      q15_same_place: "no",
+      q15_where: "vendor_cloud",
+    });
     expect(processingPlace(different.answers).id).toBe("vendor_cloud");
     const data = SECTIONS.find((section) => section.id === "data");
-    expect(visibleFields(data!, different.answers).some((field) => field.id === "q15_where")).toBe(true);
-    expect(visibleFields(data!, same.answers).some((field) => field.id === "q15_where")).toBe(false);
+    expect(visibleFields(data!, different.answers).some((field) => field.id === "q15_where")).toBe(
+      true,
+    );
+    expect(visibleFields(data!, same.answers).some((field) => field.id === "q15_where")).toBe(
+      false,
+    );
 
     const older = file({ ...base, q6_hosting: "state_data_center", q15_where: "staff_devices" });
     expect(processingPlace(older.answers)).toEqual({ id: "staff_devices", sameAsRun: false });
     expect(displayedSamePlace(older.answers)).toBe("");
     expect(showProcessingPlace(older.answers)).toBe(true);
-    expect(visibleFields(data!, older.answers).some((field) => field.id === "q15_where")).toBe(true);
+    expect(visibleFields(data!, older.answers).some((field) => field.id === "q15_where")).toBe(
+      true,
+    );
     expect(older.answers.q15_where).toBe("staff_devices");
-    const matched = file({ ...base, q6_hosting: "state_data_center", q15_where: "state_data_center" });
+    const matched = file({
+      ...base,
+      q6_hosting: "state_data_center",
+      q15_where: "state_data_center",
+    });
     expect(displayedSamePlace(matched.answers)).toBe("yes");
     expect(showProcessingPlace(matched.answers)).toBe(false);
     const fresh = file({ ...base, q6_hosting: "state_data_center" });
@@ -326,23 +421,40 @@ describe("evaluation engine", () => {
     expect(threatApplies("model_theft", answers.answers)).toBe(true);
     expect(threatApplies("output_leakage", answers.answers)).toBe(true);
     expect(threatApplies("unsafe_output_handling", answers.answers)).toBe(true);
-    expect(result.items.find((item) => item.instanceId === "22__prompt_injection")?.q6Excluded).toBe(true);
-    expect(result.items.find((item) => item.instanceId === "22__prompt_injection")?.status).toBe("Not applicable");
+    expect(
+      result.items.find((item) => item.instanceId === "22__prompt_injection")?.q6Excluded,
+    ).toBe(true);
+    expect(result.items.find((item) => item.instanceId === "22__prompt_injection")?.status).toBe(
+      "Not applicable",
+    );
     expect(result.rp.find((item) => item.id === "RP5")?.status).toBe("In place");
     const found = result.rp.find((item) => item.id === "RP5")?.found ?? "";
-    expect(found).toContain("excluded because of the Q6 answers, not because the agency selected Does not apply");
+    expect(found).toContain(
+      "excluded because of the Q6 answers, not because the agency selected Does not apply",
+    );
     expect(found).not.toContain("There is no protection");
     const risks = SECTIONS.find((section) => section.id === "risks");
     expect(visibleFields(risks!, answers.answers).some((field) => field.id === "st22")).toBe(true);
 
     const unclear = file({ ...base, q6_capabilities: ["unknown"], q6_method: "unknown" });
-    for (const id of ["prompt_injection", "poisoned_data", "model_theft", "output_leakage", "unsafe_output_handling"]) {
+    for (const id of [
+      "prompt_injection",
+      "poisoned_data",
+      "model_theft",
+      "output_leakage",
+      "unsafe_output_handling",
+    ]) {
       expect(threatApplies(id, unclear.answers)).toBe(true);
     }
     const empty = file({ ...base, q6_capabilities: [] });
     expect(threatApplies("prompt_injection", empty.answers)).toBe(true);
 
-    const passed = file({ ...base, q6_capabilities: ["ranks"], q6_method: "statistical", q6_design_facts: ["outputs_not_passed"] });
+    const passed = file({
+      ...base,
+      q6_capabilities: ["ranks"],
+      q6_method: "statistical",
+      q6_design_facts: ["outputs_not_passed"],
+    });
     expect(threatApplies("unsafe_output_handling", passed.answers)).toBe(false);
     const acting = file({
       ...base,
@@ -352,7 +464,11 @@ describe("evaluation engine", () => {
     });
     expect(threatApplies("unsafe_output_handling", acting.answers)).toBe(true);
 
-    const generative = file({ ...base, q6_capabilities: ["generates_text", "public_chat", "retrieves_documents"], q6_method: "llm" });
+    const generative = file({
+      ...base,
+      q6_capabilities: ["generates_text", "public_chat", "retrieves_documents"],
+      q6_method: "llm",
+    });
     expect(threatApplies("prompt_injection", generative.answers)).toBe(true);
     expect(threatApplies("poisoned_data", generative.answers)).toBe(true);
 
@@ -362,11 +478,19 @@ describe("evaluation engine", () => {
       q6_design_facts: ["public_inputs_only"],
       st16a: "allowed",
     };
-    expect(threatApplies("poisoned_data", file({ ...base, ...publicRank, q5_builder: "vendor_product" }).answers)).toBe(true);
+    expect(
+      threatApplies(
+        "poisoned_data",
+        file({ ...base, ...publicRank, q5_builder: "vendor_product" }).answers,
+      ),
+    ).toBe(true);
     const stateBuilt = file({ ...base, ...publicRank, q5_builder: "state_built" });
     expect(threatApplies("poisoned_data", stateBuilt.answers)).toBe(false);
     expect(stateBuilt.answers.st16a).toBe("allowed");
-    expect(evaluate(stateBuilt).items.find((item) => item.instanceId === "22__poisoned_data")?.q6Excluded).toBe(true);
+    expect(
+      evaluate(stateBuilt).items.find((item) => item.instanceId === "22__poisoned_data")
+        ?.q6Excluded,
+    ).toBe(true);
   });
 
   it("counts fewer visible questions after the branching rules", () => {
@@ -378,11 +502,21 @@ describe("evaluation engine", () => {
 
   it("flags each published prohibited use without a go or no-go decision", () => {
     for (const item of PROHIBITED) {
-      const answers = { ...base, q7b_prohibited: [item.id], q17_status: "live", q4_name: "Example Scorer (fictional)" };
+      const answers = {
+        ...base,
+        q7b_prohibited: [item.id],
+        q17_status: "live",
+        q4_name: "Example Scorer (fictional)",
+      };
       const result = evaluate(file(answers));
       expect(result.prohibited, item.id).toBe(true);
       expect(result.prohibitedLabels, item.id).toEqual([item.label]);
-      expect(result.mitigations.some((mitigation) => mitigation.id === "M-PROHIBITED" && mitigation.timing === "Before use"), item.id).toBe(true);
+      expect(
+        result.mitigations.some(
+          (mitigation) => mitigation.id === "M-PROHIBITED" && mitigation.timing === "Before use",
+        ),
+        item.id,
+      ).toBe(true);
       const bluf = buildBluf(result);
       expect(bluf.sentences, item.id).toHaveLength(3);
       expect(bluf.sentences[0], item.id).toBe(BLUF_OUTCOME.prohibited);
@@ -429,45 +563,61 @@ describe("evaluation engine", () => {
     const findings = [...result.criteria, ...result.rp].map((item) => item.found);
     const joined = findings.join("\n");
     for (const mitigation of MITIGATIONS) {
-      const named = findings.some((found) => found.includes(`The mitigation ${mitigation.title}`) || found.includes(`${mitigation.title} applies`));
+      const named = findings.some(
+        (found) =>
+          found.includes(`The mitigation ${mitigation.title}`) ||
+          found.includes(`${mitigation.title} applies`),
+      );
       if (named) expect(keptIds).toContain(mitigation.id);
     }
-    expect(joined).toContain("The mitigation Human review of each output before it takes effect applies.");
+    expect(joined).toContain(
+      "The mitigation Human review of each output before it takes effect applies.",
+    );
     expect(joined).toContain("The mitigation Accuracy testing and drift monitoring applies.");
-    expect(joined).toContain("Testing whether results differ across groups remains open, and this report does not include a recommended mitigation for it.");
-    expect(joined).toContain("Incident and reassessment ownership remains open, and this report does not include a recommended mitigation for it.");
+    expect(joined).toContain(
+      "Testing whether results differ across groups remains open, and this report does not include a recommended mitigation for it.",
+    );
+    expect(joined).toContain(
+      "Incident and reassessment ownership remains open, and this report does not include a recommended mitigation for it.",
+    );
     expect(joined).not.toContain("Bias testing on a Maryland-like population");
     expect(joined).not.toContain("Named incident and reassessment owner");
   });
 
   it("uses Before use for a live system and Before deployment for planning", () => {
     const live = evaluate(buildScenario(SCENARIOS.find((item) => item.id === "S02")!));
-    expect(live.mitigations.every((item) => item.timing === "Before use" || item.timing === "Ongoing")).toBe(true);
+    expect(
+      live.mitigations.every((item) => item.timing === "Before use" || item.timing === "Ongoing"),
+    ).toBe(true);
     const planning = evaluate(buildScenario(SCENARIOS.find((item) => item.id === "S11")!));
     expect(planning.mitigations.some((item) => item.timing === "Before use")).toBe(false);
   });
 
   it("keeps a C5 unknown path at Partial and withholds access mitigation for a general effect", () => {
-    const result = evaluate(file({
-      ...base,
-      q9_groups: ["disabilities"],
-      q9_rel__disabilities: "affected_in_general",
-      q12_outside: "yes",
-      st12e__disabilities: "unknown",
-    }));
+    const result = evaluate(
+      file({
+        ...base,
+        q9_groups: ["disabilities"],
+        q9_rel__disabilities: "affected_in_general",
+        q12_outside: "yes",
+        st12e__disabilities: "unknown",
+      }),
+    );
     expect(result.criteria.find((item) => item.id === "C5")?.status).toBe("Partial");
     expect(result.mitigations.some((item) => item.id === "M-ACCESS")).toBe(false);
     expect(result.followups.some((item) => item.q === 12)).toBe(true);
   });
 
   it("omits the Agency Lead email and blocks nothing in the draft text", () => {
-    const report = buildReport(file({
-      ...base,
-      q3_is_lead: "no",
-      q3_lead_role: "Deputy director",
-      q3_email: "agency.lead@example.md.gov",
-      q2_agency: "Example Agency (fictional)",
-    }));
+    const report = buildReport(
+      file({
+        ...base,
+        q3_is_lead: "no",
+        q3_lead_role: "Deputy director",
+        q3_email: "agency.lead@example.md.gov",
+        q2_agency: "Example Agency (fictional)",
+      }),
+    );
     const text = report.blocks.map((block) => block.text).join("\n");
     expect(text).not.toContain("agency.lead@example.md.gov");
     expect(text).toContain("Agency draft — not approval. Send DoIT the signed Executive Summary.");
@@ -482,6 +632,8 @@ describe("scenario validation", () => {
     expect(rows).toHaveLength(24);
     expect(rows.map((row) => row.id)).toEqual(SCENARIOS.map((scenario) => scenario.id));
     const failed = rows.filter((row) => !row.match);
-    expect(failed, failed.map((row) => `${row.id}: ${row.lines.join(" | ")}`).join("\n")).toEqual([]);
+    expect(failed, failed.map((row) => `${row.id}: ${row.lines.join(" | ")}`).join("\n")).toEqual(
+      [],
+    );
   });
 });

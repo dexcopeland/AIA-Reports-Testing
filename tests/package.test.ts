@@ -29,11 +29,17 @@ describe("report package", () => {
     const report = buildReport(saved);
     const executive = report.documents.find((item) => item.key === "executive");
     expect(executive).toBeTruthy();
-    const commentField = executive!.blocks.flatMap((block) => block.fields ?? []).find((field) => field.kind === "multiline" && field.value === comment);
+    const commentField = executive!.blocks
+      .flatMap((block) => block.fields ?? [])
+      .find((field) => field.kind === "multiline" && field.value === comment);
     expect(commentField).toBeTruthy();
-    const name = executive!.blocks.flatMap((block) => block.fields ?? []).find((field) => field.name === "lead_name");
+    const name = executive!.blocks
+      .flatMap((block) => block.fields ?? [])
+      .find((field) => field.name === "lead_name");
     expect(name?.value).toBe("Alex Example");
-    const signature = executive!.blocks.flatMap((block) => block.fields ?? []).find((field) => field.kind === "signature");
+    const signature = executive!.blocks
+      .flatMap((block) => block.fields ?? [])
+      .find((field) => field.kind === "signature");
     expect(signature?.value ?? "").toBe("");
 
     const { bytes } = await reportToPdfBytes(documentView(report, executive!));

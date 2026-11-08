@@ -18,17 +18,27 @@ describe("bottom line up front", () => {
     const report = buildReport(buildScenario(scenario!));
     const executive = report.documents.find((item) => item.key === "executive");
     expect(executive).toBeTruthy();
-    const headings = executive!.blocks.filter((block) => block.type === "h2").map((block) => block.text);
+    const headings = executive!.blocks
+      .filter((block) => block.type === "h2")
+      .map((block) => block.text);
     expect(headings[0]).toBe("About this summary");
     expect(headings[1]).toBe("The AI system");
     expect(headings[2]).toBe("Bottom line up front");
 
     const start = executive!.blocks.findIndex((block) => block.text === "Bottom line up front");
-    const summary = executive!.blocks.findIndex((block) => block.text === "What the agency is doing well");
+    const summary = executive!.blocks.findIndex(
+      (block) => block.text === "What the agency is doing well",
+    );
     const bluf = executive!.blocks.slice(start, summary);
     const follow = bluf.findIndex((block) => block.text === "Follow-up steps for the agency");
     expect(follow).toBeGreaterThan(0);
-    const takeaway = sentences(bluf.slice(0, follow).filter((block) => block.type === "p").map((block) => block.text).join(" "));
+    const takeaway = sentences(
+      bluf
+        .slice(0, follow)
+        .filter((block) => block.type === "p")
+        .map((block) => block.text)
+        .join(" "),
+    );
     expect(takeaway).toHaveLength(3);
     expect(takeaway[0]).toBe(BLUF_OUTCOME.highClean);
     expect(takeaway[1]).toBe("The path is High.");
@@ -53,9 +63,14 @@ describe("bottom line up front", () => {
     const executive = report.documents.find((item) => item.key === "executive");
     expect(executive).toBeTruthy();
     const start = executive!.blocks.findIndex((block) => block.text === "Bottom line up front");
-    const summary = executive!.blocks.findIndex((block) => block.text === "What the agency is doing well");
+    const summary = executive!.blocks.findIndex(
+      (block) => block.text === "What the agency is doing well",
+    );
     const bluf = executive!.blocks.slice(start, summary);
-    const takeaway = bluf.filter((block) => block.type === "p").map((block) => block.text).join(" ");
+    const takeaway = bluf
+      .filter((block) => block.type === "p")
+      .map((block) => block.text)
+      .join(" ");
     expect(takeaway).toContain(BLUF_OUTCOME.highConditions);
     expect(takeaway).toContain("The path is High.");
     expect(takeaway).toMatch(/High-risk because it impacts/);
@@ -80,7 +95,10 @@ describe("bottom line up front", () => {
       expect(result.area.rights).toBe(false);
       expect(result.area.safety).toBe(false);
       expect(result.prohibited).toBe(false);
-      expect(result.criteria.some((item) => item.status === "Gap") || result.rp.some((item) => item.status === "Not yet")).toBe(true);
+      expect(
+        result.criteria.some((item) => item.status === "Gap") ||
+          result.rp.some((item) => item.status === "Not yet"),
+      ).toBe(true);
       expect(result.path).toBe("general");
       expect(buildBluf(result).sentences[0]).toBe(BLUF_OUTCOME.generalConditions);
       expect(buildBluf(result).sentences[1]).toBe("The path is General.");
@@ -115,18 +133,30 @@ describe("bottom line up front", () => {
     const executive = report.documents.find((item) => item.key === "executive");
     expect(executive).toBeTruthy();
     const start = executive!.blocks.findIndex((block) => block.text === "Bottom line up front");
-    const summary = executive!.blocks.findIndex((block) => block.text === "What the agency is doing well");
-    const takeaway = executive!.blocks.slice(start, summary).filter((block) => block.type === "p").map((block) => block.text).join(" ");
+    const summary = executive!.blocks.findIndex(
+      (block) => block.text === "What the agency is doing well",
+    );
+    const takeaway = executive!.blocks
+      .slice(start, summary)
+      .filter((block) => block.type === "p")
+      .map((block) => block.text)
+      .join(" ");
     const result = evaluate(buildScenario(scenario!));
     expect(result.prohibited).toBe(true);
     expect(result.mitigations.some((item) => item.id === "M-PROHIBITED")).toBe(true);
-    const published = PROHIBITED.find((item) => item.id === "covert_or_realtime_biometric_id_no_consent");
+    const published = PROHIBITED.find(
+      (item) => item.id === "covert_or_realtime_biometric_id_no_consent",
+    );
     expect(published).toBeTruthy();
     expect(body).toContain(published!.label);
     expect(takeaway).toContain(BLUF_OUTCOME.prohibited);
     expect(takeaway).toContain("The path is Prohibited.");
     expect(takeaway).toContain("prohibited use");
-    const blufParagraphs = executive!.blocks.slice(start, summary).filter((block) => block.type === "p").slice(0, 3).map((block) => block.text);
+    const blufParagraphs = executive!.blocks
+      .slice(start, summary)
+      .filter((block) => block.type === "p")
+      .slice(0, 3)
+      .map((block) => block.text);
     expect(blufParagraphs).toHaveLength(3);
     expect(sentences(blufParagraphs.join(" "))).toHaveLength(3);
     expect(takeaway).not.toContain("The risk level is High-risk.");
@@ -139,8 +169,14 @@ describe("bottom line up front", () => {
     expect(stop?.text).toContain("(Evidence, Prohibited use).");
     expect(stop?.text).not.toContain("Evidence, M");
     const evidence = report.documents.find((item) => item.key === "evidence");
-    expect(evidence?.blocks.some((block) => block.text === "Prohibited use" && block.anchor === "prohibited")).toBe(true);
-    expect(steps.every((step) => step.link && report.blocks.some((block) => block.anchor === step.link))).toBe(true);
+    expect(
+      evidence?.blocks.some(
+        (block) => block.text === "Prohibited use" && block.anchor === "prohibited",
+      ),
+    ).toBe(true);
+    expect(
+      steps.every((step) => step.link && report.blocks.some((block) => block.anchor === step.link)),
+    ).toBe(true);
   });
 });
 
@@ -156,7 +192,9 @@ describe("high path reason", () => {
       expect(reason, id).toContain("Q8");
       expect(reason, id).toContain("Q10");
       expect(reason, id).not.toMatch(/intake|\bQ1\b/i);
-      expect(buildBluf(result).steps.some((step) => step.text.includes("intake reference"))).toBe(true);
+      expect(buildBluf(result).steps.some((step) => step.text.includes("intake reference"))).toBe(
+        true,
+      );
     }
   });
 
@@ -193,17 +231,35 @@ describe("sign-off boxes", () => {
       "Agency Lead signature",
     ]);
     expect(lead.fields?.every((field) => field.boxed)).toBe(true);
-    expect(lead.fields?.find((field) => field.label === "Agency Lead signature")?.kind).toBe("signature");
+    expect(lead.fields?.find((field) => field.label === "Agency Lead signature")?.kind).toBe(
+      "signature",
+    );
     const acknowledgments = signs.slice(0, -1);
     for (const row of acknowledgments) {
       const fields = row.fields ?? [];
-      expect(fields.filter((field) => field.kind === "choice").map((field) => field.label)).toEqual(["Yes", "No"]);
-      expect(new Set(fields.filter((field) => field.kind === "choice").map((field) => field.group)).size).toBe(1);
-      expect(fields.some((field) => field.kind === "date" && !field.boxed && field.lines === 1)).toBe(true);
-      expect(fields.some((field) => field.label === "Comment" && field.kind === "multiline" && field.boxed && field.lines <= 2)).toBe(true);
+      expect(fields.filter((field) => field.kind === "choice").map((field) => field.label)).toEqual(
+        ["Yes", "No"],
+      );
+      expect(
+        new Set(fields.filter((field) => field.kind === "choice").map((field) => field.group)).size,
+      ).toBe(1);
+      expect(
+        fields.some((field) => field.kind === "date" && !field.boxed && field.lines === 1),
+      ).toBe(true);
+      expect(
+        fields.some(
+          (field) =>
+            field.label === "Comment" &&
+            field.kind === "multiline" &&
+            field.boxed &&
+            field.lines <= 2,
+        ),
+      ).toBe(true);
       expect(fields.some((field) => field.kind === "choice" && field.boxed)).toBe(false);
     }
-    expect(new Set(signs.flatMap((box) => box.fields?.map((field) => field.name) ?? [])).size).toBe(signs.reduce((sum, box) => sum + (box.fields?.length ?? 0), 0));
+    expect(new Set(signs.flatMap((box) => box.fields?.map((field) => field.name) ?? [])).size).toBe(
+      signs.reduce((sum, box) => sum + (box.fields?.length ?? 0), 0),
+    );
     const body = report.blocks.map((block) => block.text).join("\n");
     expect(body).not.toContain("________");
     expect(body).not.toContain("Our plan and target date");

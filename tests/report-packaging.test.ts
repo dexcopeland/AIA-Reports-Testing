@@ -45,14 +45,23 @@ describe("report packaging", () => {
     for (const part of report.documents) {
       expect(part.blocks.find((block) => block.type === "note")?.text).toBe(BANNER);
     }
-    const sources = ["../src/ui/AssessmentApp.tsx", "../src/ui/screens.tsx", "../src/engine/report.ts", "../src/content/rules.ts"];
+    const sources = [
+      "../src/ui/AssessmentApp.tsx",
+      "../src/ui/screens.tsx",
+      "../src/engine/report.ts",
+      "../src/content/rules.ts",
+    ];
     for (const path of sources) {
       const text = readFileSync(new URL(path, import.meta.url), "utf8");
       expect(text, path).not.toContain("Draft for DoIT AI Governance review");
       expect(text, path).not.toContain("for DoIT AI Governance review");
     }
-    expect(readFileSync(new URL("../src/ui/AssessmentApp.tsx", import.meta.url), "utf8")).toContain("{FIXED.draftBanner}");
-    expect(readFileSync(new URL("../src/ui/screens.tsx", import.meta.url), "utf8")).toContain("{FIXED.draftBanner}");
+    expect(readFileSync(new URL("../src/ui/AssessmentApp.tsx", import.meta.url), "utf8")).toContain(
+      "{FIXED.draftBanner}",
+    );
+    expect(readFileSync(new URL("../src/ui/screens.tsx", import.meta.url), "utf8")).toContain(
+      "{FIXED.draftBanner}",
+    );
   });
 
   it("states the executive purpose for the agency, separate from the system purpose", () => {
@@ -84,12 +93,24 @@ describe("report packaging", () => {
     partial.answers.st11a = "sample";
     delete partial.answers.st11a__evidence;
     const cases = [
-      { file: example("path-prohibited-score"), outcome: BLUF_OUTCOME.prohibited, path: "The path is Prohibited." },
+      {
+        file: example("path-prohibited-score"),
+        outcome: BLUF_OUTCOME.prohibited,
+        path: "The path is Prohibited.",
+      },
       { file: scenario("S02"), outcome: BLUF_OUTCOME.highGaps, path: "The path is High." },
       { file: partial, outcome: BLUF_OUTCOME.highConditions, path: "The path is High." },
       { file: scenario("S01"), outcome: BLUF_OUTCOME.highClean, path: "The path is High." },
-      { file: example("state-park-schedule"), outcome: BLUF_OUTCOME.generalConditions, path: "The path is General." },
-      { file: example("path-general-grounds"), outcome: BLUF_OUTCOME.generalClean, path: "The path is General." },
+      {
+        file: example("state-park-schedule"),
+        outcome: BLUF_OUTCOME.generalConditions,
+        path: "The path is General.",
+      },
+      {
+        file: example("path-general-grounds"),
+        outcome: BLUF_OUTCOME.generalClean,
+        path: "The path is General.",
+      },
       { file: unknowns, outcome: BLUF_OUTCOME.highUnknowns, path: "The path is High." },
     ] as const;
     expect(new Set(cases.map((item) => item.outcome)).size).toBe(7);
@@ -126,16 +147,26 @@ describe("report packaging", () => {
     const high = buildReport(example("path-high-benefits"));
     const executive = high.documents.find((item) => item.key === "executive");
     expect(executive).toBeTruthy();
-    const heading = executive!.blocks.findIndex((block) => block.text === "Inventory under SF&P § 3.5-803(b)");
+    const heading = executive!.blocks.findIndex(
+      (block) => block.text === "Inventory under SF&P § 3.5-803(b)",
+    );
     expect(heading).toBeGreaterThan(0);
     expect(executive!.blocks[heading - 1]?.type).toBe("break");
     const table = executive!.blocks[heading + 1];
     expect(table?.type).toBe("table");
     expect(table?.rows?.map((row) => row.field)).toEqual(INVENTORY_FIELDS);
-    expect(table?.rows?.find((row) => row.field === "Name of the system")?.value).toBe("Benefits Queue Helper (fictional)");
-    expect(table?.rows?.find((row) => row.field === "Vendor")?.value).toBe("Not applicable. Built by the State.");
-    expect(table?.rows?.find((row) => row.field === "Capabilities")?.value).toContain("Ranks or prioritizes");
-    expect(table?.rows?.find((row) => row.field === "Summary of this impact assessment")?.value).toContain("The path is High.");
+    expect(table?.rows?.find((row) => row.field === "Name of the system")?.value).toBe(
+      "Benefits Queue Helper (fictional)",
+    );
+    expect(table?.rows?.find((row) => row.field === "Vendor")?.value).toBe(
+      "Not applicable. Built by the State.",
+    );
+    expect(table?.rows?.find((row) => row.field === "Capabilities")?.value).toContain(
+      "Ranks or prioritizes",
+    );
+    expect(
+      table?.rows?.find((row) => row.field === "Summary of this impact assessment")?.value,
+    ).toContain("The path is High.");
     expect(executive!.blocks.some((block) => block.text.startsWith("Capabilities:"))).toBe(true);
 
     const general = buildReport(example("path-general-grounds"));
@@ -146,7 +177,11 @@ describe("report packaging", () => {
     expect(generalExec?.blocks.some((block) => block.text.startsWith("Capabilities:"))).toBe(true);
 
     const prohibited = buildReport(example("path-prohibited-score"));
-    expect(prohibited.documents.find((item) => item.key === "executive")?.blocks.some((block) => block.type === "table")).toBe(false);
+    expect(
+      prohibited.documents
+        .find((item) => item.key === "executive")
+        ?.blocks.some((block) => block.type === "table"),
+    ).toBe(false);
   });
 
   it("renders the High inventory as a Field | Value table in PDF and Word", async () => {
@@ -195,16 +230,29 @@ describe("report packaging", () => {
     const text = blocks.map((block) => block.text).join("\n");
     expect(text).toContain("Credited (in-scope SOC 2 and ISO/IEC 27001).");
     expect(text).not.toContain("Met by agency");
-    const encryption = blocks.findIndex((block) => block.type === "bullet" && block.text.startsWith("Encryption at rest and in transit:"));
+    const encryption = blocks.findIndex(
+      (block) =>
+        block.type === "bullet" && block.text.startsWith("Encryption at rest and in transit:"),
+    );
     expect(encryption).toBeGreaterThan(0);
     const encryptionFollows = blocks.slice(encryption + 1, encryption + 4);
-    expect(encryptionFollows.some((block) => block.text === "Credited (in-scope SOC 2 and ISO/IEC 27001).")).toBe(true);
-    const human = blocks.findIndex((block) => block.type === "bullet" && block.text.startsWith("Human review before an output takes effect:"));
+    expect(
+      encryptionFollows.some(
+        (block) => block.text === "Credited (in-scope SOC 2 and ISO/IEC 27001).",
+      ),
+    ).toBe(true);
+    const human = blocks.findIndex(
+      (block) =>
+        block.type === "bullet" &&
+        block.text.startsWith("Human review before an output takes effect:"),
+    );
     expect(human).toBeGreaterThan(0);
     const nextBullet = blocks.findIndex((block, index) => index > human && block.type === "bullet");
     const humanFollows = blocks.slice(human + 1, nextBullet === -1 ? undefined : nextBullet);
     expect(humanFollows.some((block) => block.text.includes("Credited (in-scope"))).toBe(false);
-    const practice = blocks.find((block) => block.type === "label" && block.text.startsWith("RP1 "));
+    const practice = blocks.find(
+      (block) => block.type === "label" && block.text.startsWith("RP1 "),
+    );
     expect(practice?.text).toContain("Credited (in-scope AIUC-1)");
     expect(practice?.text).not.toContain("Met");
   });

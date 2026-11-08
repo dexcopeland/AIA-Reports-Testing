@@ -20,16 +20,30 @@ import { downloadReportPackage } from "./report-package";
 import { ReportScreen } from "./ReportScreen";
 import { FormScreen, HomeScreen, LoadFileCard } from "./screens";
 import { initialMaxReached, persistAdvance, reachedAfterOpen } from "./shell";
-import { autosave, autoload, clearAutosave, downloadJson, emptyFile, normalizeFile } from "./storage";
+import {
+  autosave,
+  autoload,
+  clearAutosave,
+  downloadJson,
+  emptyFile,
+  normalizeFile,
+} from "./storage";
 
 type Screen = "home" | "form" | "report";
 
+const SAVE_FAILED = "This browser did not keep that draft. Use Save JSON file to keep it.";
+
 function reachedFor(file: AnswerFile): number {
-  return initialMaxReached(activeSections(file.answers).map((section) => missing(section, file.answers).length));
+  return initialMaxReached(
+    activeSections(file.answers).map((section) => missing(section, file.answers).length),
+  );
 }
 
 export function AssessmentApp() {
   const [file, setFile] = useState<AnswerFile>(() => autoload() ?? emptyFile());
+  // The browser's copy, as of the last write that succeeded. Read once, then
+  // updated wherever the browser's copy is replaced or cleared.
+  const [saved, setSaved] = useState<AnswerFile | null>(() => autoload());
   const [screen, setScreen] = useState<Screen>("home");
   const [sectionIndex, setSectionIndex] = useState(0);
   const [saveNote, setSaveNote] = useState("Nothing is stored on a server.");
@@ -54,7 +68,10 @@ export function AssessmentApp() {
     const header = headerRef.current;
     if (!header) return;
     const sync = () => {
-      document.documentElement.style.setProperty("--sticky-header-height", `${header.offsetHeight}px`);
+      document.documentElement.style.setProperty(
+        "--sticky-header-height",
+        `${header.offsetHeight}px`,
+      );
     };
     sync();
     const observer = new ResizeObserver(sync);
@@ -63,10 +80,12 @@ export function AssessmentApp() {
   }, [screen, sectionIndex]);
 
   function commit(next: AnswerFile, note = "Saved in this browser."): AnswerFile {
-    const stamped = persistAdvance(next, autosave);
+    const { file: stamped, persisted } = persistAdvance(next, autosave);
     fileRef.current = stamped;
     setFile(stamped);
-    setSaveNote(note);
+    setSaveNote(persisted ? note : SAVE_FAILED);
+    if (!persisted) setHeaderNote(SAVE_FAILED);
+    if (persisted) setSaved(stamped);
     return stamped;
   }
 
@@ -146,6 +165,7 @@ export function AssessmentApp() {
 
   function startNew(): void {
     clearAutosave();
+    setSaved(null);
     const next = emptyFile();
     fileRef.current = next;
     setFile(next);
@@ -161,13 +181,14 @@ export function AssessmentApp() {
   }
 
   function continueDraft(): void {
-    const saved = autoload();
-    if (!saved || Object.keys(saved.answers).length === 0) return;
-    fileRef.current = saved;
-    setFile(saved);
+    const restored = autoload();
+    if (!restored || Object.keys(restored.answers).length === 0) return;
+    fileRef.current = restored;
+    setFile(restored);
+    setSaved(restored);
     setDirty(false);
     setSectionIndex(0);
-    setMaxReached(reachedFor(saved));
+    setMaxReached(reachedFor(restored));
     setReportUnlocked(false);
     setExportNote("");
     setFormError("");
@@ -241,24 +262,47 @@ export function AssessmentApp() {
     finishHome();
   }
 
-  const saved = autoload();
   const noAnswers = Object.keys(file.answers).length === 0;
 
   return (
     <>
-      <a className="skip" href="#main">Skip to content</a>
-      <header id="site-header" ref={headerRef} className="sticky top-0 z-30 bg-primary text-primary-foreground shadow-[0_1px_0_rgb(0_0_0/0.28)]">
+      <a className="skip" href="#main">
+        Skip to content
+      </a>
+      <header
+        id="site-header"
+        ref={headerRef}
+        className="sticky top-0 z-30 bg-primary text-primary-foreground shadow-[0_1px_0_rgb(0_0_0/0.28)]"
+      >
         <div className="flex flex-wrap items-center justify-between gap-x-5 gap-y-2 px-4 py-3 lg:px-6">
           <div className="min-w-[min(100%,16rem)] flex-1">
-            <h1 className="text-xl leading-tight font-bold sm:text-[1.65rem]">Algorithmic Impact Assessment</h1>
-            <p className="mt-1 hidden max-w-3xl text-sm leading-snug min-[42rem]:block">A draft for Maryland agencies. You answer in this browser. The report is built with fixed rules. Nothing is sent to a server.</p>
+            <h1 className="text-xl leading-tight font-bold sm:text-[1.65rem]">
+              Algorithmic Impact Assessment
+            </h1>
+            <p className="mt-1 hidden max-w-3xl text-sm leading-snug min-[42rem]:block">
+              A draft for Maryland agencies. You answer in this browser. The report is built with
+              fixed rules. Nothing is sent to a server.
+            </p>
           </div>
           <div className="flex flex-wrap items-center gap-2 max-[42rem]:w-full">
-            <Button id="go-home" type="button" variant="secondary" className={`${touchTarget} max-[42rem]:w-full`} disabled={screen === "home"} onClick={requestHome}>Home</Button>
-            <p id="header-save-status" className="sr-only" aria-live="polite">{headerNote}</p>
+            <Button
+              id="go-home"
+              type="button"
+              variant="secondary"
+              className={`${touchTarget} max-[42rem]:w-full`}
+              disabled={screen === "home"}
+              onClick={requestHome}
+            >
+              Home
+            </Button>
+            <p id="header-save-status" className="sr-only" aria-live="polite">
+              {headerNote}
+            </p>
           </div>
         </div>
-        <div className="banner border-t border-primary-foreground/20 bg-banner px-4 py-2 text-sm text-banner-foreground lg:px-6">{FIXED.draftBanner}</div>
+        <div className="banner border-t border-primary-foreground/20 bg-banner px-4 py-2 text-sm text-banner-foreground lg:px-6">
+          {FIXED.draftBanner}
+        </div>
       </header>
       <div id="app-shell" className="grid items-start lg:grid-cols-[18.5rem_minmax(0,1fr)]">
         <ProgressRail
@@ -301,21 +345,59 @@ export function AssessmentApp() {
               </>
             ) : null}
             {screen === "report" ? (
-              <ReportScreen file={file} exportNote={exportNote} onBack={() => openSection(sectionIndex)} onEdit={editSignoff} />
+              <ReportScreen
+                file={file}
+                exportNote={exportNote}
+                onBack={() => openSection(sectionIndex)}
+                onEdit={editSignoff}
+              />
             ) : null}
           </div>
         </main>
       </div>
-      <Dialog open={leaveOpen} onOpenChange={(open) => { if (!open) setLeaveOpen(false); }}>
+      <Dialog
+        open={leaveOpen}
+        onOpenChange={(open) => {
+          if (!open) setLeaveOpen(false);
+        }}
+      >
         <DialogContent id="leave-dialog" className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Save a draft before going home?</DialogTitle>
-            <DialogDescription>This assessment has changes since the last saved draft. You can download the draft first. The copy in this browser stays either way.</DialogDescription>
+            <DialogDescription>
+              This assessment has changes since the last saved draft. You can download the draft
+              first. The copy in this browser stays either way.
+            </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex-col sm:flex-col sm:items-stretch">
-            <Button type="button" className={touchTarget} onClick={() => { saveDraft(); finishHome("Draft file downloaded."); }}>Save draft</Button>
-            <Button type="button" variant="outline" className={touchTarget} onClick={() => finishHome()}>Leave without saving</Button>
-            <Button type="button" variant="outline" className={touchTarget} autoFocus onClick={() => setLeaveOpen(false)}>Stay</Button>
+            <Button
+              type="button"
+              className={touchTarget}
+              onClick={() => {
+                saveDraft();
+                finishHome("Draft file downloaded.");
+              }}
+            >
+              Save draft
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className={touchTarget}
+              onClick={() => finishHome()}
+            >
+              Leave without saving
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className={touchTarget}
+              // eslint-disable-next-line jsx-a11y/no-autofocus -- modal opens on intent: focus lands on the least destructive action, "Stay".
+              autoFocus
+              onClick={() => setLeaveOpen(false)}
+            >
+              Stay
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

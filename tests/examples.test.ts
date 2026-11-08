@@ -30,8 +30,12 @@ describe("loadable examples", () => {
       const derived = deriveAssessmentPath(buildExample(spec).answers);
       expect(derived.path, spec.id).not.toBe("undetermined");
       if (derived.path === "undetermined") continue;
-      expect(spec.title.startsWith(PATH_TITLE[derived.path]), `${spec.id} ${derived.path}`).toBe(true);
-      const listed = exampleIndex.groups.flatMap((group) => group.examples).find((item) => item.id === spec.id);
+      expect(spec.title.startsWith(PATH_TITLE[derived.path]), `${spec.id} ${derived.path}`).toBe(
+        true,
+      );
+      const listed = exampleIndex.groups
+        .flatMap((group) => group.examples)
+        .find((item) => item.id === spec.id);
       expect(listed?.title, spec.id).toBe(spec.title);
     }
   });
@@ -61,38 +65,72 @@ describe("loadable examples", () => {
 
   it("loads each saved draft through the same normalizer as Continue a saved draft", () => {
     for (const spec of EXAMPLES) {
-      const saved = JSON.parse(readFileSync(new URL(`../examples/${spec.id}.json`, import.meta.url), "utf8")) as unknown;
+      const saved = JSON.parse(
+        readFileSync(new URL(`../examples/${spec.id}.json`, import.meta.url), "utf8"),
+      ) as unknown;
       const loaded = loadExampleFile(`${spec.id}.json`);
       expect(loaded).toEqual(buildExample(spec));
-      expect(loaded).toMatchObject({ example: true, answers: (saved as { answers: unknown }).answers });
+      expect(loaded).toMatchObject({
+        example: true,
+        answers: (saved as { answers: unknown }).answers,
+      });
       const report = buildReport(loaded);
       const result = evaluate(loaded);
       expect(report.blocks.some((block) => block.text.includes(spec.system))).toBe(true);
-      expect(result.criteria.map((item) => item.id)).toEqual(["C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8", "C9", "C10", "C11", "C12"]);
-      expect(result.rp.map((item) => item.id)).toEqual(["RP1", "RP2", "RP3", "RP4", "RP5", "RP6", "RP7", "RP8"]);
+      expect(result.criteria.map((item) => item.id)).toEqual([
+        "C1",
+        "C2",
+        "C3",
+        "C4",
+        "C5",
+        "C6",
+        "C7",
+        "C8",
+        "C9",
+        "C10",
+        "C11",
+        "C12",
+      ]);
+      expect(result.rp.map((item) => item.id)).toEqual([
+        "RP1",
+        "RP2",
+        "RP3",
+        "RP4",
+        "RP5",
+        "RP6",
+        "RP7",
+        "RP8",
+      ]);
       const bluf = buildBluf(result).sentences.join(" ");
       expect(bluf).toContain("The outcome is");
       expect(bluf).toContain("The path is");
       expect(bluf).not.toContain("The risk level is High-risk.");
       expect(bluf).not.toMatch(/intake|\bQ1\b/i);
       if (result.path === "high") {
-        expect(bluf, spec.id).toMatch(/High-risk because it impacts rights|High-risk because it impacts safety|High-risk because it impacts rights and safety|Unknown answer forces that path|basis for a decision or action/);
+        expect(bluf, spec.id).toMatch(
+          /High-risk because it impacts rights|High-risk because it impacts safety|High-risk because it impacts rights and safety|Unknown answer forces that path|basis for a decision or action/,
+        );
         expect(bluf, spec.id).toMatch(/Q8|Q10|Q6|Q7/);
         expect(bluf, spec.id).not.toMatch(/not in place|partly in place|do not agree/);
       }
-      expect(`${spec.title} ${spec.description} ${loaded.example_label ?? ""}`.toLowerCase()).not.toMatch(/\b(good|poor)\b/);
+      expect(
+        `${spec.title} ${spec.description} ${loaded.example_label ?? ""}`.toLowerCase(),
+      ).not.toMatch(/\b(good|poor)\b/);
     }
   });
 
   it("runs from few residual risks to many, with different outcomes, inside each original path", () => {
-    for (const group of exampleIndex.groups.filter((item) => item.id === "state" || item.id === "vendor")) {
+    for (const group of exampleIndex.groups.filter(
+      (item) => item.id === "state" || item.id === "vendor",
+    )) {
       const rows = group.examples.map((entry) => {
         const file = loadExampleFile(entry.file);
         const result = evaluate(file);
         const bluf = buildBluf(result);
         return {
           id: entry.id,
-          findings: [...result.criteria, ...result.rp].filter((item) => OPEN.has(item.status)).length,
+          findings: [...result.criteria, ...result.rp].filter((item) => OPEN.has(item.status))
+            .length,
           steps: bluf.steps.length,
           outcome: bluf.sentences[0],
           reason: bluf.sentences[2],
@@ -115,17 +153,29 @@ describe("loadable examples", () => {
       expect(rows[2].outcome).toContain("ready only with conditions");
       expect(rows[4].outcome).toBe(BLUF_OUTCOME.highGaps);
       expect(new Set(rows.map((row) => row.reason)).size).toBe(rows.length);
-      expect(rows[0].c1 === "Impact: Yes" || rows[0].c2 === "Impact: Yes" || rows[0].c3 === "Impact: Yes").toBe(true);
-      expect(rows[4].c1 === "Impact: Yes" || rows[4].c2 === "Impact: Yes" || rows[4].c3 === "Impact: Yes").toBe(true);
+      expect(
+        rows[0].c1 === "Impact: Yes" ||
+          rows[0].c2 === "Impact: Yes" ||
+          rows[0].c3 === "Impact: Yes",
+      ).toBe(true);
+      expect(
+        rows[4].c1 === "Impact: Yes" ||
+          rows[4].c2 === "Impact: Yes" ||
+          rows[4].c3 === "Impact: Yes",
+      ).toBe(true);
     }
   });
 
   it("gives the low-residual examples evidence for every evidence prompt, and thin evidence at the other end", () => {
-    for (const group of exampleIndex.groups.filter((item) => item.id === "state" || item.id === "vendor")) {
+    for (const group of exampleIndex.groups.filter(
+      (item) => item.id === "state" || item.id === "vendor",
+    )) {
       const strong = evaluate(loadExampleFile(group.examples[0].file));
       const evidenced = strong.items.filter((item) => {
         if (item.q6Excluded || item.notApplicable) return false;
-        const choice = STATEMENT_BY_ID[item.statementId]?.choices.find((row) => row.value === item.choiceValue);
+        const choice = STATEMENT_BY_ID[item.statementId]?.choices.find(
+          (row) => row.value === item.choiceValue,
+        );
         return choice?.asks === "evidence";
       });
       expect(evidenced.length).toBeGreaterThan(5);
@@ -133,11 +183,17 @@ describe("loadable examples", () => {
         expect(item.evidenceFailed).toBe(false);
         expect(item.evidence.trim().split(/\s+/).length).toBeGreaterThanOrEqual(5);
       }
-      expect(SECTIONS.flatMap((section) => missing(section, loadExampleFile(group.examples[0].file).answers))).toEqual([]);
+      expect(
+        SECTIONS.flatMap((section) =>
+          missing(section, loadExampleFile(group.examples[0].file).answers),
+        ),
+      ).toEqual([]);
 
       const thin = evaluate(loadExampleFile(group.examples[4].file));
       expect(thin.items.some((item) => item.evidenceFailed || item.unanswered)).toBe(true);
-      expect(openFindings(group.examples[4].id)).toBeGreaterThan(openFindings(group.examples[0].id));
+      expect(openFindings(group.examples[4].id)).toBeGreaterThan(
+        openFindings(group.examples[0].id),
+      );
     }
   });
 });

@@ -39,20 +39,20 @@ Unknown counts as a Gap (or Not yet for recommended practice). A group with no a
 
 Edit the data modules, not the page layout, unless the layout is what you mean to change.
 
-| What | File |
-| --- | --- |
-| Version numbers | `src/content/types.ts` |
-| Statement sets (32 items) | `src/content/statements.ts` |
-| Gates, mitigations, fixed paragraphs, sources, proposed-rule list | `src/content/rules.ts` |
-| Option lists | `src/content/catalog.ts` |
-| Form fields, help text, show/hide | `src/content/form.ts` |
-| Which rule is still a proposal | `content/RULES.md` and `proposed: true` in the modules |
-| Finding sentences (What we found) | `content/findings.json` |
-| Example drafts | `examples/*.json` and `examples/index.json` |
-| Report assembly | `src/engine/report.ts` |
-| Report package zip | `src/report/zip.ts` |
-| Word and PDF layout tokens | `src/report/style.ts` |
-| Scoring | `src/engine/evaluate.ts` |
+| What                                                              | File                                                   |
+| ----------------------------------------------------------------- | ------------------------------------------------------ |
+| Version numbers                                                   | `src/content/types.ts`                                 |
+| Statement sets (32 items)                                         | `src/content/statements.ts`                            |
+| Gates, mitigations, fixed paragraphs, sources, proposed-rule list | `src/content/rules.ts`                                 |
+| Option lists                                                      | `src/content/catalog.ts`                               |
+| Form fields, help text, show/hide                                 | `src/content/form.ts`                                  |
+| Which rule is still a proposal                                    | `content/RULES.md` and `proposed: true` in the modules |
+| Finding sentences (What we found)                                 | `content/findings.json`                                |
+| Example drafts                                                    | `examples/*.json` and `examples/index.json`            |
+| Report assembly                                                   | `src/engine/report.ts`                                 |
+| Report package zip                                                | `src/report/zip.ts`                                    |
+| Word and PDF layout tokens                                        | `src/report/style.ts`                                  |
+| Scoring                                                           | `src/engine/evaluate.ts`                               |
 
 Published index of statement codes, statuses and mitigations: `content/rules-index.json`. Regenerate it with `npm run rules-index` after a content edit.
 
@@ -70,11 +70,14 @@ Open the URL Vite prints (http://localhost:5173). `npm run build` writes the sta
 
 ## Tests
 
-- `npm test` runs the engine unit tests and checks synthetic scenarios S01–S24.
+- `npm test` runs the engine unit tests, checks synthetic scenarios S01–S24, and drives the screens in jsdom (`tests/app.test.tsx`): keystroke autosave, the failed-save notice, continue with blanks, restoring the browser copy, and the sign-off edits.
 - `npm run validate` rewrites `docs/scenario-validation.md`.
 - `npm run rules-index` rewrites `content/rules-index.json`.
 - With `npm run preview` already running, `npm run smoke` drives Chrome through an example assessment, the draft report and the Word download. It needs Chrome and `puppeteer-core`.
+- `npm run lint` runs ESLint over the TypeScript and React sources: hook rules, accessibility, and fast-refresh exports.
+- `npm run format:check` verifies Prettier formatting (print width 100); `npm run format` rewrites files. CI runs the lint and the format check on every push and pull request.
 - `npm run examples` rewrites `examples/` from `src/examples/catalog.ts`. The dropdown loads those JSON files.
+- CI also runs every generator and fails when the committed `docs/scenario-validation.md`, `content/rules-index.json` or `examples/` no longer matches what the sources produce.
 
 The scenario answers are coded conversions of the prose scenarios. They are fictional and labeled example data. On the checks this version runs (required gates, forbidden gates, deadline date, prohibited-use flag, prior-deployment fact, status conflict, mitigation count range), all 24 match. Three scenarios also set an extra gate the key treats as arguable or possible: S06 adds G1, S12 adds G1, S24 adds G4. Those notes are in the validation file. They are not counted as failures.
 
