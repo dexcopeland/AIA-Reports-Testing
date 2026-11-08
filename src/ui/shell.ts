@@ -39,19 +39,31 @@ export function sectionCanOpen(
   return index <= state.maxReached;
 }
 
-export function reportCanOpen(state: { navigationEnabled: boolean; reportUnlocked: boolean }): boolean {
+export function reportCanOpen(state: {
+  navigationEnabled: boolean;
+  reportUnlocked: boolean;
+}): boolean {
   return state.navigationEnabled && state.reportUnlocked;
 }
 
-/** Snapshot the draft the moment the user leaves the current question or section. */
-export function persistAdvance(file: AnswerFile, save: (file: AnswerFile) => void, now = new Date().toISOString()): AnswerFile {
-  const next = stampAssessment({
+/** Stamp the draft as the current versions' record of this moment. */
+export function stampDraft(file: AnswerFile, now = new Date().toISOString()): AnswerFile {
+  return stampAssessment({
     ...file,
     saved_at: now,
     rules_version: RULES_VERSION,
     form_version: FORM_VERSION,
     schema_version: SCHEMA_VERSION,
   });
-  save(next);
-  return next;
+}
+
+/** Snapshot the draft the moment the user leaves the current question or section. */
+export function persistAdvance(
+  file: AnswerFile,
+  save: (file: AnswerFile) => boolean,
+  now = new Date().toISOString(),
+): { file: AnswerFile; persisted: boolean } {
+  const next = stampDraft(file, now);
+  const persisted = save(next);
+  return { file: next, persisted };
 }

@@ -39,12 +39,14 @@ export function buildScenario(spec: ScenarioSpec): AnswerFile {
     q5_changes: "None",
     q6_method: "statistical",
     q6_hosting: "state_data_center",
-    q6_description: spec.profile === "good"
-      ? `Example: ${spec.system} as described for synthetic scenario ${spec.id}. Fictional system. No security settings.`
-      : "Example poor answer: it uses AI.",
-    q7_purpose: spec.profile === "good"
-      ? `Example purpose for ${spec.system}. Staff use the output in the current process. Fictional.`
-      : "Faster work.",
+    q6_description:
+      spec.profile === "good"
+        ? `Example: ${spec.system} as described for synthetic scenario ${spec.id}. Fictional system. No security settings.`
+        : "Example poor answer: it uses AI.",
+    q7_purpose:
+      spec.profile === "good"
+        ? `Example purpose for ${spec.system}. Staff use the output in the current process. Fictional.`
+        : "Faster work.",
     q7b_prohibited: ["none"],
     q8_how: "Example of how the output reaches people.",
     q9_other: "",
@@ -61,9 +63,10 @@ export function buildScenario(spec: ScenarioSpec): AnswerFile {
     q18_procured: "not_yet",
     q19_start: "",
     q19_prior: "not_applicable",
-    q20_harm: spec.profile === "good"
-      ? "Example: a wrong output could send staff to the wrong case. The cost falls on the person waiting for the service."
-      : "Unknown",
+    q20_harm:
+      spec.profile === "good"
+        ? "Example: a wrong output could send staff to the wrong case. The cost falls on the person waiting for the service."
+        : "Unknown",
     q20_types: spec.profile === "good" ? ["wrong_decision"] : ["unknown"],
     q23_monitor: spec.profile === "good" ? "Program manager" : "",
     q23_incident: spec.profile === "good" ? "Agency information security" : "",
@@ -79,7 +82,14 @@ export function buildScenario(spec: ScenarioSpec): AnswerFile {
       answers[instance.key] = "unknown";
       continue;
     }
-    const choice = [...def.choices].reverse().find((item) => item.value !== "unknown" && item.value !== "does_not_apply" && (item.status === "Met" || item.status === "In place"));
+    const choice = [...def.choices]
+      .reverse()
+      .find(
+        (item) =>
+          item.value !== "unknown" &&
+          item.value !== "does_not_apply" &&
+          (item.status === "Met" || item.status === "In place"),
+      );
     if (!choice) continue;
     answers[instance.key] = choice.value;
     if (choice.asks === "evidence") answers[`${instance.key}__evidence`] = EVIDENCE;

@@ -3,7 +3,19 @@ import type { MitigationDef } from "./types";
 export const EVIDENCE_CHECK = {
   proposed: true,
   minWords: 5,
-  rejectExact: ["yes", "done", "n/a", "na", "tbd", "see above", "in place", "complete", "we do this", "ok", "none"],
+  rejectExact: [
+    "yes",
+    "done",
+    "n/a",
+    "na",
+    "tbd",
+    "see above",
+    "in place",
+    "complete",
+    "we do this",
+    "ok",
+    "none",
+  ],
 };
 
 export const TOKEN_EVIDENCE_NOTE =
@@ -57,8 +69,14 @@ export const AREAS: { id: string; label: string }[] = [
   { id: "policing_corrections_supervision", label: "Police, corrections or community supervision" },
   { id: "investigations", label: "Investigations" },
   { id: "identifying_people", label: "Identifying people" },
-  { id: "automated_enforcement_tickets", label: "Automated enforcement that leads to tickets or citations" },
-  { id: "regulatory_inspection", label: "Inspections by a non-police agency, such as fire, health or building" },
+  {
+    id: "automated_enforcement_tickets",
+    label: "Automated enforcement that leads to tickets or citations",
+  },
+  {
+    id: "regulatory_inspection",
+    label: "Inspections by a non-police agency, such as fire, health or building",
+  },
   { id: "speech_assembly_religion", label: "Speech, assembly or religion" },
   { id: "privacy", label: "Privacy" },
   { id: "none", label: "None of these" },
@@ -73,7 +91,11 @@ export const DATA_TYPES: { id: string; label: string; suggests: string }[] = [
   { id: "precise_location", label: "Precise location", suggests: "L3" },
   { id: "student_records", label: "Student records", suggests: "L3" },
   { id: "payment", label: "Payment data", suggests: "L3" },
-  { id: "abuse_details", label: "Details of abuse, stalking or a protective order", suggests: "L3" },
+  {
+    id: "abuse_details",
+    label: "Details of abuse, stalking or a protective order",
+    suggests: "L3",
+  },
   { id: "criminal_justice", label: "Criminal justice information", suggests: "L4" },
   { id: "tax_fti", label: "Federal tax information", suggests: "L4" },
   { id: "unknown", label: "Unknown", suggests: "L3" },
@@ -140,7 +162,8 @@ export const MITIGATIONS: MitigationDef[] = [
     action: "Stop or remove the prohibited function before any use, and record how it was removed.",
     owner: "Agency Lead",
     sources: ["P1"],
-    remaining: "The function could return in a later version unless it is re-checked at each change.",
+    remaining:
+      "The function could return in a later version unless it is re-checked at each change.",
     rpOnly: false,
     timing: "TN",
     capBand: 0,
@@ -152,7 +175,8 @@ export const MITIGATIONS: MitigationDef[] = [
       "Have a named role review each output before it takes effect, with power to change or stop it, and record every override.",
     owner: "Business owner",
     sources: ["D1", "P1"],
-    remaining: "Reviewers can still follow the output too readily. Override records show whether the review is real.",
+    remaining:
+      "Reviewers can still follow the output too readily. Override records show whether the review is real.",
     rpOnly: false,
     timing: "TN",
     capBand: 2,
@@ -164,7 +188,8 @@ export const MITIGATIONS: MitigationDef[] = [
       "Give staff written instructions and training on purpose, limits, prohibited uses and when to check output, and send new uses back to intake.",
     owner: "Business owner",
     sources: ["D1", "R1"],
-    remaining: "Staff can still use the AI system outside the assessed purpose if the instructions are not followed.",
+    remaining:
+      "Staff can still use the AI system outside the assessed purpose if the instructions are not followed.",
     rpOnly: true,
     timing: "TW",
     capBand: 2,
@@ -172,7 +197,8 @@ export const MITIGATIONS: MitigationDef[] = [
   {
     id: "M-NOTICE",
     title: "AI notice and a contact path to a person",
-    action: "Tell people, where they meet the decision or contact, that AI is involved, and give a path to a person who can review the output.",
+    action:
+      "Tell people, where they meet the decision or contact, that AI is involved, and give a path to a person who can review the output.",
     owner: "Business owner",
     sources: ["D1", "P1"],
     remaining: "People can still miss the notice if it is not at the point of the decision.",
@@ -183,7 +209,8 @@ export const MITIGATIONS: MitigationDef[] = [
   {
     id: "M-CONTEST",
     title: "A way to correct data and challenge a result",
-    action: "Let people correct their data and challenge a result, and have a person review the challenge and change the result when it is wrong.",
+    action:
+      "Let people correct their data and challenge a result, and have a person review the challenge and change the result when it is wrong.",
     owner: "Business owner",
     sources: ["D1", "P1"],
     remaining: "A challenge path that is slow or hard to find leaves the bad result in place.",
@@ -194,7 +221,8 @@ export const MITIGATIONS: MitigationDef[] = [
   {
     id: "M-LANG",
     title: "Language access",
-    action: "Offer notices and contact in the languages people use, and have speakers or interpreters check them.",
+    action:
+      "Offer notices and contact in the languages people use, and have speakers or interpreters check them.",
     owner: "Business owner",
     sources: ["D1", "P2"],
     remaining: "People can still be left out if a language they use is not offered.",
@@ -205,7 +233,8 @@ export const MITIGATIONS: MitigationDef[] = [
   {
     id: "M-ACCESS",
     title: "An access path that fits each named group",
-    action: "Put in place a path each named group can use, such as phone, paper, in person, an accessible format or an interpreter.",
+    action:
+      "Put in place a path each named group can use, such as phone, paper, in person, an accessible format or an interpreter.",
     owner: "Business owner",
     sources: ["D1", "P1"],
     remaining: "A path that exists only on paper does not help the group if they cannot reach it.",
@@ -240,7 +269,8 @@ export const MITIGATIONS: MitigationDef[] = [
   {
     id: "M-ENCRYPT",
     title: "Encryption and access limits",
-    action: "Encrypt the data at rest and in transit everywhere it is processed or stored, and limit access to authorized staff.",
+    action:
+      "Encrypt the data at rest and in transit everywhere it is processed or stored, and limit access to authorized staff.",
     owner: "Agency information security",
     sources: ["P3", "P4", "P5"],
     remaining: "Keys and accounts still need care after encryption is in place.",
@@ -251,10 +281,12 @@ export const MITIGATIONS: MitigationDef[] = [
   {
     id: "M-PRIVACY",
     title: "Privacy review and retention",
-    action: "Finish the PTA, and the PIA if the State Chief Privacy Officer directs one, and delete data on the records schedule.",
+    action:
+      "Finish the PTA, and the PIA if the State Chief Privacy Officer directs one, and delete data on the records schedule.",
     owner: "Agency privacy lead",
     sources: ["P4", "P3"],
-    remaining: "A finished PTA does not by itself fix a later change in the data the AI system uses.",
+    remaining:
+      "A finished PTA does not by itself fix a later change in the data the AI system uses.",
     rpOnly: false,
     timing: "TN",
     capBand: 2,
@@ -285,7 +317,8 @@ export const MITIGATIONS: MitigationDef[] = [
   {
     id: "M-IMPACT",
     title: "Written analysis of misuse, failure and harm",
-    action: "Write down foreseeable misuse, how the AI system can fail or get results wrong, and who is harmed or bears the cost.",
+    action:
+      "Write down foreseeable misuse, how the AI system can fail or get results wrong, and who is harmed or bears the cost.",
     owner: "Business owner",
     sources: ["D1", "R1"],
     remaining: "A written list can still miss a harm that shows up only in use.",
@@ -296,7 +329,8 @@ export const MITIGATIONS: MitigationDef[] = [
   {
     id: "M-ACCURACY",
     title: "Accuracy testing and drift monitoring",
-    action: "Test accuracy on the agency's own data with set criteria, and track errors after launch against an agreed threshold.",
+    action:
+      "Test accuracy on the agency's own data with set criteria, and track errors after launch against an agreed threshold.",
     owner: "Business owner",
     sources: ["D1", "P1"],
     remaining: "Results can still drift after a model update if the next test is late.",
@@ -307,7 +341,8 @@ export const MITIGATIONS: MitigationDef[] = [
   {
     id: "M-BIAS",
     title: "Bias testing on a Maryland-like population",
-    action: "Test whether results differ across groups on a population like Maryland's, and repeat outcome checks on a set schedule.",
+    action:
+      "Test whether results differ across groups on a population like Maryland's, and repeat outcome checks on a set schedule.",
     owner: "Business owner",
     sources: ["D1", "P1"],
     remaining: "A single test does not show whether differences grow after launch.",
@@ -330,7 +365,8 @@ export const MITIGATIONS: MitigationDef[] = [
   {
     id: "M-SEC",
     title: "Threat model and security testing",
-    action: "Write a threat model for the open threats and test it, recording the results. Do not put attack detail in this report.",
+    action:
+      "Write a threat model for the open threats and test it, recording the results. Do not put attack detail in this report.",
     owner: "Agency information security",
     sources: ["D1", "R2"],
     remaining: "A test covers the threats that were in scope. A new connection can open another.",
@@ -341,10 +377,12 @@ export const MITIGATIONS: MitigationDef[] = [
   {
     id: "M-OWNER",
     title: "Named incident and reassessment owner",
-    action: "Name roles for monitoring, incidents and reassessment, write the process, and reassess at least yearly.",
+    action:
+      "Name roles for monitoring, incidents and reassessment, write the process, and reassess at least yearly.",
     owner: "Agency Lead",
     sources: ["S4", "P2", "D1"],
-    remaining: "A named role still needs time and a written process to act when an incident happens.",
+    remaining:
+      "A named role still needs time and a written process to act when an incident happens.",
     rpOnly: false,
     timing: "TW",
     capBand: 2,
@@ -368,7 +406,8 @@ export const MITIGATIONS: MitigationDef[] = [
       "Write a procedure that re-checks the assessment for a new model version, new data, new tools or permissions, or a new use, and a retirement plan for models, data, document stores and logs.",
     owner: "Business owner",
     sources: ["D1", "R2"],
-    remaining: "A trigger that is not written into procedure is easy to skip when a vendor ships an update.",
+    remaining:
+      "A trigger that is not written into procedure is easy to skip when a vendor ships an update.",
     rpOnly: true,
     timing: "TW",
     capBand: 2,
@@ -418,10 +457,26 @@ export const RP_META: { id: string; name: string; aligned: string }[] = [
     name: "Data quality and provenance",
     aligned: "ISO/IEC 42001 A.7.2–A.7.6; ISO/IEC 27090 cl. 6.9.4, 7.6 [R1] [R2].",
   },
-  { id: "RP4", name: "Oversight people and instructions", aligned: "ISO/IEC 42001 A.8.2, A.9.3, A.9.4 [R1]." },
-  { id: "RP5", name: "AI-specific security threats", aligned: "ISO/IEC 27090 cl. 5.6, 5.7, 6.2–6.10 [R2]." },
-  { id: "RP6", name: "Logging and scheduled re-testing", aligned: "ISO/IEC 27090 cl. 6.11.3.5, 7.2, 7.4, 7.5 [R2]." },
-  { id: "RP7", name: "Incident notice and concerns channel", aligned: "ISO/IEC 42001 A.3.3, A.8.3, A.8.4 [R1]." },
+  {
+    id: "RP4",
+    name: "Oversight people and instructions",
+    aligned: "ISO/IEC 42001 A.8.2, A.9.3, A.9.4 [R1].",
+  },
+  {
+    id: "RP5",
+    name: "AI-specific security threats",
+    aligned: "ISO/IEC 27090 cl. 5.6, 5.7, 6.2–6.10 [R2].",
+  },
+  {
+    id: "RP6",
+    name: "Logging and scheduled re-testing",
+    aligned: "ISO/IEC 27090 cl. 6.11.3.5, 7.2, 7.4, 7.5 [R2].",
+  },
+  {
+    id: "RP7",
+    name: "Incident notice and concerns channel",
+    aligned: "ISO/IEC 42001 A.3.3, A.8.3, A.8.4 [R1].",
+  },
   {
     id: "RP8",
     name: "Change and retirement",
@@ -511,7 +566,8 @@ export const FIXED = {
     "I acknowledge the risks and recommended mitigations in this report and accept responsibility for the plans above before this AI system moves forward.",
   leadNote: "If the Agency Lead did not submit the form, the Agency Lead still signs.",
   noIntake: "No intake reference is recorded.",
-  noDate: "The § 3.5-803(e) deadline depends on the procurement date; DoIT AI Governance will confirm it.",
+  noDate:
+    "The § 3.5-803(e) deadline depends on the procurement date; DoIT AI Governance will confirm it.",
   appendixNote:
     "These are the agency's answers to the 25 form questions as submitted (Response ID {id}, submitted {when}). They are copied word for word and have not been edited or checked by DoIT. The agency is responsible for the accuracy of its answers. Questions marked recommended practice also reflect ISO/IEC 42001 or ISO/IEC 27090.",
   draftBanner: "Agency draft — not approval. Send DoIT the signed Executive Summary.",

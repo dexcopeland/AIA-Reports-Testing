@@ -1,7 +1,13 @@
 export const BUILDERS = [
   { id: "vendor_product", label: "A vendor product" },
-  { id: "vendor_product_agency_changed", label: "A vendor product that the agency changed or extended" },
-  { id: "state_built_outside_model", label: "Built by the State, using an outside hosted model or API" },
+  {
+    id: "vendor_product_agency_changed",
+    label: "A vendor product that the agency changed or extended",
+  },
+  {
+    id: "state_built_outside_model",
+    label: "Built by the State, using an outside hosted model or API",
+  },
   { id: "state_built", label: "Built by the State, with no outside model or vendor" },
   { id: "unknown", label: "Unknown" },
 ];
@@ -82,7 +88,10 @@ export const PRIOR = [
 
 export const TARGETS = [
   { id: "individuals", label: "Individual people, applicants, filers or cases" },
-  { id: "places_or_groups", label: "Places, areas or groups, such as counties, neighborhoods, workplaces or work zones" },
+  {
+    id: "places_or_groups",
+    label: "Places, areas or groups, such as counties, neighborhoods, workplaces or work zones",
+  },
   { id: "both", label: "Both individuals and places or groups" },
   { id: "neither", label: "Neither. It gives general information" },
   { id: "unknown", label: "Unknown" },

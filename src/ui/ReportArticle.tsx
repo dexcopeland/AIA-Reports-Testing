@@ -48,7 +48,7 @@ function SignControl({
       <DatePicker
         id={id}
         className="sign-date w-auto min-w-44"
-        value={/^\d{4}-\d{2}-\d{2}$/.test(field.value ?? "") ? field.value ?? "" : ""}
+        value={/^\d{4}-\d{2}-\d{2}$/.test(field.value ?? "") ? (field.value ?? "") : ""}
         onChange={(value) => onEdit(signId, field.name, value)}
       />
     );
@@ -88,17 +88,25 @@ function BoxedFields({
       <section className="sign-box" id={signId === "lead" ? "lead-signoff" : undefined}>
         {title ? <p className="sign-label">{title}</p> : null}
         <div className="sign-inline">
-          {fields.filter((field) => field.kind !== "signature").map((field) => (
-            <Field key={field.name} className="sign-inline-item">
-              <FieldLabel htmlFor={`sign-${field.name}`} className="sign-label">{fieldLabel(field)}</FieldLabel>
-              <SignControl field={field} signId={signId} onEdit={onEdit} />
-            </Field>
-          ))}
+          {fields
+            .filter((field) => field.kind !== "signature")
+            .map((field) => (
+              <Field key={field.name} className="sign-inline-item">
+                <FieldLabel htmlFor={`sign-${field.name}`} className="sign-label">
+                  {fieldLabel(field)}
+                </FieldLabel>
+                <SignControl field={field} signId={signId} onEdit={onEdit} />
+              </Field>
+            ))}
         </div>
         {signature ? (
           <>
-            <p className="sign-label" id="lead-signature-label">{signature.label}</p>
-            <p className="sign-hint">Leave this blank. Sign it by hand on the printed copy, or in the PDF.</p>
+            <p className="sign-label" id="lead-signature-label">
+              {signature.label}
+            </p>
+            <p className="sign-hint">
+              Leave this blank. Sign it by hand on the printed copy, or in the PDF.
+            </p>
             <SignatureSpace />
           </>
         ) : null}
@@ -110,7 +118,9 @@ function BoxedFields({
       {title ? <p className="sign-label">{title}</p> : null}
       {fields.map((field) => (
         <Field key={field.name}>
-          <FieldLabel htmlFor={`sign-${field.name}`} className="sign-label">{field.label}</FieldLabel>
+          <FieldLabel htmlFor={`sign-${field.name}`} className="sign-label">
+            {field.label}
+          </FieldLabel>
           <SignControl field={field} signId={signId} onEdit={onEdit} />
         </Field>
       ))}
@@ -122,7 +132,11 @@ function SignBlock({ block, onEdit }: { block: Block; onEdit: SignoffEdit }) {
   const fields = block.fields ?? [];
   const signId = block.signId ?? "";
   if (!fields.some((field) => field.kind === "choice")) {
-    return <div className="sign-group">{BoxedFields({ title: block.text, fields, inline: true, signId, onEdit })}</div>;
+    return (
+      <div className="sign-group">
+        {BoxedFields({ title: block.text, fields, inline: true, signId, onEdit })}
+      </div>
+    );
   }
   const group = fields.find((field) => field.group)?.group ?? "ack";
   const selected = fields.find((field) => field.kind === "choice" && field.selected);
@@ -139,29 +153,49 @@ function SignBlock({ block, onEdit }: { block: Block; onEdit: SignoffEdit }) {
             className="flex flex-row flex-wrap gap-4"
             aria-label={`${block.text} acknowledgment`}
             onValueChange={(next) => {
-              const field = fields.find((item) => item.kind === "choice" && choiceValue(item) === next);
+              const field = fields.find(
+                (item) => item.kind === "choice" && choiceValue(item) === next,
+              );
               if (field) onEdit(signId, field.name, next);
             }}
           >
-            {fields.filter((field) => field.kind === "choice").map((field) => {
-              const id = `sign-${field.name}`;
-              return (
-                <Field key={field.name} orientation="horizontal" className="ack-choice w-auto items-center">
-                  <RadioGroupItem id={id} value={choiceValue(field)} />
-                  <FieldLabel htmlFor={id} className="font-normal">{field.label}</FieldLabel>
-                </Field>
-              );
-            })}
+            {fields
+              .filter((field) => field.kind === "choice")
+              .map((field) => {
+                const id = `sign-${field.name}`;
+                return (
+                  <Field
+                    key={field.name}
+                    orientation="horizontal"
+                    className="ack-choice w-auto items-center"
+                  >
+                    <RadioGroupItem id={id} value={choiceValue(field)} />
+                    <FieldLabel htmlFor={id} className="font-normal">
+                      {field.label}
+                    </FieldLabel>
+                  </Field>
+                );
+              })}
           </RadioGroup>
-          {fields.filter((field) => field.kind === "date").map((field) => (
-            <Field key={field.name} orientation="horizontal" className="ack-date w-auto items-center">
-              <FieldLabel htmlFor={`sign-${field.name}`} className="sign-label">Date</FieldLabel>
-              <SignControl field={field} signId={signId} onEdit={onEdit} />
-            </Field>
-          ))}
+          {fields
+            .filter((field) => field.kind === "date")
+            .map((field) => (
+              <Field
+                key={field.name}
+                orientation="horizontal"
+                className="ack-date w-auto items-center"
+              >
+                <FieldLabel htmlFor={`sign-${field.name}`} className="sign-label">
+                  Date
+                </FieldLabel>
+                <SignControl field={field} signId={signId} onEdit={onEdit} />
+              </Field>
+            ))}
         </div>
       </div>
-      {boxed.length > 0 ? BoxedFields({ title: "", fields: boxed, inline: false, signId, onEdit }) : null}
+      {boxed.length > 0
+        ? BoxedFields({ title: "", fields: boxed, inline: false, signId, onEdit })
+        : null}
     </div>
   );
 }
@@ -192,13 +226,42 @@ function BlockNode({ block, onEdit }: { block: Block; onEdit: SignoffEdit }) {
   if (block.type === "step") return null;
   if (block.type === "break") return <div className="sheet-break" />;
   if (block.type === "table") return <InventoryTable rows={block.rows ?? []} />;
-  const className = block.text.startsWith("Aligned to:") ? `r-${block.type} r-aligned` : `r-${block.type}`;
+  const className = block.text.startsWith("Aligned to:")
+    ? `r-${block.type} r-aligned`
+    : `r-${block.type}`;
   const content = block.text;
-  if (block.type === "h1") return <h1 id={block.anchor} className={`${className} report-title`}>{content}</h1>;
-  if (block.type === "h2") return <h2 id={block.anchor} className={className}>{content}</h2>;
-  if (block.type === "h3") return <h3 id={block.anchor} className={className}>{content}</h3>;
-  if (block.type === "p" || block.type === "label" || block.type === "field" || block.type === "note" || block.type === "qa" || block.type === "bullet" || block.type === "sub") {
-    return <p id={block.anchor} className={className}>{content}</p>;
+  if (block.type === "h1")
+    return (
+      <h1 id={block.anchor} className={`${className} report-title`}>
+        {content}
+      </h1>
+    );
+  if (block.type === "h2")
+    return (
+      <h2 id={block.anchor} className={className}>
+        {content}
+      </h2>
+    );
+  if (block.type === "h3")
+    return (
+      <h3 id={block.anchor} className={className}>
+        {content}
+      </h3>
+    );
+  if (
+    block.type === "p" ||
+    block.type === "label" ||
+    block.type === "field" ||
+    block.type === "note" ||
+    block.type === "qa" ||
+    block.type === "bullet" ||
+    block.type === "sub"
+  ) {
+    return (
+      <p id={block.anchor} className={className}>
+        {content}
+      </p>
+    );
   }
   const unexpected: never = block.type;
   return unexpected;
@@ -216,9 +279,14 @@ function Blocks({ blocks, onEdit }: { blocks: Block[]; onEdit: SignoffEdit }) {
         {items.map((block, index) => (
           <li key={`${block.text}-${index}`}>
             {block.link ? <a href={`#${block.link}`}>{block.text}</a> : block.text}
-            {(block.aside ?? "").split("\n").filter(Boolean).map((line) => (
-              <div key={line} className="r-aside">{line}</div>
-            ))}
+            {(block.aside ?? "")
+              .split("\n")
+              .filter(Boolean)
+              .map((line) => (
+                <div key={line} className="r-aside">
+                  {line}
+                </div>
+              ))}
           </li>
         ))}
       </ol>,

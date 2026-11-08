@@ -18,7 +18,9 @@ export function uniqueWarnings(warnings: GlyphWarning[]): GlyphWarning[] {
 }
 
 /** Four PDFs and the same four documents as Word files, zipped in the browser. */
-export async function reportPackageZip(doc: ReportDoc): Promise<{ blob: Blob; warnings: GlyphWarning[]; names: string[] }> {
+export async function reportPackageZip(
+  doc: ReportDoc,
+): Promise<{ blob: Blob; warnings: GlyphWarning[]; names: string[] }> {
   const stem = reportFileStem(doc.systemName);
   const files: Record<string, Uint8Array> = {};
   const warnings: GlyphWarning[] = [];

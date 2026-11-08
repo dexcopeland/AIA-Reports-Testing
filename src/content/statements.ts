@@ -32,7 +32,9 @@ function unknownChoice(status: ItemStatus, mitigation: string | null): ChoiceDef
   };
 }
 
-function define(item: Omit<StatementDef, "proposed" | "choices"> & { rows: ChoiceDef[] }): StatementDef {
+function define(
+  item: Omit<StatementDef, "proposed" | "choices"> & { rows: ChoiceDef[] },
+): StatementDef {
   return {
     ...item,
     proposed: true,
@@ -58,12 +60,47 @@ export const STATEMENTS: StatementDef[] = [
     unknownStatus: gap,
     unknownMitigation: "M-REVIEW",
     rows: [
-      choice("none", "No one reviews outputs. They take effect on their own.", gap, "M-REVIEW", "gate"),
-      choice("after_only", "Staff look at outputs only after they take effect, or only when someone complains.", gap, "M-REVIEW", "gate"),
-      choice("sample", "Staff review a sample, or only flagged cases, before they take effect.", partial, "M-REVIEW", "gate"),
-      choice("planned", "Review of every output before it takes effect is planned, with a start date.", partial, "M-REVIEW", "date"),
-      choice("every_unwritten", "A named role reviews every output before it takes effect, but how they review is not written down.", partial, "M-REVIEW"),
-      choice("every_written", "A named role reviews every output before it takes effect, following a written procedure.", met, null, "ev"),
+      choice(
+        "none",
+        "No one reviews outputs. They take effect on their own.",
+        gap,
+        "M-REVIEW",
+        "gate",
+      ),
+      choice(
+        "after_only",
+        "Staff look at outputs only after they take effect, or only when someone complains.",
+        gap,
+        "M-REVIEW",
+        "gate",
+      ),
+      choice(
+        "sample",
+        "Staff review a sample, or only flagged cases, before they take effect.",
+        partial,
+        "M-REVIEW",
+        "gate",
+      ),
+      choice(
+        "planned",
+        "Review of every output before it takes effect is planned, with a start date.",
+        partial,
+        "M-REVIEW",
+        "date",
+      ),
+      choice(
+        "every_unwritten",
+        "A named role reviews every output before it takes effect, but how they review is not written down.",
+        partial,
+        "M-REVIEW",
+      ),
+      choice(
+        "every_written",
+        "A named role reviews every output before it takes effect, following a written procedure.",
+        met,
+        null,
+        "ev",
+      ),
     ],
   }),
   define({
@@ -76,10 +113,32 @@ export const STATEMENTS: StatementDef[] = [
     unknownStatus: gap,
     unknownMitigation: "M-REVIEW",
     rows: [
-      choice("cannot", "Reviewers cannot change outputs, and no one can pause the AI system.", gap, "M-REVIEW"),
-      choice("change_only", "Reviewers can change outputs, but no named role can pause or switch off the AI system.", partial, "M-REVIEW"),
-      choice("planned", "Change and stop powers are planned, with a date.", partial, "M-REVIEW", "date"),
-      choice("both", "Reviewers can change outputs, and a named role can pause or switch off the AI system.", met, null, "ev"),
+      choice(
+        "cannot",
+        "Reviewers cannot change outputs, and no one can pause the AI system.",
+        gap,
+        "M-REVIEW",
+      ),
+      choice(
+        "change_only",
+        "Reviewers can change outputs, but no named role can pause or switch off the AI system.",
+        partial,
+        "M-REVIEW",
+      ),
+      choice(
+        "planned",
+        "Change and stop powers are planned, with a date.",
+        partial,
+        "M-REVIEW",
+        "date",
+      ),
+      choice(
+        "both",
+        "Reviewers can change outputs, and a named role can pause or switch off the AI system.",
+        met,
+        null,
+        "ev",
+      ),
     ],
   }),
   define({
@@ -93,7 +152,12 @@ export const STATEMENTS: StatementDef[] = [
     unknownMitigation: "M-REVIEW",
     rows: [
       choice("none", "Changes to outputs are not recorded.", gap, "M-REVIEW"),
-      choice("sometimes", "Changes are sometimes noted, with no set place or format.", partial, "M-REVIEW"),
+      choice(
+        "sometimes",
+        "Changes are sometimes noted, with no set place or format.",
+        partial,
+        "M-REVIEW",
+      ),
       choice("planned", "Recording is planned, with a date.", partial, "M-REVIEW", "date"),
       choice("every", "Every change is recorded with who, when and why.", met, null, "ev"),
     ],
@@ -108,11 +172,33 @@ export const STATEMENTS: StatementDef[] = [
     unknownStatus: notYet,
     unknownMitigation: null,
     rows: [
-      choice("none", "Staff get no training or written instructions on this AI system.", notYet, "M-TRAIN"),
+      choice(
+        "none",
+        "Staff get no training or written instructions on this AI system.",
+        notYet,
+        "M-TRAIN",
+      ),
       choice("informal", "Staff get informal or spoken guidance only.", partly, "M-TRAIN"),
-      choice("planned", "Training and written instructions are planned, with a date.", partly, "M-TRAIN", "date"),
-      choice("partial_written", "Written instructions cover purpose and limits, but not prohibited uses or what to do about uses outside the assessed purpose.", partly, "M-TRAIN"),
-      choice("full", "Written instructions and training cover purpose, limits, prohibited uses and when to check output, and new uses go back to intake.", inPlace, null, "evopt"),
+      choice(
+        "planned",
+        "Training and written instructions are planned, with a date.",
+        partly,
+        "M-TRAIN",
+        "date",
+      ),
+      choice(
+        "partial_written",
+        "Written instructions cover purpose and limits, but not prohibited uses or what to do about uses outside the assessed purpose.",
+        partly,
+        "M-TRAIN",
+      ),
+      choice(
+        "full",
+        "Written instructions and training cover purpose, limits, prohibited uses and when to check output, and new uses go back to intake.",
+        inPlace,
+        null,
+        "evopt",
+      ),
     ],
   }),
   define({
@@ -126,9 +212,20 @@ export const STATEMENTS: StatementDef[] = [
     unknownMitigation: "M-NOTICE",
     rows: [
       choice("none", "People are not told AI is involved.", gap, "M-NOTICE"),
-      choice("general", "A general notice exists, such as a web page, but not where people meet the decision or contact.", partial, "M-NOTICE"),
+      choice(
+        "general",
+        "A general notice exists, such as a web page, but not where people meet the decision or contact.",
+        partial,
+        "M-NOTICE",
+      ),
       choice("planned", "A notice is planned, with a date.", partial, "M-NOTICE", "date"),
-      choice("at_decision", "People are told in plain language, where they meet the decision or contact, that AI is involved.", met, null, "ev"),
+      choice(
+        "at_decision",
+        "People are told in plain language, where they meet the decision or contact, that AI is involved.",
+        met,
+        null,
+        "ev",
+      ),
     ],
   }),
   define({
@@ -142,9 +239,20 @@ export const STATEMENTS: StatementDef[] = [
     unknownMitigation: "M-NOTICE",
     rows: [
       choice("none", "There is no way to reach a person about an AI output.", gap, "M-NOTICE"),
-      choice("general", "People can use the general agency contact, but staff there are not set up to answer questions about the output.", partial, "M-NOTICE"),
+      choice(
+        "general",
+        "People can use the general agency contact, but staff there are not set up to answer questions about the output.",
+        partial,
+        "M-NOTICE",
+      ),
       choice("planned", "A contact path is planned, with a date.", partial, "M-NOTICE", "date"),
-      choice("set_path", "A set contact path (phone, email or in person) reaches staff who can review the output.", met, null, "ev"),
+      choice(
+        "set_path",
+        "A set contact path (phone, email or in person) reaches staff who can review the output.",
+        met,
+        null,
+        "ev",
+      ),
     ],
   }),
   define({
@@ -158,9 +266,26 @@ export const STATEMENTS: StatementDef[] = [
     unknownMitigation: "M-CONTEST",
     rows: [
       choice("none", "People cannot correct their data or challenge a result.", gap, "M-CONTEST"),
-      choice("general", "A general complaint or appeal process exists, but it does not cover AI outputs or data fixes.", partial, "M-CONTEST"),
-      choice("planned", "A correction and challenge path is planned, with a date.", partial, "M-CONTEST", "date"),
-      choice("reviewed", "People can correct their data and challenge a result, and a person reviews the challenge and can change the result.", met, null, "ev"),
+      choice(
+        "general",
+        "A general complaint or appeal process exists, but it does not cover AI outputs or data fixes.",
+        partial,
+        "M-CONTEST",
+      ),
+      choice(
+        "planned",
+        "A correction and challenge path is planned, with a date.",
+        partial,
+        "M-CONTEST",
+        "date",
+      ),
+      choice(
+        "reviewed",
+        "People can correct their data and challenge a result, and a person reviews the challenge and can change the result.",
+        met,
+        null,
+        "ev",
+      ),
     ],
   }),
   define({
@@ -174,9 +299,25 @@ export const STATEMENTS: StatementDef[] = [
     unknownMitigation: null,
     rows: [
       choice("english_only", "Notices and contact are in English only.", gap, "M-LANG"),
-      choice("on_request", "Interpreters are available only if someone asks, and this is not offered.", partial, "M-LANG"),
-      choice("untested", "Translated materials exist, but speakers of those languages have not checked them.", partial, "M-LANG"),
-      choice("checked", "Notices and contact are offered in named languages, checked by speakers or interpreters.", met, null, "ev"),
+      choice(
+        "on_request",
+        "Interpreters are available only if someone asks, and this is not offered.",
+        partial,
+        "M-LANG",
+      ),
+      choice(
+        "untested",
+        "Translated materials exist, but speakers of those languages have not checked them.",
+        partial,
+        "M-LANG",
+      ),
+      choice(
+        "checked",
+        "Notices and contact are offered in named languages, checked by speakers or interpreters.",
+        met,
+        null,
+        "ev",
+      ),
     ],
   }),
   define({
@@ -189,10 +330,25 @@ export const STATEMENTS: StatementDef[] = [
     unknownStatus: partial,
     unknownMitigation: null,
     rows: [
-      choice("shut_out", "Our practice shuts this group out, for example online only for people without internet.", gap, "M-ACCESS"),
+      choice(
+        "shut_out",
+        "Our practice shuts this group out, for example online only for people without internet.",
+        gap,
+        "M-ACCESS",
+      ),
       choice("no_path", "There is no path that fits this group.", partial, "M-ACCESS"),
-      choice("hard", "A path exists, but this group would have trouble using it.", partial, "M-ACCESS"),
-      choice("fits", "A path that fits this group is in place, such as paper, phone, in person, accessible formats or an interpreter.", met, null),
+      choice(
+        "hard",
+        "A path exists, but this group would have trouble using it.",
+        partial,
+        "M-ACCESS",
+      ),
+      choice(
+        "fits",
+        "A path that fits this group is in place, such as paper, phone, in person, accessible formats or an interpreter.",
+        met,
+        null,
+      ),
     ],
   }),
   define({
@@ -205,10 +361,21 @@ export const STATEMENTS: StatementDef[] = [
     unknownStatus: gap,
     unknownMitigation: "M-ABUSE",
     rows: [
-      choice("none", "None of these is in place: quick exit, no saved history on the device or account, notices that cannot reveal use.", gap, "M-ABUSE"),
+      choice(
+        "none",
+        "None of these is in place: quick exit, no saved history on the device or account, notices that cannot reveal use.",
+        gap,
+        "M-ABUSE",
+      ),
       choice("some", "One or two of the three are in place.", partial, "M-ABUSE"),
       choice("planned", "All three are planned, with a date.", partial, "M-ABUSE", "date"),
-      choice("all", "Quick exit, no saved chat or search history, and notices that cannot reveal use to the person causing harm are all in place.", met, null, "ev"),
+      choice(
+        "all",
+        "Quick exit, no saved chat or search history, and notices that cannot reveal use to the person causing harm are all in place.",
+        met,
+        null,
+        "ev",
+      ),
     ],
   }),
   define({
@@ -222,9 +389,26 @@ export const STATEMENTS: StatementDef[] = [
     unknownMitigation: null,
     rows: [
       choice("none", "Sources are not recorded, and quality is not checked.", notYet, "M-DATAQ"),
-      choice("informal", "Staff know the sources, but they are not recorded, and quality is checked informally.", partly, "M-DATAQ"),
-      choice("planned", "Sources are recorded; a quality check is planned, with a date.", partly, "M-DATAQ", "date"),
-      choice("scheduled", "Sources are recorded, and quality is checked on a set schedule with results kept.", inPlace, null, "evopt"),
+      choice(
+        "informal",
+        "Staff know the sources, but they are not recorded, and quality is checked informally.",
+        partly,
+        "M-DATAQ",
+      ),
+      choice(
+        "planned",
+        "Sources are recorded; a quality check is planned, with a date.",
+        partly,
+        "M-DATAQ",
+        "date",
+      ),
+      choice(
+        "scheduled",
+        "Sources are recorded, and quality is checked on a set schedule with results kept.",
+        inPlace,
+        null,
+        "evopt",
+      ),
     ],
   }),
   define({
@@ -238,9 +422,20 @@ export const STATEMENTS: StatementDef[] = [
     unknownMitigation: null,
     rows: [
       choice("none", "Nothing protects the data from being changed.", notYet, "M-DATAQ"),
-      choice("limited", "Access is limited, but changes are not logged or checked.", partly, "M-DATAQ"),
+      choice(
+        "limited",
+        "Access is limited, but changes are not logged or checked.",
+        partly,
+        "M-DATAQ",
+      ),
       choice("planned", "Protection is planned, with a date.", partly, "M-DATAQ", "date"),
-      choice("logged", "Only named roles can change the data, and changes are logged and checked.", inPlace, null, "evopt"),
+      choice(
+        "logged",
+        "Only named roles can change the data, and changes are logged and checked.",
+        inPlace,
+        null,
+        "evopt",
+      ),
     ],
   }),
   define({
@@ -253,10 +448,26 @@ export const STATEMENTS: StatementDef[] = [
     unknownStatus: notYet,
     unknownMitigation: null,
     rows: [
-      choice("too_wide", "Users can pull in documents they could not otherwise see.", notYet, "M-DATAQ"),
+      choice(
+        "too_wide",
+        "Users can pull in documents they could not otherwise see.",
+        notYet,
+        "M-DATAQ",
+      ),
       choice("planned", "Limits are planned, with a date.", partly, "M-DATAQ", "date"),
-      choice("trusted", "Users get only what they can already see, but retrieved text is not treated as untrusted.", partly, "M-DATAQ"),
-      choice("untrusted", "Users get only what they can already see, and retrieved text is treated as information, not instructions.", inPlace, null, "evopt"),
+      choice(
+        "trusted",
+        "Users get only what they can already see, but retrieved text is not treated as untrusted.",
+        partly,
+        "M-DATAQ",
+      ),
+      choice(
+        "untrusted",
+        "Users get only what they can already see, and retrieved text is treated as information, not instructions.",
+        inPlace,
+        null,
+        "evopt",
+      ),
     ],
   }),
   define({
@@ -271,9 +482,26 @@ export const STATEMENTS: StatementDef[] = [
     rows: [
       choice("none", "The data is not encrypted.", gap, "M-ENCRYPT"),
       choice("one", "It is encrypted at rest or in transit, but not both.", partial, "M-ENCRYPT"),
-      choice("planned", "Encryption of both is planned, with a date.", partial, "M-ENCRYPT", "date"),
-      choice("agency_only", "Both are in place on agency systems, but not confirmed for the vendor's systems.", partial, "M-ENCRYPT"),
-      choice("everywhere", "The data is encrypted at rest and in transit everywhere it is processed or stored.", met, null, "ev"),
+      choice(
+        "planned",
+        "Encryption of both is planned, with a date.",
+        partial,
+        "M-ENCRYPT",
+        "date",
+      ),
+      choice(
+        "agency_only",
+        "Both are in place on agency systems, but not confirmed for the vendor's systems.",
+        partial,
+        "M-ENCRYPT",
+      ),
+      choice(
+        "everywhere",
+        "The data is encrypted at rest and in transit everywhere it is processed or stored.",
+        met,
+        null,
+        "ev",
+      ),
     ],
   }),
   define({
@@ -287,8 +515,19 @@ export const STATEMENTS: StatementDef[] = [
     unknownMitigation: "M-ENCRYPT",
     rows: [
       choice("open", "Anyone at the agency or vendor can reach the data.", gap, "M-ENCRYPT"),
-      choice("practice", "Access is limited by practice, not by system controls.", partial, "M-ENCRYPT"),
-      choice("planned", "System access controls are planned, with a date.", partial, "M-ENCRYPT", "date"),
+      choice(
+        "practice",
+        "Access is limited by practice, not by system controls.",
+        partial,
+        "M-ENCRYPT",
+      ),
+      choice(
+        "planned",
+        "System access controls are planned, with a date.",
+        partial,
+        "M-ENCRYPT",
+        "date",
+      ),
       choice("controls", "System controls limit access to authorized staff.", met, null, "ev"),
     ],
   }),
@@ -304,7 +543,12 @@ export const STATEMENTS: StatementDef[] = [
     rows: [
       choice("none", "No privacy review has started.", gap, "M-PRIVACY"),
       choice("pta_progress", "A PTA is in progress.", partial, "M-PRIVACY"),
-      choice("pia_open", "The PTA is done; a PIA was directed and is not done.", partial, "M-PRIVACY"),
+      choice(
+        "pia_open",
+        "The PTA is done; a PIA was directed and is not done.",
+        partial,
+        "M-PRIVACY",
+      ),
       choice("done", "The PTA is done, and the PIA is done if one was directed.", met, null, "ev"),
     ],
   }),
@@ -319,8 +563,18 @@ export const STATEMENTS: StatementDef[] = [
     unknownMitigation: null,
     rows: [
       choice("none", "No retention period is set.", partial, "M-PRIVACY"),
-      choice("not_deleted", "A period is set, but deletion does not happen on schedule.", partial, "M-PRIVACY"),
-      choice("on_schedule", "A period is set under the records schedule, and data is deleted on time.", met, null),
+      choice(
+        "not_deleted",
+        "A period is set, but deletion does not happen on schedule.",
+        partial,
+        "M-PRIVACY",
+      ),
+      choice(
+        "on_schedule",
+        "A period is set under the records schedule, and data is deleted on time.",
+        met,
+        null,
+      ),
     ],
   }),
   define({
@@ -335,8 +589,19 @@ export const STATEMENTS: StatementDef[] = [
     rows: [
       choice("allowed", "The vendor may use State data to train its models.", gap, "M-NOTRAIN"),
       choice("silent", "The contract does not say.", gap, "M-NOTRAIN"),
-      choice("requested", "A ban has been requested, or is in a draft contract.", partial, "M-NOTRAIN"),
-      choice("banned", "The signed contract bans the vendor from training on State data.", met, null, "ev"),
+      choice(
+        "requested",
+        "A ban has been requested, or is in a draft contract.",
+        partial,
+        "M-NOTRAIN",
+      ),
+      choice(
+        "banned",
+        "The signed contract bans the vendor from training on State data.",
+        met,
+        null,
+        "ev",
+      ),
     ],
   }),
   define({
@@ -349,8 +614,18 @@ export const STATEMENTS: StatementDef[] = [
     unknownStatus: notYet,
     unknownMitigation: null,
     rows: [
-      choice("absent", "The contract does not include this term, and we have not asked.", notYet, "M-CONTRACT"),
-      choice("requested", "We have asked for it, or it is under negotiation.", partly, "M-CONTRACT"),
+      choice(
+        "absent",
+        "The contract does not include this term, and we have not asked.",
+        notYet,
+        "M-CONTRACT",
+      ),
+      choice(
+        "requested",
+        "We have asked for it, or it is under negotiation.",
+        partly,
+        "M-CONTRACT",
+      ),
       choice("draft", "It is in a draft contract.", partly, "M-CONTRACT", "date"),
       choice("signed", "It is in the signed contract.", inPlace, null, "evopt"),
     ],
@@ -366,9 +641,24 @@ export const STATEMENTS: StatementDef[] = [
     unknownMitigation: null,
     rows: [
       choice("none", "Risks have not been looked at.", notYet, "M-IMPACT"),
-      choice("talked", "The team has talked about risks, but nothing is written down.", partly, "M-IMPACT"),
-      choice("partial_list", "A written list covers some of: misuse, how it fails, who is harmed.", partly, "M-IMPACT"),
-      choice("written", "A written analysis covers foreseeable misuse, how it fails or gets results wrong, and who is harmed or bears the cost.", inPlace, null),
+      choice(
+        "talked",
+        "The team has talked about risks, but nothing is written down.",
+        partly,
+        "M-IMPACT",
+      ),
+      choice(
+        "partial_list",
+        "A written list covers some of: misuse, how it fails, who is harmed.",
+        partly,
+        "M-IMPACT",
+      ),
+      choice(
+        "written",
+        "A written analysis covers foreseeable misuse, how it fails or gets results wrong, and who is harmed or bears the cost.",
+        inPlace,
+        null,
+      ),
     ],
   }),
   define({
@@ -381,10 +671,32 @@ export const STATEMENTS: StatementDef[] = [
     unknownStatus: gap,
     unknownMitigation: "M-ACCURACY",
     rows: [
-      choice("vendor_only", "It has not been tested; we rely on what the vendor says.", gap, "M-ACCURACY"),
-      choice("informal", "It was tested once or informally, with no set pass criteria.", partial, "M-ACCURACY"),
-      choice("planned", "Testing with set criteria is planned, with a date.", partial, "M-ACCURACY", "date"),
-      choice("recorded", "It was tested on our own data with set criteria, and results are recorded.", met, null, "ev"),
+      choice(
+        "vendor_only",
+        "It has not been tested; we rely on what the vendor says.",
+        gap,
+        "M-ACCURACY",
+      ),
+      choice(
+        "informal",
+        "It was tested once or informally, with no set pass criteria.",
+        partial,
+        "M-ACCURACY",
+      ),
+      choice(
+        "planned",
+        "Testing with set criteria is planned, with a date.",
+        partial,
+        "M-ACCURACY",
+        "date",
+      ),
+      choice(
+        "recorded",
+        "It was tested on our own data with set criteria, and results are recorded.",
+        met,
+        null,
+        "ev",
+      ),
     ],
   }),
   define({
@@ -398,10 +710,32 @@ export const STATEMENTS: StatementDef[] = [
     unknownMitigation: "M-BIAS",
     rows: [
       choice("none", "Results are not compared across groups.", gap, "M-BIAS"),
-      choice("vendor_claim", "The vendor says it tested for bias, but we have not seen results for a population like Maryland's.", gap, "M-BIAS"),
-      choice("planned", "Testing on a population like Maryland's is planned, with a date.", partial, "M-BIAS", "date"),
-      choice("once", "Tested once on a population like Maryland's, with no ongoing outcome checks.", partial, "M-BIAS"),
-      choice("audited", "Tested on a population like Maryland's, and outcomes across groups are checked on a set schedule.", met, null, "ev"),
+      choice(
+        "vendor_claim",
+        "The vendor says it tested for bias, but we have not seen results for a population like Maryland's.",
+        gap,
+        "M-BIAS",
+      ),
+      choice(
+        "planned",
+        "Testing on a population like Maryland's is planned, with a date.",
+        partial,
+        "M-BIAS",
+        "date",
+      ),
+      choice(
+        "once",
+        "Tested once on a population like Maryland's, with no ongoing outcome checks.",
+        partial,
+        "M-BIAS",
+      ),
+      choice(
+        "audited",
+        "Tested on a population like Maryland's, and outcomes across groups are checked on a set schedule.",
+        met,
+        null,
+        "ev",
+      ),
     ],
   }),
   define({
@@ -415,9 +749,20 @@ export const STATEMENTS: StatementDef[] = [
     unknownMitigation: "M-ACCURACY",
     rows: [
       choice("none", "Nothing is monitored after launch.", gap, "M-ACCURACY"),
-      choice("complaints", "Problems are noticed only when staff or the public report them.", partial, "M-ACCURACY"),
+      choice(
+        "complaints",
+        "Problems are noticed only when staff or the public report them.",
+        partial,
+        "M-ACCURACY",
+      ),
       choice("planned", "Monitoring is planned, with a date.", partial, "M-ACCURACY", "date"),
-      choice("threshold", "Accuracy and errors are tracked on a set schedule against an agreed threshold.", met, null, "ev"),
+      choice(
+        "threshold",
+        "Accuracy and errors are tracked on a set schedule against an agreed threshold.",
+        met,
+        null,
+        "ev",
+      ),
     ],
   }),
   define({
@@ -431,9 +776,20 @@ export const STATEMENTS: StatementDef[] = [
     unknownMitigation: null,
     rows: [
       choice("none", "Uses are not logged.", notYet, "M-LOG"),
-      choice("partial_fields", "Some fields are logged, but not input, user or model version.", partly, "M-LOG"),
+      choice(
+        "partial_fields",
+        "Some fields are logged, but not input, user or model version.",
+        partly,
+        "M-LOG",
+      ),
       choice("planned", "Full logging is planned, with a date.", partly, "M-LOG", "date"),
-      choice("full", "Each use is logged with input, output, time, user and model version, and logs are protected at the system's data level.", inPlace, null, "evopt"),
+      choice(
+        "full",
+        "Each use is logged with input, output, time, user and model version, and logs are protected at the system's data level.",
+        inPlace,
+        null,
+        "evopt",
+      ),
     ],
   }),
   define({
@@ -448,8 +804,19 @@ export const STATEMENTS: StatementDef[] = [
     rows: [
       choice("never", "It is never re-tested.", notYet, "M-LOG"),
       choice("on_problem", "It is re-tested only when a problem is reported.", partly, "M-LOG"),
-      choice("one_of", "It is re-tested on a schedule, or after model updates, but not both.", partly, "M-LOG"),
-      choice("both", "A fixed test set is re-run on a schedule and after each model update.", inPlace, null, "evopt"),
+      choice(
+        "one_of",
+        "It is re-tested on a schedule, or after model updates, but not both.",
+        partly,
+        "M-LOG",
+      ),
+      choice(
+        "both",
+        "A fixed test set is re-run on a schedule and after each model update.",
+        inPlace,
+        null,
+        "evopt",
+      ),
     ],
   }),
   define({
@@ -466,7 +833,12 @@ export const STATEMENTS: StatementDef[] = [
       choice("planned", "Protection is planned, with a date.", partly, "M-SEC", "date"),
       choice("some", "Some inputs or outputs are covered, not all.", partly, "M-SEC"),
       choice("all", "Protection is in place for all inputs and outputs.", inPlace, null, "evopt"),
-      choice("does_not_apply", "Does not apply, because of a design fact ticked in Q6.", inPlace, null),
+      choice(
+        "does_not_apply",
+        "Does not apply, because of a design fact ticked in Q6.",
+        inPlace,
+        null,
+      ),
     ],
   }),
   define({
@@ -482,7 +854,13 @@ export const STATEMENTS: StatementDef[] = [
       choice("none", "There is no threat model or security testing.", notYet, "M-SEC"),
       choice("planned", "Testing is planned, with a date.", partly, "M-SEC", "date"),
       choice("untested", "A threat model is written, but not tested.", partly, "M-SEC"),
-      choice("tested", "A threat model and red team or similar testing are done, with results recorded.", inPlace, null, "evopt"),
+      choice(
+        "tested",
+        "A threat model and red team or similar testing are done, with results recorded.",
+        inPlace,
+        null,
+        "evopt",
+      ),
     ],
   }),
   define({
@@ -498,7 +876,13 @@ export const STATEMENTS: StatementDef[] = [
       choice("none", "No role is named for incidents or reassessment.", gap, "M-OWNER"),
       choice("named_only", "A role is named, but there is no written process.", partial, "M-OWNER"),
       choice("planned", "A process is planned, with a date.", partial, "M-OWNER", "date"),
-      choice("yearly", "Named roles cover monitoring, incidents and reassessment, with a written process and reassessment at least yearly.", met, null, "ev"),
+      choice(
+        "yearly",
+        "Named roles cover monitoring, incidents and reassessment, with a written process and reassessment at least yearly.",
+        met,
+        null,
+        "ev",
+      ),
     ],
   }),
   define({
@@ -512,9 +896,20 @@ export const STATEMENTS: StatementDef[] = [
     unknownMitigation: null,
     rows: [
       choice("none", "There is no plan to tell affected people.", notYet, "M-INCIDENT"),
-      choice("ad_hoc", "We would tell them case by case, with no set method or time.", partly, "M-INCIDENT"),
+      choice(
+        "ad_hoc",
+        "We would tell them case by case, with no set method or time.",
+        partly,
+        "M-INCIDENT",
+      ),
       choice("planned", "A notice process is planned, with a date.", partly, "M-INCIDENT", "date"),
-      choice("set", "A named role tells affected people and users, by a set method within a set time.", inPlace, null, "evopt"),
+      choice(
+        "set",
+        "A named role tells affected people and users, by a set method within a set time.",
+        inPlace,
+        null,
+        "evopt",
+      ),
     ],
   }),
   define({
@@ -527,10 +922,25 @@ export const STATEMENTS: StatementDef[] = [
     unknownStatus: notYet,
     unknownMitigation: null,
     rows: [
-      choice("inside", "Staff can raise concerns only inside the team that runs the AI system.", notYet, "M-INCIDENT"),
-      choice("untold", "General agency channels exist, but staff are not told they apply.", partly, "M-INCIDENT"),
+      choice(
+        "inside",
+        "Staff can raise concerns only inside the team that runs the AI system.",
+        notYet,
+        "M-INCIDENT",
+      ),
+      choice(
+        "untold",
+        "General agency channels exist, but staff are not told they apply.",
+        partly,
+        "M-INCIDENT",
+      ),
       choice("planned", "A channel is planned, with a date.", partly, "M-INCIDENT", "date"),
-      choice("told", "A channel outside the team is in place, and staff are told about it.", inPlace, null),
+      choice(
+        "told",
+        "A channel outside the team is in place, and staff are told about it.",
+        inPlace,
+        null,
+      ),
     ],
   }),
   define({
@@ -544,9 +954,24 @@ export const STATEMENTS: StatementDef[] = [
     unknownMitigation: null,
     rows: [
       choice("none", "Nothing triggers a re-check.", notYet, "M-CHANGE"),
-      choice("yearly_only", "It is re-checked only at the yearly reassessment.", partly, "M-CHANGE"),
-      choice("some", "Some changes trigger a re-check, but not all of: new model version, new data, new tools or permissions, new use.", partly, "M-CHANGE"),
-      choice("all_four", "All four changes trigger a re-check, and this is written into procedure.", inPlace, null),
+      choice(
+        "yearly_only",
+        "It is re-checked only at the yearly reassessment.",
+        partly,
+        "M-CHANGE",
+      ),
+      choice(
+        "some",
+        "Some changes trigger a re-check, but not all of: new model version, new data, new tools or permissions, new use.",
+        partly,
+        "M-CHANGE",
+      ),
+      choice(
+        "all_four",
+        "All four changes trigger a re-check, and this is written into procedure.",
+        inPlace,
+        null,
+      ),
     ],
   }),
   define({
@@ -561,8 +986,18 @@ export const STATEMENTS: StatementDef[] = [
     rows: [
       choice("none", "There is no retirement plan.", notYet, "M-CHANGE"),
       choice("draft", "A plan is drafted, with a date.", partly, "M-CHANGE", "date"),
-      choice("some", "The plan covers some of: models, data, document stores, logs.", partly, "M-CHANGE"),
-      choice("full", "The plan covers deleting or returning models, data, document stores and logs under the records schedule and contract.", inPlace, null),
+      choice(
+        "some",
+        "The plan covers some of: models, data, document stores, logs.",
+        partly,
+        "M-CHANGE",
+      ),
+      choice(
+        "full",
+        "The plan covers deleting or returning models, data, document stores and logs under the records schedule and contract.",
+        inPlace,
+        null,
+      ),
     ],
   }),
 ];
@@ -582,7 +1017,11 @@ export const THREATS: { id: string; label: string; designFact: string | null }[]
   { id: "poisoned_data", label: "Poisoned training or reference data", designFact: null },
   { id: "model_theft", label: "Model theft or copying", designFact: null },
   { id: "output_leakage", label: "Data leaking through outputs", designFact: "no_personal_info" },
-  { id: "unsafe_output_handling", label: "Unsafe outputs passed to other systems", designFact: "outputs_not_passed" },
+  {
+    id: "unsafe_output_handling",
+    label: "Unsafe outputs passed to other systems",
+    designFact: "outputs_not_passed",
+  },
 ];
 
 export const GROUPS: { id: string; label: string }[] = [
@@ -600,6 +1039,10 @@ export const GROUPS: { id: string; label: string }[] = [
 
 export const RELATIONS: { id: string; label: string; individual: boolean }[] = [
   { id: "uses_system", label: "They use the AI system", individual: true },
-  { id: "acted_on_individually", label: "The output acts on them as individuals", individual: true },
+  {
+    id: "acted_on_individually",
+    label: "The output acts on them as individuals",
+    individual: true,
+  },
   { id: "affected_in_general", label: "They are affected only in general", individual: false },
 ];

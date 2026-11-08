@@ -6,8 +6,13 @@ declare module "pdfmake/build/pdfmake.js" {
 
   const pdfMake: {
     addVirtualFileSystem(files: Record<string, string>): void;
-    addFonts(fonts: Record<string, { normal: string; bold: string; italics: string; bolditalics: string }>): void;
-    createPdf(definition: Record<string, unknown>, options?: { bufferPages?: boolean }): PdfDocument;
+    addFonts(
+      fonts: Record<string, { normal: string; bold: string; italics: string; bolditalics: string }>,
+    ): void;
+    createPdf(
+      definition: Record<string, unknown>,
+      options?: { bufferPages?: boolean },
+    ): PdfDocument;
   };
 
   export default pdfMake;

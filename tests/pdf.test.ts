@@ -1,7 +1,12 @@
 import { PDFParse } from "pdf-parse";
 import { describe, expect, it } from "vitest";
 import { BLUF_OUTCOME } from "../src/engine/bluf";
-import { buildReport, documentView, type ReportDoc, type ReportDocument } from "../src/engine/report";
+import {
+  buildReport,
+  documentView,
+  type ReportDoc,
+  type ReportDocument,
+} from "../src/engine/report";
 import { reportToPdfBytes } from "../src/pdf/build-pdf";
 import { buildScenario } from "../src/scenarios/build";
 import { SCENARIOS } from "../src/scenarios/catalog";
@@ -15,7 +20,13 @@ async function pdfOf(report: ReportDoc, key: ReportDocument["key"]) {
   const text = await parser.getText();
   const info = await parser.getInfo();
   await parser.destroy();
-  return { bytes: raw, warnings, info, flat: text.text.replace(/\s+/g, " "), raw: raw.toString("latin1") };
+  return {
+    bytes: raw,
+    warnings,
+    info,
+    flat: text.text.replace(/\s+/g, " "),
+    raw: raw.toString("latin1"),
+  };
 }
 
 describe("PDF report", () => {
@@ -52,15 +63,26 @@ describe("PDF report", () => {
     expect(evidence.flat).toContain("Gates");
     expect(evidence.flat).toContain("What was checked:");
     expect(evidence.flat).toContain("Human oversight is in place");
-    expect(evidence.flat).toContain("Recommended practice checks (ISO/IEC 42001 and ISO/IEC 27090)");
+    expect(evidence.flat).toContain(
+      "Recommended practice checks (ISO/IEC 42001 and ISO/IEC 27090)",
+    );
     expect(submission.flat).toContain("Assessment Submission Record:");
     expect(submission.flat).toContain("Submission date:");
     expect(submission.flat).toContain("Q1. Intake reference number");
     expect(followup.flat).toContain("Follow-Up Actions:");
     expect(followup.flat).toContain("No follow-up step is open.");
     for (const part of report.documents) {
-      const file = part.key === "executive" ? executive : part.key === "evidence" ? evidence : part.key === "submission" ? submission : followup;
-      for (const heading of part.blocks.filter((block) => block.type === "h1" || block.type === "h2").map((block) => block.text)) {
+      const file =
+        part.key === "executive"
+          ? executive
+          : part.key === "evidence"
+            ? evidence
+            : part.key === "submission"
+              ? submission
+              : followup;
+      for (const heading of part.blocks
+        .filter((block) => block.type === "h1" || block.type === "h2")
+        .map((block) => block.text)) {
         expect(file.flat).toContain(heading);
       }
     }
@@ -112,7 +134,7 @@ describe("PDF report", () => {
     expect(evidence.flat).toContain("C9 –");
     const steps = report.blocks.filter((block) => block.type === "step");
     expect(steps.length).toBeGreaterThan(0);
-    const anchors = new Set(report.blocks.flatMap((block) => block.anchor ? [block.anchor] : []));
+    const anchors = new Set(report.blocks.flatMap((block) => (block.anchor ? [block.anchor] : [])));
     for (const step of steps) expect(step.link && anchors.has(step.link)).toBe(true);
   });
 });

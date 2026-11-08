@@ -48,7 +48,9 @@ describe("question cards", () => {
       ["q9_groups", "q9_other"],
       ["q10_role"],
     ]);
-    expect(SECTIONS.flatMap((item) => item.fields).some((field) => field.id.startsWith("q9_rel__"))).toBe(false);
+    expect(
+      SECTIONS.flatMap((item) => item.fields).some((field) => field.id.startsWith("q9_rel__")),
+    ).toBe(false);
   });
 
   it("puts short related answers in columns inside one card", () => {
@@ -79,12 +81,22 @@ describe("progress rail", () => {
   it("keeps a later section open after a rail visit even when that section becomes incomplete", () => {
     const restored = initialMaxReached([2, 0, 0]);
     expect(restored).toBe(0);
-    const later = { maxReached: restored, complete: true, reportOpen: false, navigationEnabled: true };
+    const later = {
+      maxReached: restored,
+      complete: true,
+      reportOpen: false,
+      navigationEnabled: true,
+    };
     expect(sectionCanOpen(2, later)).toBe(true);
 
     const visited = reachedAfterOpen(restored, 2);
     expect(visited).toBe(2);
-    const cleared = { maxReached: visited, complete: false, reportOpen: false, navigationEnabled: true };
+    const cleared = {
+      maxReached: visited,
+      complete: false,
+      reportOpen: false,
+      navigationEnabled: true,
+    };
     expect(sectionCanOpen(2, cleared)).toBe(true);
     expect(sectionCanOpen(1, cleared)).toBe(true);
   });
@@ -103,8 +115,16 @@ describe("advance autosave", () => {
       signoff: { mitigations: [], lead_name: "Program manager", lead_title: "", lead_date: "" },
     };
     const saved: AnswerFile[] = [];
-    const next = persistAdvance(draft, (file) => saved.push(file), "2026-11-05T00:00:00.000Z");
+    const { file: next, persisted } = persistAdvance(
+      draft,
+      (file) => {
+        saved.push(file);
+        return true;
+      },
+      "2026-11-05T00:00:00.000Z",
+    );
 
+    expect(persisted).toBe(true);
     expect(saved).toEqual([next]);
     expect(next.answers.q2_agency).toBe("Department of Example");
     expect(next.example_label).toBe("Keep the label");
@@ -113,5 +133,23 @@ describe("advance autosave", () => {
     expect(next.schema_version).toBe(SCHEMA_VERSION);
     expect(next.form_version).toBe(FORM_VERSION);
     expect(next.rules_version).toBe(RULES_VERSION);
+  });
+
+  it("keeps the stamped file even when the save reports failure", () => {
+    const draft: AnswerFile = {
+      schema_version: SCHEMA_VERSION,
+      form_version: FORM_VERSION,
+      rules_version: RULES_VERSION,
+      answers: {},
+    };
+    const { file: next, persisted } = persistAdvance(
+      draft,
+      () => false,
+      "2026-11-05T00:00:00.000Z",
+    );
+
+    expect(next.saved_at).toBe("2026-11-05T00:00:00.000Z");
+    expect(next.rules_version).toBe(RULES_VERSION);
+    expect(persisted).toBe(false);
   });
 });

@@ -29,11 +29,18 @@ export function familyCoverage(faces: GlyphFont[]): GlyphFont {
 }
 
 function covers(font: GlyphFont, codePoint: number): boolean {
-  if (codePoint === 0x09 || codePoint === 0x0a || codePoint === 0x0d || codePoint === 0x20) return true;
+  if (codePoint === 0x09 || codePoint === 0x0a || codePoint === 0x0d || codePoint === 0x20)
+    return true;
   return font.hasGlyphForCodePoint(codePoint);
 }
 
-export function shapeText(text: string, primary: GlyphFont, fallback: GlyphFont, primaryName: string, fallbackName: string): { runs: TextRun[]; missing: string[] } {
+export function shapeText(
+  text: string,
+  primary: GlyphFont,
+  fallback: GlyphFont,
+  primaryName: string,
+  fallbackName: string,
+): { runs: TextRun[]; missing: string[] } {
   const runs: TextRun[] = [];
   const missing: string[] = [];
   let current = "";
@@ -45,8 +52,13 @@ export function shapeText(text: string, primary: GlyphFont, fallback: GlyphFont,
   };
   for (const character of text) {
     const codePoint = character.codePointAt(0) ?? 0;
-    const fontName = covers(primary, codePoint) ? primaryName : covers(fallback, codePoint) ? fallbackName : primaryName;
-    if (!covers(primary, codePoint) && !covers(fallback, codePoint) && character.trim()) missing.push(character);
+    const fontName = covers(primary, codePoint)
+      ? primaryName
+      : covers(fallback, codePoint)
+        ? fallbackName
+        : primaryName;
+    if (!covers(primary, codePoint) && !covers(fallback, codePoint) && character.trim())
+      missing.push(character);
     if (fontName !== currentFont && current) push();
     currentFont = fontName;
     current += character;
@@ -57,7 +69,11 @@ export function shapeText(text: string, primary: GlyphFont, fallback: GlyphFont,
 
 function explicitQuestions(block: Block): string[] {
   const lead = /^Answer relied on \(([^)]+)\):/.exec(block.text);
-  if (lead) return lead[1].split(",").map((part) => part.trim()).filter(Boolean);
+  if (lead)
+    return lead[1]
+      .split(",")
+      .map((part) => part.trim())
+      .filter(Boolean);
   if (block.type === "label") {
     const appendix = /^Q(\d+)\./.exec(block.text);
     if (appendix) return [`Q${appendix[1]}`];
@@ -92,7 +108,8 @@ function questionContext(blocks: Block[]): string[][] {
     }
   };
   for (let index = 0; index <= blocks.length; index += 1) {
-    const boundary = index === blocks.length || isHeading(blocks[index]) || isCriterion(blocks[index]);
+    const boundary =
+      index === blocks.length || isHeading(blocks[index]) || isCriterion(blocks[index]);
     if (!boundary) continue;
     fillFromLead(index);
     start = index + 1;
@@ -114,7 +131,12 @@ export function glyphWarnings(blocks: Block[], missing: string[]): GlyphWarning[
     const fieldText = (block.fields ?? []).map((field) => field.value ?? "").join("");
     const rowText = (block.rows ?? []).map((row) => `${row.field}${row.value}`).join("");
     for (const character of missing) {
-      if (!block.text.includes(character) && !fieldText.includes(character) && !rowText.includes(character)) continue;
+      if (
+        !block.text.includes(character) &&
+        !fieldText.includes(character) &&
+        !rowText.includes(character)
+      )
+        continue;
       const bucket = questions.get(character);
       if (!bucket) continue;
       const named = context[index] ?? [];
@@ -124,11 +146,20 @@ export function glyphWarnings(blocks: Block[], missing: string[]): GlyphWarning[
   });
   return missing.map((character) => ({
     character,
-    questions: [...(questions.get(character) ?? new Set(["the report"]))].sort((a, b) => a.localeCompare(b, "en", { numeric: true })),
+    questions: [...(questions.get(character) ?? new Set(["the report"]))].sort((a, b) =>
+      a.localeCompare(b, "en", { numeric: true }),
+    ),
   }));
 }
 
-export function pdfText(text: string, primary: GlyphFont, fallback: GlyphFont, primaryName: string, fallbackName: string, missing: Set<string>): string | TextRun[] {
+export function pdfText(
+  text: string,
+  primary: GlyphFont,
+  fallback: GlyphFont,
+  primaryName: string,
+  fallbackName: string,
+  missing: Set<string>,
+): string | TextRun[] {
   const shaped = shapeText(text, primary, fallback, primaryName, fallbackName);
   for (const character of shaped.missing) missing.add(character);
   if (shaped.runs.length === 0) return text;

@@ -1,0 +1,6 @@
+package-lock.json
+dist/
+coverage/
+docs/scenario-validation.md
+content/rules-index.json
+examples/*.json

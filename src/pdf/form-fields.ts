@@ -19,10 +19,21 @@ interface PdfRef {
 interface PdfKitDoc {
   initForm(): PdfKitDoc;
   switchToPage(index: number): PdfPage;
-  formText(name: string, x: number, y: number, w: number, h: number, options?: Record<string, unknown>): unknown;
+  formText(
+    name: string,
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    options?: Record<string, unknown>,
+  ): unknown;
   annotate(x: number, y: number, w: number, h: number, options: Record<string, unknown>): unknown;
   ref(data: Record<string, unknown>): PdfRef;
-  _fieldDict(name: string, type: string | null, options: Record<string, unknown>): Record<string, unknown>;
+  _fieldDict(
+    name: string,
+    type: string | null,
+    options: Record<string, unknown>,
+  ): Record<string, unknown>;
   _addToParent(ref: unknown): unknown;
   _ctm: number[];
   page: PdfPage;
@@ -53,14 +64,23 @@ function spots(doc: PdfKitDoc): Map<string, FieldSpot> {
     const pageRef = dest[0] as PdfRef | undefined;
     const x = dest[2];
     const y = dest[3];
-    const page = doc._pageBuffer.findIndex((item) => item.dictionary === pageRef || item.dictionary.id === pageRef?.id);
+    const page = doc._pageBuffer.findIndex(
+      (item) => item.dictionary === pageRef || item.dictionary.id === pageRef?.id,
+    );
     if (page < 0 || typeof x !== "number" || typeof y !== "number") continue;
     found.set(name.slice("fld_".length), { page, x, y });
   }
   return found;
 }
 
-function addSignature(doc: PdfKitDoc, name: string, x: number, y: number, w: number, h: number): void {
+function addSignature(
+  doc: PdfKitDoc,
+  name: string,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+): void {
   const fieldDict = doc._fieldDict(name, null, {});
   fieldDict.FT = "Sig";
   fieldDict.Subtype = "Widget";
@@ -85,7 +105,12 @@ const BOX = 11;
 const BOX_OFF = `q ${NAVY} RG 0.9 w 0.6 0.6 ${BOX - 1.2} ${BOX - 1.2} re S Q`;
 const BOX_ON = `${BOX_OFF} q ${NAVY} RG 1.35 w 2.3 4.5 m 4.3 2.4 l 8.6 8.1 l S Q`;
 
-function radioParent(doc: PdfKitDoc, groups: Map<string, PdfRef>, group: string, value: "Yes" | "No" | "Off"): PdfRef {
+function radioParent(
+  doc: PdfKitDoc,
+  groups: Map<string, PdfRef>,
+  group: string,
+  value: "Yes" | "No" | "Off",
+): PdfRef {
   const existing = groups.get(group);
   if (existing) return existing;
   const dict = doc._fieldDict(group, "radioButton", { noToggleToOff: true });
@@ -100,7 +125,15 @@ function radioParent(doc: PdfKitDoc, groups: Map<string, PdfRef>, group: string,
   return parent;
 }
 
-function addChoice(doc: PdfKitDoc, field: SignField, x: number, y: number, groups: Map<string, PdfRef>, off: PdfRef, value: "Yes" | "No" | "Off"): void {
+function addChoice(
+  doc: PdfKitDoc,
+  field: SignField,
+  x: number,
+  y: number,
+  groups: Map<string, PdfRef>,
+  off: PdfRef,
+  value: "Yes" | "No" | "Off",
+): void {
   const group = field.group ?? field.name;
   const parent = radioParent(doc, groups, group, value);
   const onState = field.label === "No" ? "No" : "Yes";
@@ -120,7 +153,11 @@ function addChoice(doc: PdfKitDoc, field: SignField, x: number, y: number, group
   doc._addToParent(annotRef);
 }
 
-function fieldBox(field: SignField, doc: PdfKitDoc, spot: FieldSpot): { width: number; height: number; top: number } {
+function fieldBox(
+  field: SignField,
+  doc: PdfKitDoc,
+  spot: FieldSpot,
+): { width: number; height: number; top: number } {
   const height = doc.page.height;
   const baseline = height - spot.y;
   switch (field.kind) {
@@ -130,11 +167,23 @@ function fieldBox(field: SignField, doc: PdfKitDoc, spot: FieldSpot): { width: n
     case "date":
       return { width: field.width ?? 72, height: 14, top: Math.max(36, baseline - 11) };
     case "text":
-      return { width: field.width ?? Math.max(80, doc.page.width - 78 - spot.x), height: 14, top: Math.max(36, baseline - 11) };
+      return {
+        width: field.width ?? Math.max(80, doc.page.width - 78 - spot.x),
+        height: 14,
+        top: Math.max(36, baseline - 11),
+      };
     case "multiline":
-      return { width: Math.max(140, doc.page.width - 78 - spot.x), height: Math.max(24, field.lines * 13), top: Math.max(36, baseline - 2) };
+      return {
+        width: Math.max(140, doc.page.width - 78 - spot.x),
+        height: Math.max(24, field.lines * 13),
+        top: Math.max(36, baseline - 2),
+      };
     case "signature":
-      return { width: Math.max(140, doc.page.width - 78 - spot.x), height: 34, top: Math.max(36, baseline - 2) };
+      return {
+        width: Math.max(140, doc.page.width - 78 - spot.x),
+        height: 34,
+        top: Math.max(36, baseline - 2),
+      };
     default: {
       const unknown: never = field.kind;
       throw new Error(`Unknown sign-off field ${String(unknown)}`);
@@ -143,25 +192,45 @@ function fieldBox(field: SignField, doc: PdfKitDoc, spot: FieldSpot): { width: n
 }
 
 function groupValue(fields: SignField[], group: string): "Yes" | "No" | "Off" {
-  const chosen = fields.find((field) => field.kind === "choice" && (field.group ?? field.name) === group && field.selected);
+  const chosen = fields.find(
+    (field) => field.kind === "choice" && (field.group ?? field.name) === group && field.selected,
+  );
   if (!chosen) return "Off";
   return chosen.label === "No" ? "No" : "Yes";
 }
 
-function place(doc: PdfKitDoc, field: SignField, spot: FieldSpot, groups: Map<string, PdfRef>, off: PdfRef, fields: SignField[]): void {
+function place(
+  doc: PdfKitDoc,
+  field: SignField,
+  spot: FieldSpot,
+  groups: Map<string, PdfRef>,
+  off: PdfRef,
+  fields: SignField[],
+): void {
   doc.switchToPage(spot.page);
   doc._ctm = [1, 0, 0, -1, 0, doc.page.height];
   const box = fieldBox(field, doc, spot);
   switch (field.kind) {
     case "choice":
-      addChoice(doc, field, spot.x, box.top, groups, off, groupValue(fields, field.group ?? field.name));
+      addChoice(
+        doc,
+        field,
+        spot.x,
+        box.top,
+        groups,
+        off,
+        groupValue(fields, field.group ?? field.name),
+      );
       break;
     case "date":
     case "text":
       doc.formText(field.name, spot.x, box.top, box.width, box.height, { fontSize: 11 });
       break;
     case "multiline":
-      doc.formText(field.name, spot.x, box.top, box.width, box.height, { multiline: true, fontSize: 11 });
+      doc.formText(field.name, spot.x, box.top, box.width, box.height, {
+        multiline: true,
+        fontSize: 11,
+      });
       break;
     case "signature":
       addSignature(doc, field.name, spot.x, box.top, box.width, box.height);

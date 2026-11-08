@@ -21,7 +21,10 @@ export interface ExampleIndex {
 
 export const exampleIndex = indexJson as ExampleIndex;
 
-const modules = import.meta.glob("../../examples/*.json", { eager: true, import: "default" }) as Record<string, unknown>;
+const modules = import.meta.glob("../../examples/*.json", {
+  eager: true,
+  import: "default",
+}) as Record<string, unknown>;
 
 export function loadExampleFile(fileName: string): AnswerFile {
   const key = Object.keys(modules).find((item) => item.endsWith(`/${fileName}`));

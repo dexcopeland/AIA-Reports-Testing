@@ -10,7 +10,11 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..", "examples");
 
 function openCount(file: ReturnType<typeof buildExample>): number {
   const result = evaluate(file);
-  const open = (status: string) => status === "Gap" || status === "Partial" || status === "Not yet" || status === "Partly in place";
+  const open = (status: string) =>
+    status === "Gap" ||
+    status === "Partial" ||
+    status === "Not yet" ||
+    status === "Partly in place";
   return [...result.criteria, ...result.rp].filter((item) => open(item.status)).length;
 }
 
@@ -32,8 +36,12 @@ async function main(): Promise<void> {
     await writeFile(join(root, `${spec.id}.json`), `${JSON.stringify(file, null, 2)}\n`);
     const result = evaluate(file);
     const bluf = buildBluf(result);
-    const statuses = [...result.criteria, ...result.rp].map((item) => `${item.id}:${item.status}`).join(" ");
-    console.log(`${spec.id}\tfindings=${openCount(file)}\tsteps=${bluf.steps.length}\t${bluf.sentences[0]}`);
+    const statuses = [...result.criteria, ...result.rp]
+      .map((item) => `${item.id}:${item.status}`)
+      .join(" ");
+    console.log(
+      `${spec.id}\tfindings=${openCount(file)}\tsteps=${bluf.steps.length}\t${bluf.sentences[0]}`,
+    );
     console.log(`  ${bluf.sentences[2]}`);
     console.log(`  ${statuses}`);
   }

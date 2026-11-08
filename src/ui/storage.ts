@@ -16,13 +16,23 @@ export function emptyFile(): AnswerFile {
   };
 }
 
-export function autosave(file: AnswerFile): void {
-  const next = { ...file, saved_at: new Date().toISOString() };
-  localStorage.setItem(KEY, JSON.stringify(next));
+/** Write this exact file to browser storage. Reports whether the browser kept it. */
+export function autosave(file: AnswerFile): boolean {
+  try {
+    localStorage.setItem(KEY, JSON.stringify(file));
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export function autoload(): AnswerFile | null {
-  const raw = localStorage.getItem(KEY);
+  let raw: string | null = null;
+  try {
+    raw = localStorage.getItem(KEY);
+  } catch {
+    return null;
+  }
   if (!raw) return null;
   try {
     return normalizeFile(JSON.parse(raw) as unknown);
@@ -32,7 +42,11 @@ export function autoload(): AnswerFile | null {
 }
 
 export function clearAutosave(): void {
-  localStorage.removeItem(KEY);
+  try {
+    localStorage.removeItem(KEY);
+  } catch {
+    // Storage denied entirely (private browsing, quota). Nothing to clean.
+  }
 }
 
 export function normalizeFile(value: unknown): AnswerFile {
@@ -40,9 +54,12 @@ export function normalizeFile(value: unknown): AnswerFile {
   const record = value as Partial<AnswerFile>;
   const schema = String(record.schema_version ?? "");
   if (schema.split(".")[0] !== SCHEMA_VERSION.split(".")[0]) {
-    throw new Error(`This file uses schema ${schema || "unknown"}. This app reads schema ${SCHEMA_VERSION}.`);
+    throw new Error(
+      `This file uses schema ${schema || "unknown"}. This app reads schema ${SCHEMA_VERSION}.`,
+    );
   }
-  const answers = record.answers && typeof record.answers === "object" ? (record.answers as Answers) : {};
+  const answers =
+    record.answers && typeof record.answers === "object" ? (record.answers as Answers) : {};
   const signoff = normalizeSignoff(record.signoff);
   return stampAssessment({
     schema_version: SCHEMA_VERSION,
@@ -60,7 +77,9 @@ export function downloadJson(file: AnswerFile): void {
   const blob = new Blob([JSON.stringify(file, null, 2)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
-  const name = String(file.answers.q4_name ?? "assessment").replace(/[^\w.-]+/g, "-").slice(0, 60);
+  const name = String(file.answers.q4_name ?? "assessment")
+    .replace(/[^\w.-]+/g, "-")
+    .slice(0, 60);
   link.href = url;
   link.download = `AIA-answers-${name || "draft"}.json`;
   link.click();

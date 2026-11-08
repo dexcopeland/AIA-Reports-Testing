@@ -10,7 +10,8 @@ export const EXAMPLES: ExampleSpec[] = [
     id: "state-subsidy-review",
     group: "state",
     title: "High-risk: Child-care subsidy review desk (state-built system)",
-    description: "Staff use a state-built score to order child-care subsidy files before a supervisor decides.",
+    description:
+      "Staff use a state-built score to order child-care subsidy files before a supervisor decides.",
     profile: "strong",
     agency: "Maryland Office of Family Subsidy Standards (fictional)",
     unit: "Subsidy review unit (fictional)",
@@ -24,8 +25,10 @@ export const EXAMPLES: ExampleSpec[] = [
       q6_design_facts: ["no_free_text_input", "outputs_not_passed"],
       q6_method: "rules_plus_model",
       q6_hosting: "state_data_center",
-      q6_description: "The desk scores a child-care subsidy file from application data and household size, then orders the queue. It runs in the state data center. A benefits supervisor decides each award. Fictional system.",
-      q7_purpose: "Today supervisors sort paper files by arrival date. The desk proposes an order so older complete files and flagged files surface first. Staff still decide every award. Fictional purpose.",
+      q6_description:
+        "The desk scores a child-care subsidy file from application data and household size, then orders the queue. It runs in the state data center. A benefits supervisor decides each award. Fictional system.",
+      q7_purpose:
+        "Today supervisors sort paper files by arrival date. The desk proposes an order so older complete files and flagged files surface first. Staff still decide every award. Fictional purpose.",
       q8_areas: ["benefits_services"],
       q8_target: "individuals",
       q8_how: "It orders subsidy files. A supervisor decides each award.",
@@ -42,7 +45,8 @@ export const EXAMPLES: ExampleSpec[] = [
       q17_status: "live",
       q19_start: "2026-03-02",
       q19_prior: "yes",
-      q20_harm: "A wrong score could move a complete file behind others, so a family waits longer for a child-care subsidy. The cost falls on the applicant. Staff can still change the order.",
+      q20_harm:
+        "A wrong score could move a complete file behind others, so a family waits longer for a child-care subsidy. The cost falls on the applicant. Staff can still change the order.",
       q20_types: ["wrong_decision", "missed_service", "bias_harm"],
     },
   },
@@ -50,7 +54,8 @@ export const EXAMPLES: ExampleSpec[] = [
     id: "state-road-notice",
     group: "state",
     title: "High-risk: Road-closure notice drafter (state-built system)",
-    description: "A state-built drafter proposes road-closure notices that a traffic supervisor edits before posting.",
+    description:
+      "A state-built drafter proposes road-closure notices that a traffic supervisor edits before posting.",
     profile: "strong",
     agency: "Maryland Route Notice Desk (fictional)",
     unit: "Traffic notice unit (fictional)",
@@ -59,13 +64,16 @@ export const EXAMPLES: ExampleSpec[] = [
     owner: "traffic supervisor",
     answers: {
       q5_builder: "state_built",
-      q5_changes: "State staff connected the drafter to the public notice template. No vendor and no outside model.",
+      q5_changes:
+        "State staff connected the drafter to the public notice template. No vendor and no outside model.",
       q6_capabilities: ["generates_text"],
       q6_design_facts: ["no_personal_info", "outputs_not_passed"],
       q6_method: "rules_plus_model",
       q6_hosting: "state_data_center",
-      q6_description: "The drafter turns a closure record into a plain-language notice for the public web page. It runs in the state data center. A traffic supervisor edits the notice before it is posted. Fictional system.",
-      q7_purpose: "Today a traffic supervisor writes each closure notice by hand. The drafter proposes the text so posting is faster. The supervisor still approves every notice. Fictional purpose.",
+      q6_description:
+        "The drafter turns a closure record into a plain-language notice for the public web page. It runs in the state data center. A traffic supervisor edits the notice before it is posted. Fictional system.",
+      q7_purpose:
+        "Today a traffic supervisor writes each closure notice by hand. The drafter proposes the text so posting is faster. The supervisor still approves every notice. Fictional purpose.",
       q8_areas: ["safety"],
       q8_target: "places_or_groups",
       q8_how: "A wrong notice could send drivers toward a closed road or away from an open one.",
@@ -81,7 +89,8 @@ export const EXAMPLES: ExampleSpec[] = [
       q17_status: "live",
       q19_start: "2026-01-20",
       q19_prior: "yes",
-      q20_harm: "A draft notice could name the wrong detour. Drivers would lose time or enter a work zone. The traffic supervisor can stop a notice before it posts.",
+      q20_harm:
+        "A draft notice could name the wrong detour. Drivers would lose time or enter a work zone. The traffic supervisor can stop a notice before it posts.",
       q20_types: ["safety_harm", "wrong_decision"],
     },
     statements: {
@@ -96,7 +105,8 @@ export const EXAMPLES: ExampleSpec[] = [
     id: "state-park-schedule",
     group: "state",
     title: "General Impact Assessment: Park mowing schedule helper (state-built system)",
-    description: "Crew leads use a state-built forecast of mowing time. It does not decide a service for a person.",
+    description:
+      "Crew leads use a state-built forecast of mowing time. It does not decide a service for a person.",
     profile: "strong",
     agency: "Maryland Civic Grounds Office (fictional)",
     unit: "Park maintenance unit (fictional)",
@@ -110,8 +120,10 @@ export const EXAMPLES: ExampleSpec[] = [
       q6_design_facts: ["no_free_text_input", "no_personal_info", "outputs_not_passed"],
       q6_method: "statistical",
       q6_hosting: "agency_network",
-      q6_description: "The helper forecasts how long mowing will take on each park map and suggests a weekly order for crews. It runs on the agency network. A crew coordinator sets the real schedule. Fictional system.",
-      q7_purpose: "Crew leads now build the weekly mowing order on a whiteboard. The helper proposes an order from acreage and season. It does not serve or deny a resident. Fictional purpose.",
+      q6_description:
+        "The helper forecasts how long mowing will take on each park map and suggests a weekly order for crews. It runs on the agency network. A crew coordinator sets the real schedule. Fictional system.",
+      q7_purpose:
+        "Crew leads now build the weekly mowing order on a whiteboard. The helper proposes an order from acreage and season. It does not serve or deny a resident. Fictional purpose.",
       q8_areas: ["regulatory_inspection"],
       q8_target: "places_or_groups",
       q8_how: "It orders park maps for routine grounds checks. It does not decide a case.",
@@ -128,7 +140,8 @@ export const EXAMPLES: ExampleSpec[] = [
       q17_status: "live",
       q19_start: "2025-08-04",
       q19_prior: "yes",
-      q20_harm: "A bad forecast could send a crew to a small park first and leave a larger park late. The cost is staff time and a messier public park, not a decision about a person.",
+      q20_harm:
+        "A bad forecast could send a crew to a small park first and leave a larger park late. The cost is staff time and a messier public park, not a decision about a person.",
       q20_types: ["missed_service"],
     },
     statements: {
@@ -144,7 +157,8 @@ export const EXAMPLES: ExampleSpec[] = [
     id: "state-visit-window",
     group: "state",
     title: "High-risk: Visitation window suggester (state-built system)",
-    description: "A state-built scheduler, calling an outside model, suggests visitation windows for a custody supervisor to accept or change.",
+    description:
+      "A state-built scheduler, calling an outside model, suggests visitation windows for a custody supervisor to accept or change.",
     profile: "strong",
     agency: "Maryland Custody Scheduling Desk (fictional)",
     unit: "Visitation unit (fictional)",
@@ -156,13 +170,16 @@ export const EXAMPLES: ExampleSpec[] = [
       q5_vendor: "Summit Hosted Models (fictional)",
       q5_product: "VisitDraft API",
       q5_version: "2026.2-example",
-      q5_changes: "State staff added the visitation form. The text comes from an outside hosted model.",
+      q5_changes:
+        "State staff added the visitation form. The text comes from an outside hosted model.",
       q6_capabilities: ["generates_text", "ranks"],
       q6_design_facts: ["outputs_not_passed"],
       q6_method: "llm",
       q6_hosting: "vendor_cloud",
-      q6_description: "The suggester reads a visitation request and proposes a window. It calls an outside hosted model and runs from that vendor cloud. A custody supervisor can accept or change the window. Fictional system.",
-      q7_purpose: "Supervisors now pick windows from a shared calendar. The suggester proposes one so the queue moves faster. The supervisor is supposed to decide. Fictional purpose.",
+      q6_description:
+        "The suggester reads a visitation request and proposes a window. It calls an outside hosted model and runs from that vendor cloud. A custody supervisor can accept or change the window. Fictional system.",
+      q7_purpose:
+        "Supervisors now pick windows from a shared calendar. The suggester proposes one so the queue moves faster. The supervisor is supposed to decide. Fictional purpose.",
       q8_areas: ["policing_corrections_supervision", "safety"],
       q8_target: "individuals",
       q8_how: "A suggested window can decide when a family visit happens.",
@@ -181,7 +198,8 @@ export const EXAMPLES: ExampleSpec[] = [
       q18_procured: "on_or_after_2026_02_01",
       q19_start: "2026-05-01",
       q19_prior: "no",
-      q20_harm: "A wrong window could block a visit or crowd a room. Families and incarcerated people bear that cost. Several controls are still open.",
+      q20_harm:
+        "A wrong window could block a visit or crowd a room. Families and incarcerated people bear that cost. Several controls are still open.",
       q20_types: ["rights_harm", "wrong_decision"],
     },
     statements: {
@@ -212,7 +230,8 @@ export const EXAMPLES: ExampleSpec[] = [
     id: "state-appeal-ranker",
     group: "state",
     title: "High-risk: Benefits appeal ranker (state-built system)",
-    description: "Appeal files are ranked by a state-built tool. The saved answers say planning, while a start date is already filled in, and most safeguards are blank.",
+    description:
+      "Appeal files are ranked by a state-built tool. The saved answers say planning, while a start date is already filled in, and most safeguards are blank.",
     profile: "thin",
     agency: "Maryland Appeals Ranking Unit (fictional)",
     unit: "Appeals intake unit (fictional)",
@@ -285,8 +304,10 @@ export const EXAMPLES: ExampleSpec[] = [
       q6_design_facts: ["no_free_text_input", "outputs_not_passed"],
       q6_method: "rules_plus_model",
       q6_hosting: "vendor_cloud",
-      q6_description: "CaseQueue scores a benefit application and places it in a review queue. It is a vendor product hosted in the vendor cloud. An eligibility supervisor decides whether the file moves forward. Fictional system.",
-      q7_purpose: "Eligibility staff now pull the oldest file first. The score proposes an order so incomplete files wait for documents and complete files reach a supervisor. Staff still decide eligibility. Fictional purpose.",
+      q6_description:
+        "CaseQueue scores a benefit application and places it in a review queue. It is a vendor product hosted in the vendor cloud. An eligibility supervisor decides whether the file moves forward. Fictional system.",
+      q7_purpose:
+        "Eligibility staff now pull the oldest file first. The score proposes an order so incomplete files wait for documents and complete files reach a supervisor. Staff still decide eligibility. Fictional purpose.",
       q8_areas: ["benefits_services"],
       q8_target: "individuals",
       q8_how: "The score orders benefit files. A supervisor decides each one.",
@@ -306,7 +327,8 @@ export const EXAMPLES: ExampleSpec[] = [
       q18_procured: "before_2026_02_01",
       q19_start: "2025-10-01",
       q19_prior: "yes",
-      q20_harm: "A wrong score could delay a complete application or rush an incomplete one. The applicant bears the wait. The eligibility supervisor can change the queue before a decision.",
+      q20_harm:
+        "A wrong score could delay a complete application or rush an incomplete one. The applicant bears the wait. The eligibility supervisor can change the queue before a decision.",
       q20_types: ["wrong_decision", "missed_service", "bias_harm"],
     },
   },
@@ -314,7 +336,8 @@ export const EXAMPLES: ExampleSpec[] = [
     id: "vendor-injury-summary",
     group: "vendor",
     title: "High-risk: Workplace injury summary assistant (vendor product)",
-    description: "An agency-extended vendor assistant drafts injury summaries that a safety reviewer checks.",
+    description:
+      "An agency-extended vendor assistant drafts injury summaries that a safety reviewer checks.",
     profile: "strong",
     agency: "Maryland Workplace Harm Review Desk (fictional)",
     unit: "Injury review unit (fictional)",
@@ -326,13 +349,16 @@ export const EXAMPLES: ExampleSpec[] = [
       q5_vendor: "Harbor Ledger Software (fictional)",
       q5_product: "InjuryDraft",
       q5_version: "2.4-example",
-      q5_changes: "The agency added a summary template and a link to the injury form. The vendor model is unchanged.",
+      q5_changes:
+        "The agency added a summary template and a link to the injury form. The vendor model is unchanged.",
       q6_capabilities: ["generates_text", "retrieves_documents"],
       q6_design_facts: ["outputs_not_passed"],
       q6_method: "llm",
       q6_hosting: "vendor_cloud",
-      q6_description: "InjuryDraft drafts a summary of a workplace injury report and can pull the report the reviewer already has. The agency added a template. A safety supervisor checks the draft before it is filed. Fictional system.",
-      q7_purpose: "Reviewers now write summaries by hand from the injury packet. The assistant proposes a draft so the packet is easier to read. The supervisor still files the official summary. Fictional purpose.",
+      q6_description:
+        "InjuryDraft drafts a summary of a workplace injury report and can pull the report the reviewer already has. The agency added a template. A safety supervisor checks the draft before it is filed. Fictional system.",
+      q7_purpose:
+        "Reviewers now write summaries by hand from the injury packet. The assistant proposes a draft so the packet is easier to read. The supervisor still files the official summary. Fictional purpose.",
       q8_areas: ["health", "safety"],
       q8_target: "individuals",
       q8_how: "A wrong summary could steer a safety review toward the wrong hazard or person.",
@@ -350,7 +376,8 @@ export const EXAMPLES: ExampleSpec[] = [
       q18_procured: "on_or_after_2026_02_01",
       q19_start: "2026-06-15",
       q19_prior: "yes",
-      q20_harm: "A draft could omit a hazard or name the wrong work site. Workers and the employer bear that mistake if a reviewer files it unchanged. The safety supervisor is assigned to check each draft.",
+      q20_harm:
+        "A draft could omit a hazard or name the wrong work site. Workers and the employer bear that mistake if a reviewer files it unchanged. The safety supervisor is assigned to check each draft.",
       q20_types: ["safety_harm", "privacy_harm", "wrong_decision"],
     },
     statements: {
@@ -366,7 +393,8 @@ export const EXAMPLES: ExampleSpec[] = [
     id: "vendor-library-forecast",
     group: "vendor",
     title: "General Impact Assessment: Library hold-time forecast (vendor product)",
-    description: "Branch leads see a vendor forecast of how long a hold might take. No case decision is made.",
+    description:
+      "Branch leads see a vendor forecast of how long a hold might take. No case decision is made.",
     profile: "strong",
     agency: "Maryland Branch Reading Services (fictional)",
     unit: "Branch operations unit (fictional)",
@@ -380,11 +408,18 @@ export const EXAMPLES: ExampleSpec[] = [
       q5_version: "1.3-example",
       q5_changes: "None. Branch leads view the vendor forecast as sold.",
       q6_capabilities: ["predicts"],
-      q6_design_facts: ["no_free_text_input", "no_personal_info", "public_inputs_only", "outputs_not_passed"],
+      q6_design_facts: [
+        "no_free_text_input",
+        "no_personal_info",
+        "public_inputs_only",
+        "outputs_not_passed",
+      ],
       q6_method: "statistical",
       q6_hosting: "vendor_cloud",
-      q6_description: "HoldForecast estimates how many days a public hold might take, using public circulation counts. It is a vendor product in the vendor cloud. A branch coordinator uses it as information only. Fictional system.",
-      q7_purpose: "Branch leads now guess hold time from last month's counts. The forecast shows a number on the staff screen. It does not decide who receives a book or a service. Fictional purpose.",
+      q6_description:
+        "HoldForecast estimates how many days a public hold might take, using public circulation counts. It is a vendor product in the vendor cloud. A branch coordinator uses it as information only. Fictional system.",
+      q7_purpose:
+        "Branch leads now guess hold time from last month's counts. The forecast shows a number on the staff screen. It does not decide who receives a book or a service. Fictional purpose.",
       q8_areas: ["regulatory_inspection"],
       q8_target: "neither",
       q8_how: "It shows a time estimate for a branch. It does not pick a person.",
@@ -402,7 +437,8 @@ export const EXAMPLES: ExampleSpec[] = [
       q18_procured: "before_2026_02_01",
       q19_start: "2025-07-01",
       q19_prior: "yes",
-      q20_harm: "A high estimate could make a branch order extra copies it does not need. The cost is a wasted purchase, not a decision about a resident.",
+      q20_harm:
+        "A high estimate could make a branch order extra copies it does not need. The cost is a wasted purchase, not a decision about a resident.",
       q20_types: ["wrong_decision"],
     },
     statements: {
@@ -419,7 +455,8 @@ export const EXAMPLES: ExampleSpec[] = [
     id: "vendor-waitlist",
     group: "vendor",
     title: "High-risk: Rental assistance waitlist sorter (vendor product)",
-    description: "A vendor product sorts rental-assistance applicants. Review covers a sample, and several controls are still open.",
+    description:
+      "A vendor product sorts rental-assistance applicants. Review covers a sample, and several controls are still open.",
     profile: "strong",
     agency: "Maryland Rent Aid Sorting Office (fictional)",
     unit: "Rental aid unit (fictional)",
@@ -436,8 +473,10 @@ export const EXAMPLES: ExampleSpec[] = [
       q6_design_facts: ["no_free_text_input"],
       q6_method: "statistical",
       q6_hosting: "vendor_cloud",
-      q6_description: "RentQueue orders rental-assistance applicants. It is a vendor product in the vendor cloud. Staff are supposed to review the order. Fictional system.",
-      q7_purpose: "The unit wants a faster waitlist than a spreadsheet. The product sorts applicants. How staff use that sort is only partly written down. Fictional purpose.",
+      q6_description:
+        "RentQueue orders rental-assistance applicants. It is a vendor product in the vendor cloud. Staff are supposed to review the order. Fictional system.",
+      q7_purpose:
+        "The unit wants a faster waitlist than a spreadsheet. The product sorts applicants. How staff use that sort is only partly written down. Fictional purpose.",
       q8_areas: ["housing"],
       q8_target: "individuals",
       q8_how: "The sort can move an applicant up or down the rental-assistance waitlist.",
@@ -456,7 +495,8 @@ export const EXAMPLES: ExampleSpec[] = [
       q18_procured: "on_or_after_2026_02_01",
       q19_start: "2026-04-01",
       q19_prior: "no",
-      q20_harm: "A wrong rank could delay housing help for a household. The household bears the cost. The office has not finished the review, notice, or contract controls.",
+      q20_harm:
+        "A wrong rank could delay housing help for a household. The household bears the cost. The office has not finished the review, notice, or contract controls.",
       q20_types: ["missed_service", "bias_harm", "wrong_decision"],
     },
     statements: {
@@ -483,7 +523,8 @@ export const EXAMPLES: ExampleSpec[] = [
     id: "vendor-license-score",
     group: "vendor",
     title: "High-risk: Occupational license score (vendor product)",
-    description: "A vendor score can hold up a license file. Review, data level, and procurement timing are not determined.",
+    description:
+      "A vendor score can hold up a license file. Review, data level, and procurement timing are not determined.",
     profile: "thin",
     agency: "Maryland Trade License Review Desk (fictional)",
     unit: "License review unit (fictional)",
@@ -543,7 +584,8 @@ export const EXAMPLES: ExampleSpec[] = [
     id: "path-high-benefits",
     group: "path",
     title: "High-risk: Benefits queue (path example)",
-    description: "Staff use a state-built score to order benefit files. A supervisor decides each file.",
+    description:
+      "Staff use a state-built score to order benefit files. A supervisor decides each file.",
     profile: "strong",
     agency: "Maryland Benefit Queue Office (fictional)",
     unit: "Queue unit (fictional)",
@@ -557,8 +599,10 @@ export const EXAMPLES: ExampleSpec[] = [
       q6_design_facts: ["no_free_text_input", "outputs_not_passed"],
       q6_method: "statistical",
       q6_hosting: "state_data_center",
-      q6_description: "The helper orders benefit files for a supervisor. It runs in the state data center. Fictional system.",
-      q7_purpose: "Supervisors now pull the oldest file. The helper proposes an order. Staff still decide each file. Fictional purpose.",
+      q6_description:
+        "The helper orders benefit files for a supervisor. It runs in the state data center. Fictional system.",
+      q7_purpose:
+        "Supervisors now pull the oldest file. The helper proposes an order. Staff still decide each file. Fictional purpose.",
       q8_areas: ["benefits_services"],
       q8_target: "individuals",
       q8_how: "It orders benefit files. A supervisor decides each award.",
@@ -572,7 +616,8 @@ export const EXAMPLES: ExampleSpec[] = [
       q14_overlays: ["none"],
       q14_sources: "Benefit applications held by the queue unit.",
       q17_status: "planning",
-      q20_harm: "A wrong order could delay a complete file. The applicant waits. The supervisor can change the order.",
+      q20_harm:
+        "A wrong order could delay a complete file. The applicant waits. The supervisor can change the order.",
       q20_types: ["missed_service"],
       q23_monitor: "benefits supervisor",
       q23_incident: "security specialist",
@@ -583,7 +628,8 @@ export const EXAMPLES: ExampleSpec[] = [
     id: "path-general-grounds",
     group: "path",
     title: "General Impact Assessment: Grounds forecast (path example)",
-    description: "Crew leads see a state-built forecast of mowing time. It does not decide a service for a person.",
+    description:
+      "Crew leads see a state-built forecast of mowing time. It does not decide a service for a person.",
     profile: "strong",
     agency: "Maryland Civic Grounds Office (fictional)",
     unit: "Park maintenance unit (fictional)",
@@ -597,8 +643,10 @@ export const EXAMPLES: ExampleSpec[] = [
       q6_design_facts: ["no_personal_info", "public_inputs_only", "outputs_not_passed"],
       q6_method: "statistical",
       q6_hosting: "agency_network",
-      q6_description: "The helper forecasts mowing time for each park map. It runs on the agency network. A crew coordinator sets the real schedule. Fictional system.",
-      q7_purpose: "Crew leads now build the weekly order on a whiteboard. The helper shows a time estimate. It does not serve or deny a resident. Fictional purpose.",
+      q6_description:
+        "The helper forecasts mowing time for each park map. It runs on the agency network. A crew coordinator sets the real schedule. Fictional system.",
+      q7_purpose:
+        "Crew leads now build the weekly order on a whiteboard. The helper shows a time estimate. It does not serve or deny a resident. Fictional purpose.",
       q8_areas: ["none"],
       q8_target: "places_or_groups",
       q8_how: "It orders park maps for routine grounds work. It does not decide a case.",
@@ -612,7 +660,8 @@ export const EXAMPLES: ExampleSpec[] = [
       q14_overlays: ["none"],
       q14_sources: "Public park boundary maps.",
       q17_status: "planning",
-      q20_harm: "A bad forecast could send a crew to a small park first. The cost is staff time, not a decision about a person.",
+      q20_harm:
+        "A bad forecast could send a crew to a small park first. The cost is staff time, not a decision about a person.",
       q20_types: ["missed_service"],
       q23_monitor: "crew coordinator",
       q23_incident: "security specialist",
@@ -637,7 +686,8 @@ export const EXAMPLES: ExampleSpec[] = [
       q6_design_facts: ["no_free_text_input"],
       q6_method: "statistical",
       q6_hosting: "state_data_center",
-      q6_description: "The tool scores personal traits from a resident file. It runs in the state data center. Fictional system.",
+      q6_description:
+        "The tool scores personal traits from a resident file. It runs in the state data center. Fictional system.",
       q7_purpose: "The unit wanted a single trait score for a resident file. Fictional purpose.",
       q7b_prohibited: ["social_scoring"],
       q8_areas: ["regulatory_inspection"],
@@ -653,7 +703,8 @@ export const EXAMPLES: ExampleSpec[] = [
       q14_overlays: ["none"],
       q14_sources: "Resident files held by the scoring unit.",
       q17_status: "planning",
-      q20_harm: "A trait score can follow a person into a later decision. The person bears that label.",
+      q20_harm:
+        "A trait score can follow a person into a later decision. The person bears that label.",
       q20_types: ["bias_harm"],
       q23_monitor: "program manager",
       q23_incident: "security specialist",
@@ -663,8 +714,10 @@ export const EXAMPLES: ExampleSpec[] = [
   {
     id: "path-cert-vendor",
     group: "path",
-    title: "General Impact Assessment: Certified hold forecast (path example, in-scope certificates)",
-    description: "A vendor forecast shows hold time. SOC 2 and ISO/IEC 27001 cover this product. The path stays General.",
+    title:
+      "General Impact Assessment: Certified hold forecast (path example, in-scope certificates)",
+    description:
+      "A vendor forecast shows hold time. SOC 2 and ISO/IEC 27001 cover this product. The path stays General.",
     profile: "strong",
     agency: "Maryland Branch Reading Services (fictional)",
     unit: "Branch operations unit (fictional)",
@@ -678,11 +731,18 @@ export const EXAMPLES: ExampleSpec[] = [
       q5_version: "2.0-example",
       q5_changes: "None. Branch leads view the vendor forecast as sold.",
       q6_capabilities: ["predicts"],
-      q6_design_facts: ["no_free_text_input", "no_personal_info", "public_inputs_only", "outputs_not_passed"],
+      q6_design_facts: [
+        "no_free_text_input",
+        "no_personal_info",
+        "public_inputs_only",
+        "outputs_not_passed",
+      ],
       q6_method: "statistical",
       q6_hosting: "vendor_cloud",
-      q6_description: "HoldForecast estimates how many days a public hold might take. It is a vendor product in the vendor cloud. Fictional system.",
-      q7_purpose: "Branch leads now guess hold time from last month's counts. The forecast shows a number. It does not decide who receives a book. Fictional purpose.",
+      q6_description:
+        "HoldForecast estimates how many days a public hold might take. It is a vendor product in the vendor cloud. Fictional system.",
+      q7_purpose:
+        "Branch leads now guess hold time from last month's counts. The forecast shows a number. It does not decide who receives a book. Fictional purpose.",
       q8_areas: ["regulatory_inspection"],
       q8_target: "neither",
       q8_how: "It shows a time estimate for a branch. It does not pick a person.",
@@ -699,7 +759,8 @@ export const EXAMPLES: ExampleSpec[] = [
       q16_cert_scope: "yes",
       q17_status: "planning",
       q18_procured: "not_yet",
-      q20_harm: "A high estimate could make a branch order extra copies it does not need. The cost is a wasted purchase.",
+      q20_harm:
+        "A high estimate could make a branch order extra copies it does not need. The cost is a wasted purchase.",
       q20_types: ["wrong_decision"],
       q23_monitor: "branch coordinator",
       q23_incident: "security specialist",

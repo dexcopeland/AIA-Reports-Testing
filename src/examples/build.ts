@@ -1,4 +1,10 @@
-import { FORM_VERSION, RULES_VERSION, SCHEMA_VERSION, type AnswerFile, type StatementDef } from "../content/types";
+import {
+  FORM_VERSION,
+  RULES_VERSION,
+  SCHEMA_VERSION,
+  type AnswerFile,
+  type StatementDef,
+} from "../content/types";
 import { STATEMENT_BY_ID } from "../content/statements";
 import { stampAssessment } from "../engine/draft-state";
 import type { Answers } from "../engine/answers";
@@ -38,7 +44,14 @@ function defaultValue(profile: ExampleSpec["profile"], def: StatementDef): strin
 }
 
 function strongest(def: StatementDef): string {
-  const choice = [...def.choices].reverse().find((item) => item.value !== "unknown" && item.value !== "does_not_apply" && (item.status === "Met" || item.status === "In place"));
+  const choice = [...def.choices]
+    .reverse()
+    .find(
+      (item) =>
+        item.value !== "unknown" &&
+        item.value !== "does_not_apply" &&
+        (item.status === "Met" || item.status === "In place"),
+    );
   if (!choice) throw new Error(`No strongest choice for statement ${def.id}.`);
   return choice.value;
 }
@@ -87,14 +100,17 @@ export function buildExample(spec: ExampleSpec): AnswerFile {
     const override = spec.statements?.[instance.key];
     const value = override ?? defaultValue(spec.profile, def);
     const choice = def.choices.find((item) => item.value === value);
-    if (!choice) throw new Error(`${spec.id} ${instance.key} is not a choice of ${def.id}: ${value}`);
+    if (!choice)
+      throw new Error(`${spec.id} ${instance.key} is not a choice of ${def.id}: ${value}`);
     answers[instance.key] = value;
     const context = instance.key.includes("__") ? instance.key.split("__").slice(1).join(" ") : "";
     if (choice.asks === "evidence") {
       const supplied = spec.evidence?.[instance.key];
       const line = supplied ?? defaultEvidence(spec, instance.statementId, context);
       if (supplied === undefined && wordCount(line) < 5) {
-        throw new Error(`${spec.id} evidence for ${instance.key} is thinner than the evidence check.`);
+        throw new Error(
+          `${spec.id} evidence for ${instance.key} is thinner than the evidence check.`,
+        );
       }
       answers[`${instance.key}__evidence`] = line;
     }

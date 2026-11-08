@@ -12,11 +12,15 @@ export interface BlufCopy {
 }
 
 const CROSS_STEPS: Record<string, string> = {
-  "status-conflict": "Resolve the clash between the deployment status and the start date in Section 4.",
+  "status-conflict":
+    "Resolve the clash between the deployment status and the start date in Section 4.",
   "outside-people": "Align who is affected in Section 4, where the group answers disagree.",
-  "info-only-acts": "Resolve the clash in Section 4 between information-only use and output sent to other systems.",
-  "level-mismatch": "Confirm the data level in Section 4 and apply the higher safeguards until it is confirmed.",
-  "info-only-auto": "Resolve the clash in Section 4 between information-only use and outputs with no review.",
+  "info-only-acts":
+    "Resolve the clash in Section 4 between information-only use and output sent to other systems.",
+  "level-mismatch":
+    "Confirm the data level in Section 4 and apply the higher safeguards until it is confirmed.",
+  "info-only-auto":
+    "Resolve the clash in Section 4 between information-only use and outputs with no review.",
 };
 
 const FOLLOW_STEPS: Record<number, FollowStep> = {
@@ -27,7 +31,10 @@ const FOLLOW_STEPS: Record<number, FollowStep> = {
   11: { link: "check_C9", text: "Name who reviews the output for C9." },
   13: { link: "check_C10", text: "Assign the data level for C10." },
   18: { link: "sec_4", text: "Record when the system was procured, as Section 4 uses that date." },
-  19: { link: "sec_4", text: "Record whether an impact assessment was done before deployment, as Section 4 states." },
+  19: {
+    link: "sec_4",
+    text: "Record whether an impact assessment was done before deployment, as Section 4 states.",
+  },
 };
 
 function plainName(name: string): string {
@@ -47,7 +54,11 @@ function isActionCheck(id: string): boolean {
 
 /** High only because every path reason is an Unknown answer, with no affirmative High fact. */
 function forcedByUnknowns(result: Evaluation): boolean {
-  return result.path === "high" && result.pathReasons.length > 0 && result.pathReasons.every((item) => item.endsWith("Unknown."));
+  return (
+    result.path === "high" &&
+    result.pathReasons.length > 0 &&
+    result.pathReasons.every((item) => item.endsWith("Unknown."))
+  );
 }
 
 function isUnknownReason(reason: string): boolean {
@@ -63,7 +74,11 @@ function isRightsReason(reason: string): boolean {
 }
 
 function isBasisCapabilityReason(reason: string): boolean {
-  return reason.includes("is a basis for a decision or action") && !isRightsReason(reason) && !isUnknownReason(reason);
+  return (
+    reason.includes("is a basis for a decision or action") &&
+    !isRightsReason(reason) &&
+    !isUnknownReason(reason)
+  );
 }
 
 type HighReasonKind = "both" | "rights" | "safety" | "basis" | "unknown";
@@ -136,14 +151,18 @@ function reason(result: Evaluation): string {
   if (result.statusConflict) {
     return "The single most important reason is that the deployment status and the start date do not agree.";
   }
-  const gap = result.criteria.find((item) => item.status === "Gap") ?? result.rp.find((item) => item.status === "Not yet");
+  const gap =
+    result.criteria.find((item) => item.status === "Gap") ??
+    result.rp.find((item) => item.status === "Not yet");
   if (gap && isActionCheck(gap.id)) {
     return `The single most important reason is that ${gap.id}, ${plainName(gap.name)}, is not in place.`;
   }
   if (result.priorDeployment) {
     return "The single most important reason is that an impact assessment before deployment is missing or not known.";
   }
-  const partial = result.criteria.find((item) => item.status === "Partial") ?? result.rp.find((item) => item.status === "Partly in place");
+  const partial =
+    result.criteria.find((item) => item.status === "Partial") ??
+    result.rp.find((item) => item.status === "Partly in place");
   if (partial && isActionCheck(partial.id)) {
     return `The single most important reason is that ${partial.id}, ${plainName(partial.name)}, is only partly in place.`;
   }
@@ -151,7 +170,8 @@ function reason(result: Evaluation): string {
     return "The single most important reason is that this use touches speech, assembly or religion and needs named legal authority.";
   }
   const mitigation = result.mitigations.find((item) => item.id !== "M-ONGOING");
-  if (mitigation) return `The single most important reason is the open safeguard ${plainName(mitigation.title)}.`;
+  if (mitigation)
+    return `The single most important reason is the open safeguard ${plainName(mitigation.title)}.`;
   if (result.path === "general") {
     return "The single most important reason is that no High or Prohibited fact applies, and this draft does not authorize use.";
   }
@@ -159,29 +179,48 @@ function reason(result: Evaluation): string {
 }
 
 export const BLUF_OUTCOME = {
-  prohibited: "The outcome is that a prohibited use applies, so the agency stops that use, and this draft is not an approval.",
+  prohibited:
+    "The outcome is that a prohibited use applies, so the agency stops that use, and this draft is not an approval.",
   highGaps: "The outcome is High, with gaps the agency still has to close.",
   highConditions: "The outcome is High, and it is ready only with conditions.",
-  highClean: "The outcome is High, and the coded safeguards are in place, and this draft does not authorize use.",
+  highClean:
+    "The outcome is High, and the coded safeguards are in place, and this draft does not authorize use.",
   generalConditions: "The outcome is General, and it is ready only with conditions.",
-  generalClean: "The outcome is General, and the coded safeguards are in place, and this draft does not authorize use.",
+  generalClean:
+    "The outcome is General, and the coded safeguards are in place, and this draft does not authorize use.",
   highUnknowns: "The outcome is High because an Unknown answer forces that path.",
   unset: "The outcome is not set, because the path facts are not complete.",
 } as const;
 
 function openConditions(result: Evaluation): boolean {
   const checks = [...result.criteria, ...result.rp];
-  const failed = checks.some((item) => isActionCheck(item.id) && actionKind(item.status) === "fail");
-  const partial = checks.some((item) => isActionCheck(item.id) && actionKind(item.status) === "partial");
+  const failed = checks.some(
+    (item) => isActionCheck(item.id) && actionKind(item.status) === "fail",
+  );
+  const partial = checks.some(
+    (item) => isActionCheck(item.id) && actionKind(item.status) === "partial",
+  );
   const openMitigation = result.mitigations.some((item) => item.id !== "M-ONGOING");
-  return failed || partial || openMitigation || result.speech || result.crossChecks.length > 0 || !result.attestation || result.followups.length > 0 || Boolean(result.priorDeployment) || result.statusConflict;
+  return (
+    failed ||
+    partial ||
+    openMitigation ||
+    result.speech ||
+    result.crossChecks.length > 0 ||
+    !result.attestation ||
+    result.followups.length > 0 ||
+    Boolean(result.priorDeployment) ||
+    result.statusConflict
+  );
 }
 
 function outcomeSentence(result: Evaluation): string {
   if (result.path === "prohibited" || result.prohibited) return BLUF_OUTCOME.prohibited;
   if (forcedByUnknowns(result)) return BLUF_OUTCOME.highUnknowns;
   if (result.path === "high") {
-    const failed = [...result.criteria, ...result.rp].some((item) => isActionCheck(item.id) && actionKind(item.status) === "fail");
+    const failed = [...result.criteria, ...result.rp].some(
+      (item) => isActionCheck(item.id) && actionKind(item.status) === "fail",
+    );
     if (failed) return BLUF_OUTCOME.highGaps;
     if (openConditions(result)) return BLUF_OUTCOME.highConditions;
     return BLUF_OUTCOME.highClean;
@@ -231,9 +270,10 @@ export function buildBluf(result: Evaluation): BlufCopy {
   for (const kind of ["fail", "partial"] as const) {
     for (const item of checks) {
       if (actionKind(item.status) !== kind) continue;
-      const text = kind === "fail"
-        ? `Close ${item.id}, ${plainName(item.name)}, which is not in place.`
-        : `Finish ${item.id}, ${plainName(item.name)}, which is only partly in place.`;
+      const text =
+        kind === "fail"
+          ? `Close ${item.id}, ${plainName(item.name)}, which is not in place.`
+          : `Finish ${item.id}, ${plainName(item.name)}, which is only partly in place.`;
       add(text, `check_${item.id}`);
     }
   }
@@ -241,19 +281,29 @@ export function buildBluf(result: Evaluation): BlufCopy {
   result.mitigations.forEach((mitigation, index) => {
     if (mitigation.id === "M-ONGOING" || mitigation.id === "M-PROHIBITED") return;
     if (mitigation.covers.some((id) => linked(`check_${id}`))) return;
-    add(`Complete the safeguard M${index + 1}, ${plainName(mitigation.title)}.`, `mit_${index + 1}`);
+    add(
+      `Complete the safeguard M${index + 1}, ${plainName(mitigation.title)}.`,
+      `mit_${index + 1}`,
+    );
   });
 
   for (const check of result.crossChecks) {
     add(CROSS_STEPS[check.id] ?? `Resolve the ${check.id} note in Section 4.`, "sec_4");
   }
   if (result.priorDeployment) {
-    add("Record whether an impact assessment was done before deployment, as Section 4 states.", "sec_4");
+    add(
+      "Record whether an impact assessment was done before deployment, as Section 4 states.",
+      "sec_4",
+    );
   }
   if (result.speech) {
-    add("Get named legal authority for this speech, assembly or religion use in Section 4.", "sec_4");
+    add(
+      "Get named legal authority for this speech, assembly or religion use in Section 4.",
+      "sec_4",
+    );
   }
-  if (!result.attestation) add("Confirm the attestation and sign the Agency Lead acknowledgment.", "sec_9");
+  if (!result.attestation)
+    add("Confirm the attestation and sign the Agency Lead acknowledgment.", "sec_9");
 
   for (const item of result.followups) {
     const mapped = FOLLOW_STEPS[item.q];

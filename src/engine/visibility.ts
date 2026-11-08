@@ -42,7 +42,9 @@ export function vendorInvolved(answers: Answers): boolean {
 }
 
 export function selectedGroups(answers: Answers): string[] {
-  return many(answers, "q9_groups").filter((id) => id !== "unknown" && GROUPS.some((group) => group.id === id));
+  return many(answers, "q9_groups").filter(
+    (id) => id !== "unknown" && GROUPS.some((group) => group.id === id),
+  );
 }
 
 export function outsideYes(answers: Answers): boolean {
@@ -76,7 +78,8 @@ export function statusConflict(answers: Answers): boolean {
 
 export function showStatement(id: string, answers: Answers): boolean {
   if (id === "12a" || id === "12b" || id === "12c") return outsideYes(answers);
-  if (id === "12d") return outsideYes(answers) && selectedGroups(answers).includes("limited_english");
+  if (id === "12d")
+    return outsideYes(answers) && selectedGroups(answers).includes("limited_english");
   if (id === "12f") return selectedGroups(answers).includes("abuse_risk");
   if (id === "14c") return has(answers, "q6_capabilities", "retrieves_documents");
   if (id === "15a") {
@@ -116,7 +119,11 @@ function poisoningApplies(answers: Answers): boolean {
   if (caps.some((id) => GENERATIVE.has(id))) return true;
   if (vendorInvolved(answers) && text(answers, "st16a") === "allowed") return true;
   const method = text(answers, "q6_method");
-  if (designFacts(answers).includes("public_inputs_only") && (method === "statistical" || method === "rules_plus_model")) return false;
+  if (
+    designFacts(answers).includes("public_inputs_only") &&
+    (method === "statistical" || method === "rules_plus_model")
+  )
+    return false;
   return true;
 }
 
@@ -125,7 +132,8 @@ export function threatApplies(id: string, answers: Answers): boolean {
   if (capabilitiesUnclear(answers)) return true;
   const caps = capabilities(answers);
   const facts = designFacts(answers);
-  if (id === "prompt_injection") return caps.some((item) => GENERATIVE.has(item)) || methodUnclear(answers);
+  if (id === "prompt_injection")
+    return caps.some((item) => GENERATIVE.has(item)) || methodUnclear(answers);
   if (id === "poisoned_data") return poisoningApplies(answers);
   if (id === "model_theft") return true;
   if (id === "output_leakage") return true;
@@ -140,7 +148,9 @@ export function threatApplies(id: string, answers: Answers): boolean {
 /** An older file named a processing place that is not the Q6 hosting place, and has not answered the new yes/no. */
 export function legacyProcessingPlace(answers: Answers): boolean {
   const where = text(answers, "q15_where");
-  return text(answers, "q15_same_place") === "" && where !== "" && where !== text(answers, "q6_hosting");
+  return (
+    text(answers, "q15_same_place") === "" && where !== "" && where !== text(answers, "q6_hosting")
+  );
 }
 
 /**
