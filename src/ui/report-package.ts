@@ -3,7 +3,10 @@ import { buildReport } from "../engine/report";
 import type { AnswerFile } from "../content/types";
 
 export function reportDownloadBlocked(file: AnswerFile): boolean {
-  return !(text(file.answers, "q25_confirm") === "confirm" || many(file.answers, "q25_confirm").includes("confirm"));
+  return !(
+    text(file.answers, "q25_confirm") === "confirm" ||
+    many(file.answers, "q25_confirm").includes("confirm")
+  );
 }
 
 export async function downloadReportPackage(file: AnswerFile): Promise<string> {
@@ -22,7 +25,9 @@ export async function downloadReportPackage(file: AnswerFile): Promise<string> {
     if (warnings.length === 0) {
       return "Report package downloaded. It contains four PDFs and the same four documents as Word files.";
     }
-    const listed = warnings.map((warning) => `${warning.character} (${warning.questions.join(", ")})`).join("; ");
+    const listed = warnings
+      .map((warning) => `${warning.character} (${warning.questions.join(", ")})`)
+      .join("; ");
     return `Report package downloaded. These characters are not in the report fonts, so they may not appear: ${listed}.`;
   } catch {
     return "The report package could not be built in this browser.";

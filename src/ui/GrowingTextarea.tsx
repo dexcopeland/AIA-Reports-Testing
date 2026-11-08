@@ -3,7 +3,12 @@ import { Textarea } from "@/components/ui/textarea";
 
 const supportsFieldSizing = typeof CSS !== "undefined" && CSS.supports("field-sizing", "content");
 
-export function GrowingTextarea({ className, value, onChange, ...props }: ComponentProps<typeof Textarea>) {
+export function GrowingTextarea({
+  className,
+  value,
+  onChange,
+  ...props
+}: ComponentProps<typeof Textarea>) {
   if (supportsFieldSizing) {
     return <Textarea className={className} value={value} onChange={onChange} {...props} />;
   }

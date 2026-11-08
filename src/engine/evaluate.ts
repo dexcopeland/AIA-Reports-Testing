@@ -1,4 +1,18 @@
-import { ASSURANCES, BUILDERS, CAPABILITIES, DEPLOYMENT, HARM_TYPES, HOSTING, LEVELS, METHODS, PRIOR, PROCUREMENT, ROLES, TARGETS, labelOf } from "../content/catalog";
+import {
+  ASSURANCES,
+  BUILDERS,
+  CAPABILITIES,
+  DEPLOYMENT,
+  HARM_TYPES,
+  HOSTING,
+  LEVELS,
+  METHODS,
+  PRIOR,
+  PROCUREMENT,
+  ROLES,
+  TARGETS,
+  labelOf,
+} from "../content/catalog";
 import {
   CRITERIA_META,
   DATA_TYPES,
@@ -15,17 +29,24 @@ import {
   RP_META,
   SAFETY_AREAS,
 } from "../content/rules";
+import { CONTRACT_TERMS, GROUPS, RELATIONS, STATEMENT_BY_ID, THREATS } from "../content/statements";
 import {
-  CONTRACT_TERMS,
-  GROUPS,
-  RELATIONS,
-  STATEMENT_BY_ID,
-  THREATS,
-} from "../content/statements";
-import { FORM_VERSION, RULES_VERSION, type AnswerFile, type ItemStatus, type StatementDef, type Timing, type TimingProfile } from "../content/types";
+  FORM_VERSION,
+  RULES_VERSION,
+  type AnswerFile,
+  type ItemStatus,
+  type StatementDef,
+  type Timing,
+  type TimingProfile,
+} from "../content/types";
 import type { Answers } from "./answers";
 import { has, many, text } from "./answers";
-import { applyCertCredit, certCreditSnapshot, mitigationCreditCerts, softenRemaining } from "./credits";
+import {
+  applyCertCredit,
+  certCreditSnapshot,
+  mitigationCreditCerts,
+  softenRemaining,
+} from "./credits";
 import { deriveAssessmentPath } from "./path";
 import {
   areaLabels,
@@ -41,7 +62,16 @@ import {
 } from "./findings";
 import type { AnswerLine } from "./model";
 import { fingerprint } from "./fingerprint";
-import type { ConfirmFact, CriterionResult, CrossCheck, Evaluation, Followup, GateHit, LiveMitigation, ResolvedItem } from "./model";
+import type {
+  ConfirmFact,
+  CriterionResult,
+  CrossCheck,
+  Evaluation,
+  Followup,
+  GateHit,
+  LiveMitigation,
+  ResolvedItem,
+} from "./model";
 import {
   capabilities,
   dataLevel,
@@ -73,7 +103,9 @@ function weakest(statuses: ItemStatus[], track: "C" | "RP"): ItemStatus {
   const order = track === "C" ? C_ORDER : RP_ORDER;
   const ranked = statuses.filter((status) => order.includes(status));
   if (ranked.length === 0) return track === "C" ? "Gap" : "Not yet";
-  return ranked.reduce((low, status) => (order.indexOf(status) < order.indexOf(low) ? status : low));
+  return ranked.reduce((low, status) =>
+    order.indexOf(status) < order.indexOf(low) ? status : low,
+  );
 }
 
 function toRp(status: ItemStatus): ItemStatus {
@@ -150,7 +182,10 @@ function instancesFor(answers: Answers): Instance[] {
 }
 
 export function instanceKeys(answers: Answers): { key: string; statementId: string }[] {
-  return instancesFor(answers).map((instance) => ({ key: `st${instance.instanceId}`, statementId: instance.statementId }));
+  return instancesFor(answers).map((instance) => ({
+    key: `st${instance.instanceId}`,
+    statementId: instance.statementId,
+  }));
 }
 
 function resolveOne(def: StatementDef, instance: Instance, answers: Answers): ResolvedItem {
@@ -177,13 +212,16 @@ function resolveOne(def: StatementDef, instance: Instance, answers: Answers): Re
     feeds: def.feeds,
     track: def.track,
     groupId: instance.groupId,
-    individual: individualGroup(answers, instance.groupId) || (def.id === "12d" && individualGroup(answers, "limited_english")),
+    individual:
+      individualGroup(answers, instance.groupId) ||
+      (def.id === "12d" && individualGroup(answers, "limited_english")),
     designFact: undefined,
   };
 
   if (instance.q6Excluded) {
     base.choiceValue = "does_not_apply";
-    base.choiceText = "Excluded because of the Q6 answers. The agency did not select Does not apply.";
+    base.choiceText =
+      "Excluded because of the Q6 answers. The agency did not select Does not apply.";
     base.status = "Not applicable";
     base.mitigation = null;
     base.needsFollowup = false;
@@ -252,7 +290,11 @@ function asRp(status: ItemStatus): ItemStatus {
 }
 
 function statusRank(status: ItemStatus, reported: string): number {
-  const reportedIsRp = reported === "Not yet" || reported === "Partly in place" || reported === "In place" || reported === "Not applicable";
+  const reportedIsRp =
+    reported === "Not yet" ||
+    reported === "Partly in place" ||
+    reported === "In place" ||
+    reported === "Not applicable";
   const order = reportedIsRp ? RP_ORDER : C_ORDER;
   const mapped = reportedIsRp ? asRp(status) : status;
   const index = order.indexOf(mapped);
@@ -265,53 +307,108 @@ function drivingItems(items: ResolvedItem[], reported: string): ResolvedItem[] {
   let weakestRank = Number.POSITIVE_INFINITY;
   for (const item of items) weakestRank = Math.min(weakestRank, statusRank(item.status, reported));
   const weakestItems = items.filter((item) => statusRank(item.status, reported) === weakestRank);
-  const reportedIsRp = reported === "Not yet" || reported === "Partly in place" || reported === "In place" || reported === "Not applicable";
-  const exact = weakestItems.filter((item) => (reportedIsRp ? asRp(item.status) : item.status) === reported);
+  const reportedIsRp =
+    reported === "Not yet" ||
+    reported === "Partly in place" ||
+    reported === "In place" ||
+    reported === "Not applicable";
+  const exact = weakestItems.filter(
+    (item) => (reportedIsRp ? asRp(item.status) : item.status) === reported,
+  );
   return exact.length > 0 ? exact : weakestItems;
 }
 
-function criterion(id: string, status: string, found: string, answerLines: AnswerLine[], qRefs: string): CriterionResult {
-  const meta = CRITERIA_META.find((item) => item.id === id) ?? RP_META.find((item) => item.id === id);
-  return { id, name: meta?.name ?? id, status, found, quote: quoteFromLines(answerLines), qRefs, answerLines };
+function criterion(
+  id: string,
+  status: string,
+  found: string,
+  answerLines: AnswerLine[],
+  qRefs: string,
+): CriterionResult {
+  const meta =
+    CRITERIA_META.find((item) => item.id === id) ?? RP_META.find((item) => item.id === id);
+  return {
+    id,
+    name: meta?.name ?? id,
+    status,
+    found,
+    quote: quoteFromLines(answerLines),
+    qRefs,
+    answerLines,
+  };
 }
 
 function narrateTo(
   id: string,
   status: string,
   items: ResolvedItem[],
-  options: { phrase?: string; areas?: string; prefix?: string; lead?: AnswerLine[]; qRefs: string; keptIds?: ReadonlySet<string> },
+  options: {
+    phrase?: string;
+    areas?: string;
+    prefix?: string;
+    lead?: AnswerLine[];
+    qRefs: string;
+    keptIds?: ReadonlySet<string>;
+  },
 ): CriterionResult {
   const drivers = drivingItems(items, status);
-  const open = drivers.filter((item) => item.status !== "Met" && item.status !== "In place" && item.status !== "Not applicable");
+  const open = drivers.filter(
+    (item) =>
+      item.status !== "Met" && item.status !== "In place" && item.status !== "Not applicable",
+  );
   const found = renderFinding(
     id,
     status,
-    { areas: options.areas ?? "", detail: buildDetail(open, options.prefix ?? "", options.keptIds), situation: "" },
+    {
+      areas: options.areas ?? "",
+      detail: buildDetail(open, options.prefix ?? "", options.keptIds),
+      situation: "",
+    },
     options.phrase,
   );
   const quoted = open.length > 0 ? open : drivers;
-  return criterion(id, status, found, [...(options.lead ?? []), ...statementLines(quoted)], options.qRefs);
+  return criterion(
+    id,
+    status,
+    found,
+    [...(options.lead ?? []), ...statementLines(quoted)],
+    options.qRefs,
+  );
 }
 
 function exclusionSentence(labels: string[]): string {
   if (labels.length === 0) return "";
-  const names = labels.length === 1 ? labels[0] : labels.length === 2 ? `${labels[0]} and ${labels[1]}` : `${labels.slice(0, -1).join(", ")}, and ${labels[labels.length - 1]}`;
+  const names =
+    labels.length === 1
+      ? labels[0]
+      : labels.length === 2
+        ? `${labels[0]} and ${labels[1]}`
+        : `${labels.slice(0, -1).join(", ")}, and ${labels[labels.length - 1]}`;
   const verb = labels.length === 1 ? "was" : "were";
   return `${names} ${verb} excluded because of the Q6 answers, not because the agency selected Does not apply.`;
 }
 
-function narrateRp5(status: string, items: ResolvedItem[], keptIds: ReadonlySet<string>): CriterionResult {
+function narrateRp5(
+  status: string,
+  items: ResolvedItem[],
+  keptIds: ReadonlySet<string>,
+): CriterionResult {
   const excluded = items.filter((item) => item.q6Excluded);
-  const result = narrateTo("RP5", status, ["22", "22f"].flatMap((id) => itemsOf(items, id)), {
-    qRefs: "Q22",
-    keptIds,
-    lead: excluded.map((item) => ({
-      label: item.context || item.title,
-      statement: "Excluded because of the Q6 answers. The agency did not select Does not apply.",
-      evidence: "",
-      targetDate: "",
-    })),
-  });
+  const result = narrateTo(
+    "RP5",
+    status,
+    ["22", "22f"].flatMap((id) => itemsOf(items, id)),
+    {
+      qRefs: "Q22",
+      keptIds,
+      lead: excluded.map((item) => ({
+        label: item.context || item.title,
+        statement: "Excluded because of the Q6 answers. The agency did not select Does not apply.",
+        evidence: "",
+        targetDate: "",
+      })),
+    },
+  );
   const note = exclusionSentence(excluded.map((item) => item.context || item.title));
   if (note) result.found = `${result.found} ${note}`;
   return result;
@@ -351,7 +448,12 @@ function suggestedLevel(answers: Answers): string | null {
   return order[max] ?? null;
 }
 
-function deadline(answers: Answers): { date: string | null; line: string; summary: string; followup: boolean } {
+function deadline(answers: Answers): {
+  date: string | null;
+  line: string;
+  summary: string;
+  followup: boolean;
+} {
   if (!procurementApplicable(answers)) {
     const status = labelOf(DEPLOYMENT, deployment(answers)) || "not given";
     const start = text(answers, "q19_start");
@@ -361,12 +463,14 @@ function deadline(answers: Answers): { date: string | null; line: string; summar
     return {
       date: null,
       line: `Assessment deadline: This AI system was built by the State, with no vendor and no outside model, so no § 3.5-803(e) date is set. Deployment status is ${status}. ${timing} [S2]`,
-      summary: "No § 3.5-803(e) date is set, because this AI system was built by the State. Timing follows the deployment status and the start date.",
+      summary:
+        "No § 3.5-803(e) date is set, because this AI system was built by the State. Timing follows the deployment status and the start date.",
       followup: false,
     };
   }
   const value = procurement(answers);
-  const noDate = "The § 3.5-803(e) deadline depends on the procurement date; DoIT AI Governance will confirm it.";
+  const noDate =
+    "The § 3.5-803(e) deadline depends on the procurement date; DoIT AI Governance will confirm it.";
   if (value === "before_2026_02_01") {
     const date = "1 July 2027";
     return {
@@ -421,7 +525,10 @@ function buildFollowups(items: ResolvedItem[], answers: Answers, extra: Followup
       continue;
     }
     if (item.evidenceFailed) {
-      add(item.legacyQ, `What record shows the statement you picked for ${item.context || item.title}?`);
+      add(
+        item.legacyQ,
+        `What record shows the statement you picked for ${item.context || item.title}?`,
+      );
       continue;
     }
     if (item.unanswered) {
@@ -464,7 +571,10 @@ function buildFollowups(items: ResolvedItem[], answers: Answers, extra: Followup
   return followups;
 }
 
-function applyCap(list: LiveMitigation[], well: boolean): { kept: LiveMitigation[]; capApplied: boolean } {
+function applyCap(
+  list: LiveMitigation[],
+  well: boolean,
+): { kept: LiveMitigation[]; capApplied: boolean } {
   const ongoing = list.find((item) => item.id === "M-ONGOING");
   const rest = list.filter((item) => item.id !== "M-ONGOING");
   const ordered = [...rest].sort((a, b) => {
@@ -492,47 +602,108 @@ export function evaluate(file: AnswerFile): Evaluation {
   const areas = many(answers, "q8_areas");
   const rights = areas.some((id) => RIGHTS_AREAS.includes(id));
   const safety = areas.some((id) => SAFETY_AREAS.includes(id));
-  const areaLabel = rights && safety ? "both rights-impacting and safety-impacting" : rights ? "rights-impacting" : safety ? "safety-impacting" : "not named in the area list";
+  const areaLabel =
+    rights && safety
+      ? "both rights-impacting and safety-impacting"
+      : rights
+        ? "rights-impacting"
+        : safety
+          ? "safety-impacting"
+          : "not named in the area list";
   const speech = areas.includes("speech_assembly_religion");
   const caps = capabilities(answers);
   const role = text(answers, "q10_role");
   const review = itemsOf(items, "11a")[0];
-  const fullReview = Boolean(review && (review.choiceValue === "every_written" || review.choiceValue === "every_unwritten"));
+  const fullReview = Boolean(
+    review && (review.choiceValue === "every_written" || review.choiceValue === "every_unwritten"),
+  );
   const conflict = statusConflict(answers);
   const gates: GateHit[] = [];
   if (areas.some((id) => G1_AREAS.includes(id))) {
-    gates.push(gate("G1", "benefits, health, housing, financial or legal rights, or employment", "Q8 names an area in this gate.", false));
+    gates.push(
+      gate(
+        "G1",
+        "benefits, health, housing, financial or legal rights, or employment",
+        "Q8 names an area in this gate.",
+        false,
+      ),
+    );
   }
   if (areas.some((id) => id === "safety" || id === "critical_infrastructure")) {
     gates.push(gate("G2", "safety", "Q8 names safety or critical infrastructure.", false));
   }
   if (areas.some((id) => G3_AREAS.includes(id))) {
-    gates.push(gate("G3", "law enforcement, investigation, identification or automated tickets", "Q8 names an area in this gate. Regulatory inspection alone does not set G3.", false));
+    gates.push(
+      gate(
+        "G3",
+        "law enforcement, investigation, identification or automated tickets",
+        "Q8 names an area in this gate. Regulatory inspection alone does not set G3.",
+        false,
+      ),
+    );
   }
   const g4Because: string[] = [];
-  if (role === "decides" && !fullReview) g4Because.push("Q10 says the output decides or acts without a person approving each one");
-  if (review?.choiceValue === "none" || review?.choiceValue === "after_only" || review?.choiceValue === "sample") {
+  if (role === "decides" && !fullReview)
+    g4Because.push("Q10 says the output decides or acts without a person approving each one");
+  if (
+    review?.choiceValue === "none" ||
+    review?.choiceValue === "after_only" ||
+    review?.choiceValue === "sample"
+  ) {
     g4Because.push("Q11 says review is missing, late or only a sample");
   }
   const g4Cross = caps.includes("acts_in_other_systems") && role === "info_only" && !fullReview;
-  if (g4Cross) g4Because.push("Q6 says the output is sent to other systems that act on it, and Q10 says information only");
+  if (g4Cross)
+    g4Because.push(
+      "Q6 says the output is sent to other systems that act on it, and Q10 says information only",
+    );
   if (g4Because.length > 0) {
     const onlyCross = g4Because.length === 1 && g4Cross;
-    gates.push(gate("G4", "decides or acts without meaningful human review", g4Because.join("; "), onlyCross));
+    gates.push(
+      gate(
+        "G4",
+        "decides or acts without meaningful human review",
+        g4Because.join("; "),
+        onlyCross,
+      ),
+    );
   }
   if (text(answers, "q8_target") === "places_or_groups" || text(answers, "q8_target") === "both") {
-    gates.push(gate("G5", "targeting places or groups", "Q8 says the output picks places, areas or groups.", false));
+    gates.push(
+      gate(
+        "G5",
+        "targeting places or groups",
+        "Q8 says the output picks places, areas or groups.",
+        false,
+      ),
+    );
   }
   if (caps.includes("matches_records") && areas.some((id) => G6_AREAS.includes(id))) {
-    gates.push(gate("G6", "record matching with possible adverse action", "Q6 matches records and Q8 names an area where that match can lead to action.", true));
+    gates.push(
+      gate(
+        "G6",
+        "record matching with possible adverse action",
+        "Q6 matches records and Q8 names an area where that match can lead to action.",
+        true,
+      ),
+    );
   }
-  if (role === "unknown" || role === "" || areas.includes("unknown") || text(answers, "q8_target") === "unknown") {
+  if (
+    role === "unknown" ||
+    role === "" ||
+    areas.includes("unknown") ||
+    text(answers, "q8_target") === "unknown"
+  ) {
     gates.push(gate("G7", "decision role or impact unknown", "Q8 or Q10 is Unknown.", false));
   }
 
-  const prohibitedIds = many(answers, "q7b_prohibited").filter((id) => PROHIBITED.some((item) => item.id === id));
+  const prohibitedIds = many(answers, "q7b_prohibited").filter((id) =>
+    PROHIBITED.some((item) => item.id === id),
+  );
   const prohibited = prohibitedIds.length > 0;
-  const prohibitedLabels = prohibitedIds.map((id) => PROHIBITED.find((item) => item.id === id)?.label ?? id);
+  const prohibitedLabels = prohibitedIds.map(
+    (id) => PROHIBITED.find((item) => item.id === id)?.label ?? id,
+  );
 
   const level = dataLevel(answers);
   const suggested = suggestedLevel(answers);
@@ -541,25 +712,51 @@ export function evaluate(file: AnswerFile): Evaluation {
     suggested !== null &&
     (level === "unknown" || levelIndex.indexOf(suggested) > levelIndex.indexOf(level));
   const overlayIds = many(answers, "q14_overlays").filter((id) => id !== "none" && id !== "");
-  const overlayLabels = overlayIds.map((id) => OVERLAYS.find((item) => item.id === id)?.label ?? id);
+  const overlayLabels = overlayIds.map(
+    (id) => OVERLAYS.find((item) => item.id === id)?.label ?? id,
+  );
 
   const c4Items = itemsOf(items, "11a");
-  let c4: ItemStatus = weakest(c4Items.map((item) => item.status), "C");
+  let c4: ItemStatus = weakest(
+    c4Items.map((item) => item.status),
+    "C",
+  );
   if (role === "unknown" || role === "") c4 = "Gap";
   else if (role === "decides" && !fullReview) c4 = "Gap";
-  else if ((role === "recommends" || role === "info_only") && fullReview && c4Items[0]?.status === "Met") c4 = "Met";
+  else if (
+    (role === "recommends" || role === "info_only") &&
+    fullReview &&
+    c4Items[0]?.status === "Met"
+  )
+    c4 = "Met";
   else if (role === "decides" && fullReview) c4 = weakest([c4, "Partial"], "C");
 
-  const c9 = weakest(["11a", "11b", "11c"].flatMap((id) => itemsOf(items, id).map((item) => item.status)), "C");
-  const c6 = weakest(itemsOf(items, "21b").map((item) => item.status), "C");
-  const c11 = weakest(["21a", "21c"].flatMap((id) => itemsOf(items, id).map((item) => item.status)), "C");
-  const c12 = weakest(itemsOf(items, "23a").map((item) => item.status), "C");
+  const c9 = weakest(
+    ["11a", "11b", "11c"].flatMap((id) => itemsOf(items, id).map((item) => item.status)),
+    "C",
+  );
+  const c6 = weakest(
+    itemsOf(items, "21b").map((item) => item.status),
+    "C",
+  );
+  const c11 = weakest(
+    ["21a", "21c"].flatMap((id) => itemsOf(items, id).map((item) => item.status)),
+    "C",
+  );
+  const c12 = weakest(
+    itemsOf(items, "23a").map((item) => item.status),
+    "C",
+  );
 
   const groupItems = itemsOf(items, "12e");
   const langItems = itemsOf(items, "12d");
   let c5: ItemStatus;
   if (selectedGroups(answers).length === 0) c5 = "Gap";
-  else c5 = weakest([...groupItems, ...langItems].map((item) => item.status), "C");
+  else
+    c5 = weakest(
+      [...groupItems, ...langItems].map((item) => item.status),
+      "C",
+    );
 
   let c7: ItemStatus;
   let c8: ItemStatus;
@@ -567,39 +764,82 @@ export function evaluate(file: AnswerFile): Evaluation {
     c7 = outsideContradiction(answers) || text(answers, "q12_outside") === "" ? "Gap" : "Met";
     c8 = c7;
   } else {
-    c7 = weakest(itemsOf(items, "12a").map((item) => item.status), "C");
-    c8 = weakest(["12b", "12c"].flatMap((id) => itemsOf(items, id).map((item) => item.status)), "C");
+    c7 = weakest(
+      itemsOf(items, "12a").map((item) => item.status),
+      "C",
+    );
+    c8 = weakest(
+      ["12b", "12c"].flatMap((id) => itemsOf(items, id).map((item) => item.status)),
+      "C",
+    );
   }
 
   const c10Parts = ["15a", "15b", "15c", "15d", "16a", "12f"].flatMap((id) => itemsOf(items, id));
-  let c10 = weakest(c10Parts.map((item) => item.status), "C");
+  let c10 = weakest(
+    c10Parts.map((item) => item.status),
+    "C",
+  );
   if (level === "unknown" || text(answers, "q13_level") === "") c10 = "Gap";
 
   const rp4 = weakest(
-    [...itemsOf(items, "11d").map((item) => item.status), ...itemsOf(items, "11b").map((item) => toRp(item.status))],
+    [
+      ...itemsOf(items, "11d").map((item) => item.status),
+      ...itemsOf(items, "11b").map((item) => toRp(item.status)),
+    ],
     "RP",
   );
   const rp1item = itemsOf(items, "20a");
-  let rp1 = weakest(rp1item.map((item) => item.status), "RP");
+  let rp1 = weakest(
+    rp1item.map((item) => item.status),
+    "RP",
+  );
   if (rp1 === "In place" && text(answers, "q20_harm") === "") rp1 = "Partly in place";
   const rp2 = vendorInvolved(answers)
-    ? weakest(itemsOf(items, "16b").map((item) => item.status), "RP")
+    ? weakest(
+        itemsOf(items, "16b").map((item) => item.status),
+        "RP",
+      )
     : ("Not applicable" as ItemStatus);
-  const rp3 = weakest(["14a", "14b", "14c"].flatMap((id) => itemsOf(items, id).map((item) => item.status)), "RP");
-  const rp5 = weakest(["22", "22f"].flatMap((id) => itemsOf(items, id).map((item) => item.status)), "RP");
-  const rp6 = weakest(["21d", "21e"].flatMap((id) => itemsOf(items, id).map((item) => item.status)), "RP");
-  const rp7 = weakest(["23b", "23c"].flatMap((id) => itemsOf(items, id).map((item) => item.status)), "RP");
-  const rp8 = weakest(["24a", "24b"].flatMap((id) => itemsOf(items, id).map((item) => item.status)), "RP");
+  const rp3 = weakest(
+    ["14a", "14b", "14c"].flatMap((id) => itemsOf(items, id).map((item) => item.status)),
+    "RP",
+  );
+  const rp5 = weakest(
+    ["22", "22f"].flatMap((id) => itemsOf(items, id).map((item) => item.status)),
+    "RP",
+  );
+  const rp6 = weakest(
+    ["21d", "21e"].flatMap((id) => itemsOf(items, id).map((item) => item.status)),
+    "RP",
+  );
+  const rp7 = weakest(
+    ["23b", "23c"].flatMap((id) => itemsOf(items, id).map((item) => item.status)),
+    "RP",
+  );
+  const rp8 = weakest(
+    ["24a", "24b"].flatMap((id) => itemsOf(items, id).map((item) => item.status)),
+    "RP",
+  );
 
   const q8 = q8Lines(answers);
   const outsideLead = q12OutsideLines(answers);
-  const c7Phrase = !outsideYes(answers) && c7 === "Met" ? "no_outside" : c7 === "Met" ? "in_place" : undefined;
-  const c8Phrase = !outsideYes(answers) && c8 === "Met" ? "no_outside" : c8 === "Met" ? "in_place" : undefined;
+  const c7Phrase =
+    !outsideYes(answers) && c7 === "Met" ? "no_outside" : c7 === "Met" ? "in_place" : undefined;
+  const c8Phrase =
+    !outsideYes(answers) && c8 === "Met" ? "no_outside" : c8 === "Met" ? "in_place" : undefined;
   const c7Items = itemsOf(items, "12a");
   const c8Items = [...itemsOf(items, "12b"), ...itemsOf(items, "12c")];
   const c9Items = ["11a", "11b", "11c"].flatMap((id) => itemsOf(items, id));
-  const c10Prefix = level === "unknown" || text(answers, "q13_level") === "" ? "The data level is Unknown (not assigned)." : "";
-  const c4Prefix = role === "unknown" || role === "" ? "The decision role is not determined." : role === "decides" && c4 === "Gap" ? "The output decides or acts without a person approving each one." : "";
+  const c10Prefix =
+    level === "unknown" || text(answers, "q13_level") === ""
+      ? "The data level is Unknown (not assigned)."
+      : "";
+  const c4Prefix =
+    role === "unknown" || role === ""
+      ? "The decision role is not determined."
+      : role === "decides" && c4 === "Gap"
+        ? "The output decides or acts without a person approving each one."
+        : "";
   const statusById = new Map<string, string>([
     ["C1", rights ? "Impact: Yes" : "Impact: No"],
     ["C2", safety ? "Impact: Yes" : "Impact: No"],
@@ -622,8 +862,13 @@ export function evaluate(file: AnswerFile): Evaluation {
     ["RP7", rp7],
     ["RP8", rp8],
   ]);
-  const wellAnswered = ["C4", "C5", "C6", "C7", "C8", "C9", "C10", "C11", "C12"].every((id) => statusById.get(id) !== "Gap")
-    && ["RP1", "RP2", "RP3", "RP4", "RP5", "RP6", "RP7", "RP8"].every((id) => statusById.get(id) !== "Not yet");
+  const wellAnswered =
+    ["C4", "C5", "C6", "C7", "C8", "C9", "C10", "C11", "C12"].every(
+      (id) => statusById.get(id) !== "Gap",
+    ) &&
+    ["RP1", "RP2", "RP3", "RP4", "RP5", "RP6", "RP7", "RP8"].every(
+      (id) => statusById.get(id) !== "Not yet",
+    );
 
   const triggered = new Map<string, ResolvedItem[]>();
   const addMit = (id: string | null, item?: ResolvedItem) => {
@@ -638,7 +883,9 @@ export function evaluate(file: AnswerFile): Evaluation {
     addMit(item.mitigation, item);
   }
   if (prohibited) addMit("M-PROHIBITED");
-  const encryptMet = (!showStatement("15a", answers) || itemsOf(items, "15a")[0]?.status === "Met") && itemsOf(items, "15b")[0]?.status === "Met";
+  const encryptMet =
+    (!showStatement("15a", answers) || itemsOf(items, "15a")[0]?.status === "Met") &&
+    itemsOf(items, "15b")[0]?.status === "Met";
   if (encryptMet) triggered.delete("M-ENCRYPT");
   addMit("M-ONGOING");
 
@@ -663,7 +910,10 @@ export function evaluate(file: AnswerFile): Evaluation {
     const quotes = trig
       .filter((item) => item.choiceText)
       .slice(0, 2)
-      .map((item) => ({ q: item.legacyQ, text: `${item.context ? `${item.context}: ` : ""}${item.choiceText}` }));
+      .map((item) => ({
+        q: item.legacyQ,
+        text: `${item.context ? `${item.context}: ` : ""}${item.choiceText}`,
+      }));
     const creditCerts = mitigationCreditCerts(id, trig, answers);
     live.push({
       id,
@@ -671,7 +921,8 @@ export function evaluate(file: AnswerFile): Evaluation {
       action: def.action,
       owner: def.owner,
       sources: def.sources,
-      remaining: creditCerts.length > 0 ? softenRemaining(def.remaining, creditCerts) : def.remaining,
+      remaining:
+        creditCerts.length > 0 ? softenRemaining(def.remaining, creditCerts) : def.remaining,
       timing: pickTiming(def.timing, answers, conflict),
       rpOnly: def.rpOnly,
       covers: [...covers],
@@ -682,79 +933,227 @@ export function evaluate(file: AnswerFile): Evaluation {
   const capped = applyCap(live, wellAnswered);
   const keptMitigationIds = new Set(capped.kept.map((item) => item.id));
   const criteria: CriterionResult[] = [
-    narrateTo("C1", rights ? "Impact: Yes" : "Impact: No", [], { areas: areaLabels(areas, RIGHTS_AREAS), lead: q8, qRefs: "Q8", keptIds: keptMitigationIds }),
-    narrateTo("C2", safety ? "Impact: Yes" : "Impact: No", [], { areas: areaLabels(areas, SAFETY_AREAS), lead: q8, qRefs: "Q8", keptIds: keptMitigationIds }),
-    narrateTo("C3", areas.includes("benefits_services") ? "Impact: Yes" : "Impact: No", [], { lead: q8, qRefs: "Q8", keptIds: keptMitigationIds }),
-    narrateTo("C4", c4, c4Items, { prefix: c4Prefix, lead: q10Lines(answers), qRefs: "Q10, Q11", keptIds: keptMitigationIds }),
-    narrateTo("C5", c5, [...groupItems, ...langItems], { qRefs: "Q9, Q12", keptIds: keptMitigationIds }),
+    narrateTo("C1", rights ? "Impact: Yes" : "Impact: No", [], {
+      areas: areaLabels(areas, RIGHTS_AREAS),
+      lead: q8,
+      qRefs: "Q8",
+      keptIds: keptMitigationIds,
+    }),
+    narrateTo("C2", safety ? "Impact: Yes" : "Impact: No", [], {
+      areas: areaLabels(areas, SAFETY_AREAS),
+      lead: q8,
+      qRefs: "Q8",
+      keptIds: keptMitigationIds,
+    }),
+    narrateTo("C3", areas.includes("benefits_services") ? "Impact: Yes" : "Impact: No", [], {
+      lead: q8,
+      qRefs: "Q8",
+      keptIds: keptMitigationIds,
+    }),
+    narrateTo("C4", c4, c4Items, {
+      prefix: c4Prefix,
+      lead: q10Lines(answers),
+      qRefs: "Q10, Q11",
+      keptIds: keptMitigationIds,
+    }),
+    narrateTo("C5", c5, [...groupItems, ...langItems], {
+      qRefs: "Q9, Q12",
+      keptIds: keptMitigationIds,
+    }),
     narrateTo("C6", c6, itemsOf(items, "21b"), { qRefs: "Q21", keptIds: keptMitigationIds }),
-    narrateTo("C7", c7, c7Items, { phrase: c7Phrase, prefix: outsideContradiction(answers) ? "Q12 says no one outside the agency is affected, and Q9 names another group." : "", lead: outsideLead, qRefs: "Q12", keptIds: keptMitigationIds }),
-    narrateTo("C8", c8, c8Items, { phrase: c8Phrase, prefix: outsideContradiction(answers) ? "Q12 says no one outside the agency is affected, and Q9 names another group." : "", lead: outsideLead, qRefs: "Q12", keptIds: keptMitigationIds }),
+    narrateTo("C7", c7, c7Items, {
+      phrase: c7Phrase,
+      prefix: outsideContradiction(answers)
+        ? "Q12 says no one outside the agency is affected, and Q9 names another group."
+        : "",
+      lead: outsideLead,
+      qRefs: "Q12",
+      keptIds: keptMitigationIds,
+    }),
+    narrateTo("C8", c8, c8Items, {
+      phrase: c8Phrase,
+      prefix: outsideContradiction(answers)
+        ? "Q12 says no one outside the agency is affected, and Q9 names another group."
+        : "",
+      lead: outsideLead,
+      qRefs: "Q12",
+      keptIds: keptMitigationIds,
+    }),
     narrateTo("C9", c9, c9Items, { qRefs: "Q11", keptIds: keptMitigationIds }),
-    narrateTo("C10", c10, c10Parts, { prefix: c10Prefix, lead: q13Lines(answers), qRefs: "Q13, Q15, Q16", keptIds: keptMitigationIds }),
-    narrateTo("C11", c11, ["21a", "21c"].flatMap((id) => itemsOf(items, id)), { qRefs: "Q21", keptIds: keptMitigationIds }),
+    narrateTo("C10", c10, c10Parts, {
+      prefix: c10Prefix,
+      lead: q13Lines(answers),
+      qRefs: "Q13, Q15, Q16",
+      keptIds: keptMitigationIds,
+    }),
+    narrateTo(
+      "C11",
+      c11,
+      ["21a", "21c"].flatMap((id) => itemsOf(items, id)),
+      { qRefs: "Q21", keptIds: keptMitigationIds },
+    ),
     narrateTo("C12", c12, itemsOf(items, "23a"), { qRefs: "Q23", keptIds: keptMitigationIds }),
   ];
   const rpResults: CriterionResult[] = [
-    narrateTo("RP1", rp1, rp1item, { prefix: rp1 === "Partly in place" && text(answers, "q20_harm") === "" ? "The description of what could go wrong is blank." : "", lead: q20Lines(answers), qRefs: "Q20", keptIds: keptMitigationIds }),
+    narrateTo("RP1", rp1, rp1item, {
+      prefix:
+        rp1 === "Partly in place" && text(answers, "q20_harm") === ""
+          ? "The description of what could go wrong is blank."
+          : "",
+      lead: q20Lines(answers),
+      qRefs: "Q20",
+      keptIds: keptMitigationIds,
+    }),
     narrateTo("RP2", rp2, itemsOf(items, "16b"), { qRefs: "Q16", keptIds: keptMitigationIds }),
-    narrateTo("RP3", rp3, ["14a", "14b", "14c"].flatMap((id) => itemsOf(items, id)), { qRefs: "Q14", keptIds: keptMitigationIds }),
-    narrateTo("RP4", rp4, [...itemsOf(items, "11d"), ...itemsOf(items, "11b")], { qRefs: "Q11", keptIds: keptMitigationIds }),
+    narrateTo(
+      "RP3",
+      rp3,
+      ["14a", "14b", "14c"].flatMap((id) => itemsOf(items, id)),
+      { qRefs: "Q14", keptIds: keptMitigationIds },
+    ),
+    narrateTo("RP4", rp4, [...itemsOf(items, "11d"), ...itemsOf(items, "11b")], {
+      qRefs: "Q11",
+      keptIds: keptMitigationIds,
+    }),
     narrateRp5(rp5, items, keptMitigationIds),
-    narrateTo("RP6", rp6, ["21d", "21e"].flatMap((id) => itemsOf(items, id)), { qRefs: "Q21", keptIds: keptMitigationIds }),
-    narrateTo("RP7", rp7, ["23b", "23c"].flatMap((id) => itemsOf(items, id)), { qRefs: "Q23", keptIds: keptMitigationIds }),
-    narrateTo("RP8", rp8, ["24a", "24b"].flatMap((id) => itemsOf(items, id)), { qRefs: "Q24", keptIds: keptMitigationIds }),
+    narrateTo(
+      "RP6",
+      rp6,
+      ["21d", "21e"].flatMap((id) => itemsOf(items, id)),
+      { qRefs: "Q21", keptIds: keptMitigationIds },
+    ),
+    narrateTo(
+      "RP7",
+      rp7,
+      ["23b", "23c"].flatMap((id) => itemsOf(items, id)),
+      { qRefs: "Q23", keptIds: keptMitigationIds },
+    ),
+    narrateTo(
+      "RP8",
+      rp8,
+      ["24a", "24b"].flatMap((id) => itemsOf(items, id)),
+      { qRefs: "Q24", keptIds: keptMitigationIds },
+    ),
   ];
 
   const extraFollow: Followup[] = [];
-  if ((derivedPath.path === "high" || derivedPath.path === "prohibited") && text(answers, "q1_intake") === "") {
-    extraFollow.push({ q: 1, text: "Q1: What is the intake reference number for this AI system?", mitigationId: null });
+  if (
+    (derivedPath.path === "high" || derivedPath.path === "prohibited") &&
+    text(answers, "q1_intake") === ""
+  ) {
+    extraFollow.push({
+      q: 1,
+      text: "Q1: What is the intake reference number for this AI system?",
+      mitigationId: null,
+    });
   }
   if (text(answers, "q13_level") === "" || text(answers, "q13_level") === "unknown") {
-    extraFollow.push({ q: 13, text: "Q13: What is the highest data level this AI system uses?", mitigationId: "M-PRIVACY" });
+    extraFollow.push({
+      q: 13,
+      text: "Q13: What is the highest data level this AI system uses?",
+      mitigationId: "M-PRIVACY",
+    });
   }
   const due = deadline(answers);
-  if (due.followup) extraFollow.push({ q: 18, text: "Q18: When was this AI system procured, or was it built by the State?", mitigationId: null });
+  if (due.followup)
+    extraFollow.push({
+      q: 18,
+      text: "Q18: When was this AI system procured, or was it built by the State?",
+      mitigationId: null,
+    });
   if (many(answers, "q7b_prohibited").includes("unknown") && !prohibited) {
-    extraFollow.push({ q: 7, text: "Q7: Does any prohibited use in the Responsible AI Policy apply?", mitigationId: null });
+    extraFollow.push({
+      q: 7,
+      text: "Q7: Does any prohibited use in the Responsible AI Policy apply?",
+      mitigationId: null,
+    });
   }
-  if (selectedGroups(answers).length === 0) extraFollow.push({ q: 9, text: "Q9: Which groups of people are affected?", mitigationId: null });
-  if (role === "unknown" || role === "") extraFollow.push({ q: 10, text: "Q10: What role does the output play in decisions?", mitigationId: "M-REVIEW" });
-  if (gates.length > 0 && (text(answers, "q11_reviewer") === "" || text(answers, "q11_reviewer").toLowerCase() === "unknown" || review?.unanswered)) {
-    extraFollow.push({ q: 11, text: "Q11: Which role reviews the output, and can that role change it or stop the AI system?", mitigationId: "M-REVIEW" });
+  if (selectedGroups(answers).length === 0)
+    extraFollow.push({
+      q: 9,
+      text: "Q9: Which groups of people are affected?",
+      mitigationId: null,
+    });
+  if (role === "unknown" || role === "")
+    extraFollow.push({
+      q: 10,
+      text: "Q10: What role does the output play in decisions?",
+      mitigationId: "M-REVIEW",
+    });
+  if (
+    gates.length > 0 &&
+    (text(answers, "q11_reviewer") === "" ||
+      text(answers, "q11_reviewer").toLowerCase() === "unknown" ||
+      review?.unanswered)
+  ) {
+    extraFollow.push({
+      q: 11,
+      text: "Q11: Which role reviews the output, and can that role change it or stop the AI system?",
+      mitigationId: "M-REVIEW",
+    });
   }
   let followups = buildFollowups(items, answers, extraFollow);
   const keptIds = new Set(capped.kept.map((item) => item.id));
   followups = followups.map((item) => ({
     ...item,
-    mitigationId: item.mitigationId && keptIds.has(item.mitigationId) ? item.mitigationId : item.mitigationId && keptIds.has(preferredBackup(item.q, keptIds)) ? preferredBackup(item.q, keptIds) : null,
+    mitigationId:
+      item.mitigationId && keptIds.has(item.mitigationId)
+        ? item.mitigationId
+        : item.mitigationId && keptIds.has(preferredBackup(item.q, keptIds))
+          ? preferredBackup(item.q, keptIds)
+          : null,
   }));
 
   const confirm: ConfirmFact[] = [];
   const followQs = new Set(followups.map((item) => item.q));
   for (const item of items) {
     if (item.designFact && !followQs.has(item.legacyQ)) {
-      confirm.push({ q: 6, text: `Confirm: the design fact that ${item.context || item.title} does not apply (${item.designFact}) (Q6).` });
+      confirm.push({
+        q: 6,
+        text: `Confirm: the design fact that ${item.context || item.title} does not apply (${item.designFact}) (Q6).`,
+      });
     }
-    if ((item.status === "Met" || item.status === "In place") && item.evidence && !item.evidenceFailed && !followQs.has(item.legacyQ)) {
-      confirm.push({ q: item.legacyQ, text: `Confirm: ${item.context || item.title} — ${item.evidence} (Q${item.legacyQ}).` });
+    if (
+      (item.status === "Met" || item.status === "In place") &&
+      item.evidence &&
+      !item.evidenceFailed &&
+      !followQs.has(item.legacyQ)
+    ) {
+      confirm.push({
+        q: item.legacyQ,
+        text: `Confirm: ${item.context || item.title} — ${item.evidence} (Q${item.legacyQ}).`,
+      });
     }
   }
-  if (due.date && !followQs.has(18)) confirm.push({ q: 18, text: `Confirm: procurement timing is ${labelOf(PROCUREMENT, procurement(answers))} (Q18).` });
-  if ((deployment(answers) === "pilot" || deployment(answers) === "live") && text(answers, "q19_prior") === "yes" && !followQs.has(19)) {
-    confirm.push({ q: 19, text: "Confirm: an impact assessment was done before deployment (Q19)." });
+  if (due.date && !followQs.has(18))
+    confirm.push({
+      q: 18,
+      text: `Confirm: procurement timing is ${labelOf(PROCUREMENT, procurement(answers))} (Q18).`,
+    });
+  if (
+    (deployment(answers) === "pilot" || deployment(answers) === "live") &&
+    text(answers, "q19_prior") === "yes" &&
+    !followQs.has(19)
+  ) {
+    confirm.push({
+      q: 19,
+      text: "Confirm: an impact assessment was done before deployment (Q19).",
+    });
   }
 
   let prior: string | null = null;
   const priorValue = priorAssessment(answers);
   const priorMissing = priorValue === "no" || priorValue === "unknown" || priorValue === "";
   if ((deployment(answers) === "pilot" || deployment(answers) === "live") && priorMissing) {
-    prior = priorValue === "no"
-      ? "No impact assessment was done before deployment. This is stated as a fact."
-      : "The answers do not show whether an impact assessment was done before deployment. This is stated as a fact.";
+    prior =
+      priorValue === "no"
+        ? "No impact assessment was done before deployment. This is stated as a fact."
+        : "The answers do not show whether an impact assessment was done before deployment. This is stated as a fact.";
   }
   if (conflict && priorMissing) {
-    prior = prior ?? "The answers do not show a completed impact assessment before the stated start date. This is stated as a fact.";
+    prior =
+      prior ??
+      "The answers do not show a completed impact assessment before the stated start date. This is stated as a fact.";
   }
 
   const crossChecks: CrossCheck[] = [];
@@ -762,21 +1161,24 @@ export function evaluate(file: AnswerFile): Evaluation {
     crossChecks.push({
       id: "status-conflict",
       proposed: true,
-      message: "Q17 says Planning or Procuring, and Q19 gives a start date. Timing in this draft uses Before use until the agency confirms the status.",
+      message:
+        "Q17 says Planning or Procuring, and Q19 gives a start date. Timing in this draft uses Before use until the agency confirms the status.",
     });
   }
   if (outsideContradiction(answers)) {
     crossChecks.push({
       id: "outside-people",
       proposed: true,
-      message: "Q12 says no one outside the agency is affected, and Q9 names a group other than State employees.",
+      message:
+        "Q12 says no one outside the agency is affected, and Q9 names a group other than State employees.",
     });
   }
   if (g4Cross) {
     crossChecks.push({
       id: "info-only-acts",
       proposed: true,
-      message: "Q10 says the output is information only, and Q6 says it is sent to other systems that act on it.",
+      message:
+        "Q10 says the output is information only, and Q6 says it is sent to other systems that act on it.",
     });
   }
   if (suggestedHigher && suggested) {
@@ -786,17 +1188,22 @@ export function evaluate(file: AnswerFile): Evaluation {
       message: `The data described in Q14 suggests at least ${LEVEL_LABEL[suggested]}. Q13 says ${LEVEL_LABEL[level] ?? level}. Apply the higher safeguards until the agency confirms the level.`,
     });
   }
-  if (role === "info_only" && (review?.choiceValue === "none" || review?.choiceValue === "after_only")) {
+  if (
+    role === "info_only" &&
+    (review?.choiceValue === "none" || review?.choiceValue === "after_only")
+  ) {
     crossChecks.push({
       id: "info-only-auto",
       proposed: true,
-      message: "Q10 says the output is information only, and Q11 says outputs take effect with no review before they take effect.",
+      message:
+        "Q10 says the output is information only, and Q11 says outputs take effect with no review before they take effect.",
     });
   }
 
   const inputProblems: string[] = [];
   if (text(answers, "q4_name") === "") inputProblems.push("Q4 AI system name is blank.");
-  if (file.form_version && file.form_version !== FORM_VERSION) inputProblems.push(`Form version ${file.form_version} does not match ${FORM_VERSION}.`);
+  if (file.form_version && file.form_version !== FORM_VERSION)
+    inputProblems.push(`Form version ${file.form_version} does not match ${FORM_VERSION}.`);
 
   const responseId = text(answers, "response_id") || `DRAFT-${fingerprint(answers)}`;
   return {
@@ -858,7 +1265,21 @@ export function levelSafeguard(level: string): string {
   return LEVEL_SAFEGUARD[level] ?? LEVEL_SAFEGUARD.unknown ?? "";
 }
 
-export function optionLabel(group: "builder" | "role" | "method" | "hosting" | "capability" | "level" | "prior" | "procurement" | "target" | "harm" | "assurance", id: string): string {
+export function optionLabel(
+  group:
+    | "builder"
+    | "role"
+    | "method"
+    | "hosting"
+    | "capability"
+    | "level"
+    | "prior"
+    | "procurement"
+    | "target"
+    | "harm"
+    | "assurance",
+  id: string,
+): string {
   const table = {
     builder: BUILDERS,
     role: ROLES,

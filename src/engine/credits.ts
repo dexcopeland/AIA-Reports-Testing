@@ -6,7 +6,14 @@ import type { ResolvedItem } from "./model";
 import { vendorInvolved } from "./visibility";
 
 /** Certificates that can shorten overlapping questions. `none` and `unknown` never credit. */
-export const CREDITED_CERT_IDS = ["soc2", "fedramp", "stateramp", "iso27001", "iso42001", "aiuc1"] as const;
+export const CREDITED_CERT_IDS = [
+  "soc2",
+  "fedramp",
+  "stateramp",
+  "iso27001",
+  "iso42001",
+  "aiuc1",
+] as const;
 
 export type CreditedCertId = (typeof CREDITED_CERT_IDS)[number];
 
@@ -137,7 +144,11 @@ export function applyCertCredit(item: ResolvedItem, answers: Answers): ResolvedI
   return next;
 }
 
-export function mitigationCreditCerts(mitigationId: string, triggers: ResolvedItem[], answers: Answers): CreditedCertId[] {
+export function mitigationCreditCerts(
+  mitigationId: string,
+  triggers: ResolvedItem[],
+  answers: Answers,
+): CreditedCertId[] {
   if (!certCreditActive(answers)) return [];
   if (!triggers.some((item) => item.credited)) return [];
   return selectedCertIds(answers).filter((cert) => CERT_SOFTEN[cert].includes(mitigationId));

@@ -32,7 +32,10 @@ const BODY = REPORT_STYLE.body;
 const MUTED = REPORT_STYLE.muted;
 const FONT = REPORT_STYLE.font;
 
-function run(text: string, options: { size: number; bold?: boolean; color?: string; font?: string }): TextRun {
+function run(
+  text: string,
+  options: { size: number; bold?: boolean; color?: string; font?: string },
+): TextRun {
   return new TextRun({
     text,
     font: options.font ?? FONT,
@@ -42,7 +45,10 @@ function run(text: string, options: { size: number; bold?: boolean; color?: stri
   });
 }
 
-function childrenOf(block: Block, options: { size: number; bold?: boolean; color?: string }): (TextRun | Bookmark)[] {
+function childrenOf(
+  block: Block,
+  options: { size: number; bold?: boolean; color?: string },
+): (TextRun | Bookmark)[] {
   const text = run(block.text, options);
   if (!block.anchor) return [text];
   return [new Bookmark({ id: block.anchor, children: [text] })];
@@ -60,7 +66,10 @@ function markerValue(field: SignField): string {
 }
 
 function fieldMarker(field: SignField): TextRun {
-  return run(`{{cc|${field.name}|${field.lines}|${field.label}|${encodeURIComponent(markerValue(field))}}}`, { size: 22 });
+  return run(
+    `{{cc|${field.name}|${field.lines}|${field.label}|${encodeURIComponent(markerValue(field))}}}`,
+    { size: 22 },
+  );
 }
 
 function acknowledgmentTable(block: Block): Table {
@@ -68,19 +77,26 @@ function acknowledgmentTable(block: Block): Table {
   const yes = fields.find((field) => field.kind === "choice" && field.label === "Yes");
   const no = fields.find((field) => field.kind === "choice" && field.label === "No");
   const date = fields.find((field) => field.kind === "date");
-  const choiceCell = (field: SignField | undefined, width: number) => new TableCell({
-    width: { size: width, type: WidthType.DXA },
-    borders: openBorders,
-    margins: { top: 20, bottom: 20, left: 40, right: 40 },
-    children: [
-      new Paragraph({
-        spacing: { before: 20, after: 20 },
-        children: field
-          ? [run(`${field.label} `, { size: 22 }), new CheckBox({ alias: `${field.label} ${field.group ?? field.name}`, checked: Boolean(field.selected) })]
-          : [run(" ", { size: 22 })],
-      }),
-    ],
-  });
+  const choiceCell = (field: SignField | undefined, width: number) =>
+    new TableCell({
+      width: { size: width, type: WidthType.DXA },
+      borders: openBorders,
+      margins: { top: 20, bottom: 20, left: 40, right: 40 },
+      children: [
+        new Paragraph({
+          spacing: { before: 20, after: 20 },
+          children: field
+            ? [
+                run(`${field.label} `, { size: 22 }),
+                new CheckBox({
+                  alias: `${field.label} ${field.group ?? field.name}`,
+                  checked: Boolean(field.selected),
+                }),
+              ]
+            : [run(" ", { size: 22 })],
+        }),
+      ],
+    });
   return new Table({
     width: { size: 9360, type: WidthType.DXA },
     columnWidths: [5460, 1100, 1000, 1800],
@@ -92,7 +108,12 @@ function acknowledgmentTable(block: Block): Table {
             width: { size: 5460, type: WidthType.DXA },
             borders: openBorders,
             margins: { top: 20, bottom: 20, left: 0, right: 60 },
-            children: [new Paragraph({ spacing: { before: 20, after: 20 }, children: [run(block.text, { size: 22 })] })],
+            children: [
+              new Paragraph({
+                spacing: { before: 20, after: 20 },
+                children: [run(block.text, { size: 22 })],
+              }),
+            ],
           }),
           choiceCell(yes, 1100),
           choiceCell(no, 1000),
@@ -103,7 +124,9 @@ function acknowledgmentTable(block: Block): Table {
             children: [
               new Paragraph({
                 spacing: { before: 20, after: 20 },
-                children: date ? [run("Date ", { size: 22, bold: true, color: NAVY }), fieldMarker(date)] : [run(" ", { size: 22 })],
+                children: date
+                  ? [run("Date ", { size: 22, bold: true, color: NAVY }), fieldMarker(date)]
+                  : [run(" ", { size: 22 })],
               }),
             ],
           }),
@@ -127,7 +150,10 @@ function commentTable(field: SignField): Table {
             shading: { type: ShadingType.CLEAR, fill: REPORT_STYLE.shade },
             margins: { top: 40, bottom: 40, left: 80, right: 80 },
             children: [
-              new Paragraph({ spacing: { after: 20 }, children: [run(field.label, { size: 22, bold: true, color: NAVY })] }),
+              new Paragraph({
+                spacing: { after: 20 },
+                children: [run(field.label, { size: 22, bold: true, color: NAVY })],
+              }),
               new Paragraph({ spacing: { before: 0, after: 0 }, children: [fieldMarker(field)] }),
             ],
           }),
@@ -141,19 +167,29 @@ function leadTable(fields: SignField[]): Table {
   const lineFields = fields.filter((field) => field.kind === "text" || field.kind === "date");
   const signature = fields.find((field) => field.kind === "signature");
   const widths = [3120, 3600, 2640];
-  const cells = lineFields.map((field, index) => new TableCell({
-    width: { size: widths[index] ?? 3120, type: WidthType.DXA },
-    borders: boxBorders,
-    shading: { type: ShadingType.CLEAR, fill: REPORT_STYLE.shade },
-    margins: { top: 30, bottom: 30, left: 60, right: 60 },
-    children: [
-      new Paragraph({
-        spacing: { before: 20, after: 20 },
-        border: { bottom: { style: BorderStyle.SINGLE, size: 4, color: NAVY, space: 1 } },
-        children: [run(`${field.label.startsWith("Title") ? "Title" : field.label} `, { size: 22, bold: true, color: NAVY }), fieldMarker(field)],
+  const cells = lineFields.map(
+    (field, index) =>
+      new TableCell({
+        width: { size: widths[index] ?? 3120, type: WidthType.DXA },
+        borders: boxBorders,
+        shading: { type: ShadingType.CLEAR, fill: REPORT_STYLE.shade },
+        margins: { top: 30, bottom: 30, left: 60, right: 60 },
+        children: [
+          new Paragraph({
+            spacing: { before: 20, after: 20 },
+            border: { bottom: { style: BorderStyle.SINGLE, size: 4, color: NAVY, space: 1 } },
+            children: [
+              run(`${field.label.startsWith("Title") ? "Title" : field.label} `, {
+                size: 22,
+                bold: true,
+                color: NAVY,
+              }),
+              fieldMarker(field),
+            ],
+          }),
+        ],
       }),
-    ],
-  }));
+  );
   const signatureCell = new TableCell({
     columnSpan: 3,
     width: { size: 9360, type: WidthType.DXA },
@@ -161,7 +197,10 @@ function leadTable(fields: SignField[]): Table {
     shading: { type: ShadingType.CLEAR, fill: REPORT_STYLE.shade },
     margins: { top: 30, bottom: 40, left: 60, right: 60 },
     children: [
-      new Paragraph({ spacing: { after: 20 }, children: [run(signature?.label ?? "Signature", { size: 22, bold: true, color: NAVY })] }),
+      new Paragraph({
+        spacing: { after: 20 },
+        children: [run(signature?.label ?? "Signature", { size: 22, bold: true, color: NAVY })],
+      }),
       new Paragraph({ children: signature ? [fieldMarker(signature)] : [run(" ", { size: 22 })] }),
     ],
   });
@@ -193,19 +232,25 @@ function signTable(block: Block): FileChild[] {
 
 function inventoryTable(block: Block): Table {
   const widths = [2800, 6560];
-  const headerCell = (label: string, width: number) => new TableCell({
-    width: { size: width, type: WidthType.DXA },
-    borders: boxBorders,
-    shading: { type: ShadingType.CLEAR, fill: REPORT_STYLE.shade },
-    margins: { top: 40, bottom: 40, left: 80, right: 80 },
-    children: [new Paragraph({ children: [run(label, { size: 22, bold: true, color: NAVY })] })],
-  });
-  const bodyCell = (label: string, width: number, bold = false) => new TableCell({
-    width: { size: width, type: WidthType.DXA },
-    borders: boxBorders,
-    margins: { top: 40, bottom: 40, left: 80, right: 80 },
-    children: [new Paragraph({ children: [run(label || " ", { size: 22, bold, color: bold ? NAVY : BODY })] })],
-  });
+  const headerCell = (label: string, width: number) =>
+    new TableCell({
+      width: { size: width, type: WidthType.DXA },
+      borders: boxBorders,
+      shading: { type: ShadingType.CLEAR, fill: REPORT_STYLE.shade },
+      margins: { top: 40, bottom: 40, left: 80, right: 80 },
+      children: [new Paragraph({ children: [run(label, { size: 22, bold: true, color: NAVY })] })],
+    });
+  const bodyCell = (label: string, width: number, bold = false) =>
+    new TableCell({
+      width: { size: width, type: WidthType.DXA },
+      borders: boxBorders,
+      margins: { top: 40, bottom: 40, left: 80, right: 80 },
+      children: [
+        new Paragraph({
+          children: [run(label || " ", { size: 22, bold, color: bold ? NAVY : BODY })],
+        }),
+      ],
+    });
   return new Table({
     width: { size: 9360, type: WidthType.DXA },
     columnWidths: widths,
@@ -215,10 +260,13 @@ function inventoryTable(block: Block): Table {
         cantSplit: true,
         children: [headerCell("Field", widths[0]), headerCell("Value", widths[1])],
       }),
-      ...(block.rows ?? []).map((row) => new TableRow({
-        cantSplit: true,
-        children: [bodyCell(row.field, widths[0], true), bodyCell(row.value, widths[1])],
-      })),
+      ...(block.rows ?? []).map(
+        (row) =>
+          new TableRow({
+            cantSplit: true,
+            children: [bodyCell(row.field, widths[0], true), bodyCell(row.value, widths[1])],
+          }),
+      ),
     ],
   });
 }
@@ -250,7 +298,11 @@ function paragraphFrom(block: Block, anchors: Set<string>): FileChild[] {
       new Paragraph({
         heading: HeadingLevel.HEADING_2,
         spacing: { before: 200, after: 80 },
-        children: childrenOf(block, { size: Math.round(REPORT_STYLE.subheadPt * 2), bold: true, color: NAVY }),
+        children: childrenOf(block, {
+          size: Math.round(REPORT_STYLE.subheadPt * 2),
+          bold: true,
+          color: NAVY,
+        }),
       }),
     ];
   }
@@ -264,32 +316,39 @@ function paragraphFrom(block: Block, anchors: Set<string>): FileChild[] {
     ];
   }
   if (block.type === "step") {
-    const aside = (block.aside ?? "").split("\n").filter(Boolean).map((line) => new Paragraph({
-      indent: { left: 720 },
-      spacing: { before: 0, after: 40 },
-      children: [run(line, { size: 24 })],
-    }));
+    const aside = (block.aside ?? "")
+      .split("\n")
+      .filter(Boolean)
+      .map(
+        (line) =>
+          new Paragraph({
+            indent: { left: 720 },
+            spacing: { before: 0, after: 40 },
+            children: [run(line, { size: 24 })],
+          }),
+      );
     return [
       new Paragraph({
         numbering: { reference: "follow-up-steps", level: 0 },
         spacing: { before: 40, after: aside.length > 0 ? 20 : 40 },
-        children: block.link && anchors.has(block.link)
-          ? [
-            new InternalHyperlink({
-              anchor: block.link,
-              children: [
-                new TextRun({
-                  text: block.text,
-                  font: FONT,
-                  size: 24,
-                  style: "Hyperlink",
-                  color: REPORT_STYLE.rule,
-                  underline: { type: UnderlineType.SINGLE, color: REPORT_STYLE.rule },
+        children:
+          block.link && anchors.has(block.link)
+            ? [
+                new InternalHyperlink({
+                  anchor: block.link,
+                  children: [
+                    new TextRun({
+                      text: block.text,
+                      font: FONT,
+                      size: 24,
+                      style: "Hyperlink",
+                      color: REPORT_STYLE.rule,
+                      underline: { type: UnderlineType.SINGLE, color: REPORT_STYLE.rule },
+                    }),
+                  ],
                 }),
-              ],
-            }),
-          ]
-          : [run(block.text, { size: 24 })],
+              ]
+            : [run(block.text, { size: 24 })],
       }),
       ...aside,
     ];
@@ -327,7 +386,10 @@ function paragraphFrom(block: Block, anchors: Set<string>): FileChild[] {
       (line, index) =>
         new Paragraph({
           shading: { type: ShadingType.CLEAR, fill: "F4F7FB" },
-          border: index === 0 ? { left: { color: "1B4F8A", space: 8, style: BorderStyle.SINGLE, size: 16 } } : undefined,
+          border:
+            index === 0
+              ? { left: { color: "1B4F8A", space: 8, style: BorderStyle.SINGLE, size: 16 } }
+              : undefined,
           spacing: { after: index === lines.length - 1 ? 160 : 40 },
           children: [run(line || " ", { size: 24 })],
         }),
@@ -344,7 +406,7 @@ function paragraphFrom(block: Block, anchors: Set<string>): FileChild[] {
 }
 
 export async function reportToDocxBlob(doc: ReportView): Promise<Blob> {
-  const anchors = new Set(doc.blocks.flatMap((item) => item.anchor ? [item.anchor] : []));
+  const anchors = new Set(doc.blocks.flatMap((item) => (item.anchor ? [item.anchor] : [])));
   const children = doc.blocks.flatMap((item) => paragraphFrom(item, anchors));
   const header = new Header({
     children: [
@@ -441,7 +503,9 @@ export async function reportToDocxBlob(doc: ReportView): Promise<Blob> {
   const next = applyContentControls(new Uint8Array(await raw.arrayBuffer()));
   const copy = new Uint8Array(next.byteLength);
   copy.set(next);
-  return new Blob([copy], { type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
+  return new Blob([copy], {
+    type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  });
 }
 
 export function downloadBlob(blob: Blob, filename: string): void {

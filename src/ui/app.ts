@@ -1,4 +1,4 @@
-import { SECTIONS, visibleFields, type FormSection } from "../content/form";
+import { visibleFields, type FormSection } from "../content/form";
 import { CONTRACT_TERMS, GROUPS, THREATS } from "../content/statements";
 import type { Answers } from "../engine/answers";
 import { many, text } from "../engine/answers";
@@ -27,7 +27,9 @@ export function missing(section: FormSection, answers: Answers): string[] {
       continue;
     }
     if (field.type === "groups") {
-      const groups = many(answers, field.id).filter((id) => GROUPS.some((group) => group.id === id));
+      const groups = many(answers, field.id).filter((id) =>
+        GROUPS.some((group) => group.id === id),
+      );
       if (groups.length === 0) blanks.push(field.label);
       for (const groupId of groups) {
         if (!text(answers, `q9_rel__${groupId}`)) blanks.push(`Relation for ${groupId}`);
@@ -38,7 +40,12 @@ export function missing(section: FormSection, answers: Answers): string[] {
       if (many(answers, field.id).length === 0) blanks.push(field.label);
       continue;
     }
-    if (field.id === "q15_same_place" && displayedSamePlace(answers) === "yes" && !text(answers, field.id)) continue;
+    if (
+      field.id === "q15_same_place" &&
+      displayedSamePlace(answers) === "yes" &&
+      !text(answers, field.id)
+    )
+      continue;
     if (!text(answers, field.id)) blanks.push(field.label);
   }
   return blanks;

@@ -24,7 +24,13 @@ import { displayedSamePlace } from "../engine/visibility";
 import { DatePicker } from "./DatePicker";
 import { GrowingTextarea } from "./GrowingTextarea";
 import { HelpTip } from "./HelpTip";
-import { relationOptions, roleWarning, statementDefinition, statementInstances, toggleCheck } from "./form-model";
+import {
+  relationOptions,
+  roleWarning,
+  statementDefinition,
+  statementInstances,
+  toggleCheck,
+} from "./form-model";
 
 export function FieldControl({
   field,
@@ -38,11 +44,20 @@ export function FieldControl({
   if (field.type === "info") {
     return <p className="text-sm text-muted-foreground">{`${field.label}. ${field.help ?? ""}`}</p>;
   }
-  if (field.type === "groups") return <GroupsField field={field} answers={answers} onAnswer={onAnswer} />;
-  if (field.type === "statement") return <StatementField field={field} answers={answers} onAnswer={onAnswer} />;
-  if (field.type === "radio") return <RadioField field={field} answers={answers} onAnswer={onAnswer} />;
-  if (field.type === "check") return <CheckField field={field} answers={answers} onAnswer={onAnswer} />;
-  if (field.type === "short" || field.type === "email" || field.type === "date" || field.type === "paragraph") {
+  if (field.type === "groups")
+    return <GroupsField field={field} answers={answers} onAnswer={onAnswer} />;
+  if (field.type === "statement")
+    return <StatementField field={field} answers={answers} onAnswer={onAnswer} />;
+  if (field.type === "radio")
+    return <RadioField field={field} answers={answers} onAnswer={onAnswer} />;
+  if (field.type === "check")
+    return <CheckField field={field} answers={answers} onAnswer={onAnswer} />;
+  if (
+    field.type === "short" ||
+    field.type === "email" ||
+    field.type === "date" ||
+    field.type === "paragraph"
+  ) {
     return <TextField field={field} answers={answers} onAnswer={onAnswer} />;
   }
   const unexpected: never = field.type;
@@ -88,7 +103,9 @@ function TextField({
   return (
     <Field>
       <div className="flex items-center gap-1">
-        <FieldLabel htmlFor={field.id} className="text-base font-semibold">{label}</FieldLabel>
+        <FieldLabel htmlFor={field.id} className="text-base font-semibold">
+          {label}
+        </FieldLabel>
         {field.help ? <HelpTip label={field.label} text={field.help} /> : null}
       </div>
       {field.help ? <FieldDescription id={helpId}>{field.help}</FieldDescription> : null}
@@ -123,7 +140,9 @@ function TextField({
       ) : null}
       {warning ? (
         <Alert>
-          <AlertDescription id={`${field.id}-role`} role="status">{warning}</AlertDescription>
+          <AlertDescription id={`${field.id}-role`} role="status">
+            {warning}
+          </AlertDescription>
         </Alert>
       ) : null}
     </Field>
@@ -141,11 +160,14 @@ function RadioField({
 }) {
   const helpId = `${field.id}-help`;
   const legendId = `${field.id}-legend`;
-  const selected = field.id === "q15_same_place" ? displayedSamePlace(answers) : text(answers, field.id);
+  const selected =
+    field.id === "q15_same_place" ? displayedSamePlace(answers) : text(answers, field.id);
   const legend = (field.legend?.(answers) ?? field.label) + requiredSuffix(field);
   return (
     <FieldSet className="gap-2">
-      <QuestionLegend id={legendId} help={field.help} helpLabel={field.label}>{legend}</QuestionLegend>
+      <QuestionLegend id={legendId} help={field.help} helpLabel={field.label}>
+        {legend}
+      </QuestionLegend>
       {field.help ? <FieldDescription id={helpId}>{field.help}</FieldDescription> : null}
       <RadioGroup
         name={field.id}
@@ -159,7 +181,9 @@ function RadioField({
           return (
             <Field key={option.id} orientation="horizontal" className="items-start">
               <RadioGroupItem id={id} value={option.id} className="mt-1" />
-              <FieldLabel htmlFor={id} className="font-normal">{option.label}</FieldLabel>
+              <FieldLabel htmlFor={id} className="font-normal">
+                {option.label}
+              </FieldLabel>
             </Field>
           );
         })}
@@ -182,7 +206,9 @@ function CheckField({
   const picked = many(answers, field.id);
   return (
     <FieldSet className="gap-2">
-      <QuestionLegend id={legendId} help={field.help} helpLabel={field.label}>{field.label + requiredSuffix(field)}</QuestionLegend>
+      <QuestionLegend id={legendId} help={field.help} helpLabel={field.label}>
+        {field.label + requiredSuffix(field)}
+      </QuestionLegend>
       {field.help ? <FieldDescription id={helpId}>{field.help}</FieldDescription> : null}
       <FieldGroup className="gap-2" data-slot="checkbox-group">
         {(field.options ?? []).map((option) => {
@@ -195,9 +221,13 @@ function CheckField({
                 checked={picked.includes(option.id)}
                 aria-describedby={field.help ? helpId : undefined}
                 className="mt-1"
-                onCheckedChange={(checked) => onAnswer(field.id, toggleCheck(answers, field.id, option.id, checked))}
+                onCheckedChange={(checked) =>
+                  onAnswer(field.id, toggleCheck(answers, field.id, option.id, checked))
+                }
               />
-              <FieldLabel htmlFor={id} className="font-normal">{option.label}</FieldLabel>
+              <FieldLabel htmlFor={id} className="font-normal">
+                {option.label}
+              </FieldLabel>
             </Field>
           );
         })}
@@ -220,7 +250,11 @@ function GroupsField({
   const picked = many(answers, field.id);
   return (
     <FieldSet className="gap-3">
-      <QuestionLegend id={legendId} help={field.help} helpLabel={field.label}>{`${field.label} (required)`}</QuestionLegend>
+      <QuestionLegend
+        id={legendId}
+        help={field.help}
+        helpLabel={field.label}
+      >{`${field.label} (required)`}</QuestionLegend>
       {field.help ? <FieldDescription id={helpId}>{field.help}</FieldDescription> : null}
       {(field.options ?? []).map((option) => {
         const id = `${field.id}-${option.id}`;
@@ -233,13 +267,19 @@ function GroupsField({
                 name={field.id}
                 checked={checked}
                 className="mt-1"
-                onCheckedChange={(next) => onAnswer(field.id, toggleCheck(answers, field.id, option.id, next))}
+                onCheckedChange={(next) =>
+                  onAnswer(field.id, toggleCheck(answers, field.id, option.id, next))
+                }
               />
-              <FieldLabel htmlFor={id} className="font-normal">{option.label}</FieldLabel>
+              <FieldLabel htmlFor={id} className="font-normal">
+                {option.label}
+              </FieldLabel>
             </Field>
             {checked ? (
               <FieldSet className="ml-6 gap-2 border-l border-border pl-3">
-                <QuestionLegend id={`q9_rel__${option.id}-legend`}>{`How is ${option.label} affected?`}</QuestionLegend>
+                <QuestionLegend
+                  id={`q9_rel__${option.id}-legend`}
+                >{`How is ${option.label} affected?`}</QuestionLegend>
                 <RadioGroup
                   name={`q9_rel__${option.id}`}
                   value={text(answers, `q9_rel__${option.id}`)}
@@ -251,7 +291,9 @@ function GroupsField({
                     return (
                       <Field key={relation.id} orientation="horizontal" className="items-start">
                         <RadioGroupItem id={relId} value={relation.id} className="mt-1" />
-                        <FieldLabel htmlFor={relId} className="font-normal">{relation.label}</FieldLabel>
+                        <FieldLabel htmlFor={relId} className="font-normal">
+                          {relation.label}
+                        </FieldLabel>
                       </Field>
                     );
                   })}
@@ -285,11 +327,20 @@ function StatementField({
         const helpId = `${instance.key}-help`;
         const hintId = `${instance.key}-hint`;
         const legendId = `${instance.key}-legend`;
-        const hint = "Pick the statement closest to today, from weakest to strongest. Planned asks for a date. The strongest line can ask for one line of evidence.";
+        const hint =
+          "Pick the statement closest to today, from weakest to strongest. Planned asks for a date. The strongest line can ask for one line of evidence.";
         return (
           <FieldSet key={instance.key} className="gap-2">
-            <QuestionLegend id={legendId} help={index === 0 ? field.help : undefined} helpLabel={instance.title}>{instance.title}</QuestionLegend>
-            {field.help && index === 0 ? <FieldDescription id={helpId}>{field.help}</FieldDescription> : null}
+            <QuestionLegend
+              id={legendId}
+              help={index === 0 ? field.help : undefined}
+              helpLabel={instance.title}
+            >
+              {instance.title}
+            </QuestionLegend>
+            {field.help && index === 0 ? (
+              <FieldDescription id={helpId}>{field.help}</FieldDescription>
+            ) : null}
             <FieldDescription id={hintId}>{hint}</FieldDescription>
             <RadioGroup
               name={instance.key}
@@ -303,14 +354,18 @@ function StatementField({
                 return (
                   <Field key={item.value} orientation="horizontal" className="items-start">
                     <RadioGroupItem id={id} value={item.value} className="mt-1" />
-                    <FieldLabel htmlFor={id} className="font-normal">{item.text}</FieldLabel>
+                    <FieldLabel htmlFor={id} className="font-normal">
+                      {item.text}
+                    </FieldLabel>
                   </Field>
                 );
               })}
             </RadioGroup>
             {choice?.asks === "target_date" ? (
               <Field>
-                <FieldLabel htmlFor={`${instance.key}__date`} className="text-base font-semibold">Target date</FieldLabel>
+                <FieldLabel htmlFor={`${instance.key}__date`} className="text-base font-semibold">
+                  Target date
+                </FieldLabel>
                 <DatePicker
                   id={`${instance.key}__date`}
                   value={raw(answers, `${instance.key}__date`)}
@@ -351,7 +406,9 @@ function EvidenceLine({
   return (
     <Field>
       <div className="flex items-center gap-1">
-        <FieldLabel htmlFor={fieldKey} className="text-base font-semibold">Evidence</FieldLabel>
+        <FieldLabel htmlFor={fieldKey} className="text-base font-semibold">
+          Evidence
+        </FieldLabel>
         <HelpTip label="Evidence" text={hint} />
       </div>
       <FieldDescription id={hintId}>{hint}</FieldDescription>

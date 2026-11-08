@@ -4,7 +4,14 @@ import { formatIsoDate } from "../engine/dates";
 import type { Block, ReportView, SignField } from "../engine/report";
 import { REPORT_STYLE } from "../report/style";
 import { addAcroFormFields, collectPdf } from "./form-fields";
-import { familyCoverage, glyphWarnings, openFont, pdfText, type GlyphFont, type GlyphWarning } from "./glyphs";
+import {
+  familyCoverage,
+  glyphWarnings,
+  openFont,
+  pdfText,
+  type GlyphFont,
+  type GlyphWarning,
+} from "./glyphs";
 
 type PdfContent = Record<string, unknown>;
 
@@ -48,8 +55,12 @@ async function fontBytes(filename: string): Promise<Uint8Array> {
 
 function ensureFonts(): Promise<LoadedFaces> {
   fontsReady ??= (async () => {
-    const loaded = await Promise.all(FONT_FILES.map(async (filename) => [filename, await fontBytes(filename)] as const));
-    const files = Object.fromEntries(loaded.map(([filename, bytes]) => [filename, bytesToBase64(bytes)]));
+    const loaded = await Promise.all(
+      FONT_FILES.map(async (filename) => [filename, await fontBytes(filename)] as const),
+    );
+    const files = Object.fromEntries(
+      loaded.map(([filename, bytes]) => [filename, bytesToBase64(bytes)]),
+    );
     pdfMake.addVirtualFileSystem({ ...pdfFonts, ...files });
     pdfMake.addFonts({
       [REPORT_STYLE.pdfFamily]: {
@@ -85,8 +96,19 @@ function ensureFonts(): Promise<LoadedFaces> {
   return fontsReady;
 }
 
-function paint(text: string, faces: LoadedFaces, missing: Set<string>): string | { text: string; font: string }[] {
-  return pdfText(text, faces.primary, faces.fallback, REPORT_STYLE.pdfFamily, REPORT_STYLE.fallbackFamily, missing);
+function paint(
+  text: string,
+  faces: LoadedFaces,
+  missing: Set<string>,
+): string | { text: string; font: string }[] {
+  return pdfText(
+    text,
+    faces.primary,
+    faces.fallback,
+    REPORT_STYLE.pdfFamily,
+    REPORT_STYLE.fallbackFamily,
+    missing,
+  );
 }
 
 function withId(node: PdfContent, anchor: string | undefined): PdfContent {
@@ -94,9 +116,18 @@ function withId(node: PdfContent, anchor: string | undefined): PdfContent {
   return { ...node, id: anchor };
 }
 
-function linked(text: string, link: string | undefined, faces: LoadedFaces, missing: Set<string>): PdfContent {
+function linked(
+  text: string,
+  link: string | undefined,
+  faces: LoadedFaces,
+  missing: Set<string>,
+): PdfContent {
   const painted = paint(text, faces, missing);
-  const style = { color: `#${REPORT_STYLE.rule}`, decoration: "underline", linkToDestination: link };
+  const style = {
+    color: `#${REPORT_STYLE.rule}`,
+    decoration: "underline",
+    linkToDestination: link,
+  };
   if (typeof painted === "string") return { text: painted, ...style };
   return { text: painted.map((run) => ({ ...run, ...style })) };
 }
@@ -118,7 +149,17 @@ function marker(name: string, width: number): PdfContent {
     stack: [
       { text: " ", id: `fld_${name}`, fontSize: 11, margin: [1, 1, 0, 0] },
       {
-        canvas: [{ type: "line", x1: 0, y1: 0, x2: Math.max(12, width - 6), y2: 0, lineWidth: 0.6, lineColor: `#${REPORT_STYLE.navy}` }],
+        canvas: [
+          {
+            type: "line",
+            x1: 0,
+            y1: 0,
+            x2: Math.max(12, width - 6),
+            y2: 0,
+            lineWidth: 0.6,
+            lineColor: `#${REPORT_STYLE.navy}`,
+          },
+        ],
         relativePosition: { x: 1, y: -1 },
       },
     ],
@@ -165,7 +206,13 @@ function wrapComment(value: string): string[] {
   return lines.length > 0 ? lines : [""];
 }
 
-function commentChunk(field: SignField, lines: string[], first: boolean, faces: LoadedFaces, missing: Set<string>): PdfContent {
+function commentChunk(
+  field: SignField,
+  lines: string[],
+  first: boolean,
+  faces: LoadedFaces,
+  missing: Set<string>,
+): PdfContent {
   const stack: PdfContent[] = [];
   if (first) {
     stack.push({
@@ -194,37 +241,55 @@ function commentChunk(field: SignField, lines: string[], first: boolean, faces: 
 function commentBox(field: SignField, faces: LoadedFaces, missing: Set<string>): PdfContent[] {
   const value = shownValue(field);
   if (!value) {
-    return [{
-      table: {
-        widths: ["*"],
-        dontBreakRows: true,
-        body: [[{
-          stack: [
-            {
-              text: paint(field.label, faces, missing),
-              bold: true,
-              fontSize: 11,
-              color: `#${REPORT_STYLE.navy}`,
-              margin: [4, 3, 4, 0],
-            },
-            { text: " ", id: `fld_${field.name}`, fontSize: 11, margin: [4, 0, 4, field.lines * 11] },
+    return [
+      {
+        table: {
+          widths: ["*"],
+          dontBreakRows: true,
+          body: [
+            [
+              {
+                stack: [
+                  {
+                    text: paint(field.label, faces, missing),
+                    bold: true,
+                    fontSize: 11,
+                    color: `#${REPORT_STYLE.navy}`,
+                    margin: [4, 3, 4, 0],
+                  },
+                  {
+                    text: " ",
+                    id: `fld_${field.name}`,
+                    fontSize: 11,
+                    margin: [4, 0, 4, field.lines * 11],
+                  },
+                ],
+                fillColor: `#${REPORT_STYLE.shade}`,
+              },
+            ],
           ],
-          fillColor: `#${REPORT_STYLE.shade}`,
-        }]],
+        },
+        layout: thinBox,
+        margin: [0, 1, 0, 2],
       },
-      layout: thinBox,
-      margin: [0, 1, 0, 2],
-    }];
+    ];
   }
   const lines = wrapComment(value);
   const chunkSize = 24;
   const chunks: string[][] = [];
   if (lines.length <= chunkSize + 6) chunks.push(lines);
-  else for (let index = 0; index < lines.length; index += chunkSize) chunks.push(lines.slice(index, index + chunkSize));
+  else
+    for (let index = 0; index < lines.length; index += chunkSize)
+      chunks.push(lines.slice(index, index + chunkSize));
   return chunks.map((chunk, index) => commentChunk(field, chunk, index === 0, faces, missing));
 }
 
-function acknowledgmentRow(block: Block, fields: SignField[], faces: LoadedFaces, missing: Set<string>): PdfContent {
+function acknowledgmentRow(
+  block: Block,
+  fields: SignField[],
+  faces: LoadedFaces,
+  missing: Set<string>,
+): PdfContent {
   const date = fields.find((field) => field.kind === "date");
   const choices = fields.filter((field) => field.kind === "choice");
   return {
@@ -234,10 +299,30 @@ function acknowledgmentRow(block: Block, fields: SignField[], faces: LoadedFaces
       ...(date
         ? shownValue(date)
           ? [
-            { width: "auto", text: "Date", bold: true, fontSize: 11, margin: [6, 2, 2, 0] } satisfies PdfContent,
-            { width: "auto", text: paint(shownValue(date), faces, missing), fontSize: 11, margin: [2, 2, 0, 0] } satisfies PdfContent,
-          ]
-          : [{ width: "auto", text: "Date", bold: true, fontSize: 11, margin: [6, 2, 2, 0] } satisfies PdfContent, marker(date.name, date.width ?? 72)]
+              {
+                width: "auto",
+                text: "Date",
+                bold: true,
+                fontSize: 11,
+                margin: [6, 2, 2, 0],
+              } satisfies PdfContent,
+              {
+                width: "auto",
+                text: paint(shownValue(date), faces, missing),
+                fontSize: 11,
+                margin: [2, 2, 0, 0],
+              } satisfies PdfContent,
+            ]
+          : [
+              {
+                width: "auto",
+                text: "Date",
+                bold: true,
+                fontSize: 11,
+                margin: [6, 2, 2, 0],
+              } satisfies PdfContent,
+              marker(date.name, date.width ?? 72),
+            ]
         : []),
     ],
     columnGap: 2,
@@ -245,7 +330,12 @@ function acknowledgmentRow(block: Block, fields: SignField[], faces: LoadedFaces
   };
 }
 
-function labeledValue(label: string, value: string, faces: LoadedFaces, missing: Set<string>): PdfContent {
+function labeledValue(
+  label: string,
+  value: string,
+  faces: LoadedFaces,
+  missing: Set<string>,
+): PdfContent {
   const painted = paint(value, faces, missing);
   const valueRun = typeof painted === "string" ? [{ text: painted }] : painted;
   return {
@@ -300,7 +390,8 @@ function signBox(block: Block, faces: LoadedFaces, missing: Set<string>): PdfCon
   const loose = fields.filter((field) => !field.boxed);
   const boxed = fields.filter((field) => field.boxed);
   const parts: PdfContent[] = [];
-  if (loose.length > 0) parts.push({ unbreakable: true, stack: [acknowledgmentRow(block, loose, faces, missing)] });
+  if (loose.length > 0)
+    parts.push({ unbreakable: true, stack: [acknowledgmentRow(block, loose, faces, missing)] });
   if (loose.length > 0) {
     for (const field of boxed) parts.push(...commentBox(field, faces, missing));
   } else if (boxed.length > 0) {
@@ -342,7 +433,11 @@ function inventoryTable(block: Block, faces: LoadedFaces, missing: Set<string>):
   };
 }
 
-function blockContent(block: Block, faces: LoadedFaces, missing: Set<string>): PdfContent | PdfContent[] {
+function blockContent(
+  block: Block,
+  faces: LoadedFaces,
+  missing: Set<string>,
+): PdfContent | PdfContent[] {
   if (block.type === "break") return { text: "", pageBreak: "before" };
   if (block.type === "table") return inventoryTable(block, faces, missing);
   if (block.type === "h1") {
@@ -355,50 +450,80 @@ function blockContent(block: Block, faces: LoadedFaces, missing: Set<string>): P
         margin: [0, 0, 0, 4],
       },
       {
-        canvas: [{ type: "line", x1: 0, y1: 0, x2: 468, y2: 0, lineWidth: 1, lineColor: `#${REPORT_STYLE.navy}` }],
+        canvas: [
+          {
+            type: "line",
+            x1: 0,
+            y1: 0,
+            x2: 468,
+            y2: 0,
+            lineWidth: 1,
+            lineColor: `#${REPORT_STYLE.navy}`,
+          },
+        ],
         margin: [0, 0, 0, 10],
       },
     ];
   }
   if (block.type === "h2") {
-    return withId({
-      text: paint(block.text, faces, missing),
-      fontSize: REPORT_STYLE.headingPt,
-      bold: true,
-      color: `#${REPORT_STYLE.navy}`,
-      margin: [0, 14, 0, 6],
-    }, block.anchor);
+    return withId(
+      {
+        text: paint(block.text, faces, missing),
+        fontSize: REPORT_STYLE.headingPt,
+        bold: true,
+        color: `#${REPORT_STYLE.navy}`,
+        margin: [0, 14, 0, 6],
+      },
+      block.anchor,
+    );
   }
   if (block.type === "h3") {
-    return withId({
-      text: paint(block.text, faces, missing),
-      fontSize: REPORT_STYLE.subheadPt,
-      bold: true,
-      color: `#${REPORT_STYLE.navy}`,
-      margin: [0, 10, 0, 4],
-    }, block.anchor);
+    return withId(
+      {
+        text: paint(block.text, faces, missing),
+        fontSize: REPORT_STYLE.subheadPt,
+        bold: true,
+        color: `#${REPORT_STYLE.navy}`,
+        margin: [0, 10, 0, 4],
+      },
+      block.anchor,
+    );
   }
   if (block.type === "label") {
-    return withId({
-      text: paint(block.text, faces, missing),
-      fontSize: REPORT_STYLE.bodyPt,
-      bold: true,
-      color: `#${REPORT_STYLE.navy}`,
-      margin: [0, 8, 0, 2],
-    }, block.anchor);
+    return withId(
+      {
+        text: paint(block.text, faces, missing),
+        fontSize: REPORT_STYLE.bodyPt,
+        bold: true,
+        color: `#${REPORT_STYLE.navy}`,
+        margin: [0, 8, 0, 2],
+      },
+      block.anchor,
+    );
   }
   if (block.type === "sign") return signBox(block, faces, missing);
   if (block.type === "note") {
-    return { text: paint(block.text, faces, missing), fontSize: REPORT_STYLE.notePt, color: `#${REPORT_STYLE.muted}`, margin: [0, 0, 0, 4] };
+    return {
+      text: paint(block.text, faces, missing),
+      fontSize: REPORT_STYLE.notePt,
+      color: `#${REPORT_STYLE.muted}`,
+      margin: [0, 0, 0, 4],
+    };
   }
   if (block.type === "qa") {
     return {
       table: {
         widths: [3, "*"],
-        body: [[
-          { text: "", fillColor: `#${REPORT_STYLE.rule}` },
-          { text: paint(block.text, faces, missing), fillColor: `#${REPORT_STYLE.shade}`, margin: [6, 4, 6, 4] },
-        ]],
+        body: [
+          [
+            { text: "", fillColor: `#${REPORT_STYLE.rule}` },
+            {
+              text: paint(block.text, faces, missing),
+              fillColor: `#${REPORT_STYLE.shade}`,
+              margin: [6, 4, 6, 4],
+            },
+          ],
+        ],
       },
       layout: "noBorders",
       margin: [0, 2, 0, 8],
@@ -414,7 +539,7 @@ function blockContent(block: Block, faces: LoadedFaces, missing: Set<string>): P
 }
 
 function blocksToPdf(blocks: Block[], faces: LoadedFaces, missing: Set<string>): PdfContent[] {
-  const anchors = new Set(blocks.flatMap((block) => block.anchor ? [block.anchor] : []));
+  const anchors = new Set(blocks.flatMap((block) => (block.anchor ? [block.anchor] : [])));
   const content: PdfContent[] = [];
   for (let index = 0; index < blocks.length; index += 1) {
     const block = blocks[index];
@@ -422,8 +547,14 @@ function blocksToPdf(blocks: Block[], faces: LoadedFaces, missing: Set<string>):
       const items: PdfContent[] = [];
       while (blocks[index]?.type === "step") {
         const step = blocks[index];
-        const line = step.link && anchors.has(step.link) ? linked(step.text, step.link, faces, missing) : { text: paint(step.text, faces, missing) };
-        const aside = (step.aside ?? "").split("\n").filter(Boolean).map((item) => ({ text: paint(item, faces, missing), margin: [0, 1, 0, 0] }));
+        const line =
+          step.link && anchors.has(step.link)
+            ? linked(step.text, step.link, faces, missing)
+            : { text: paint(step.text, faces, missing) };
+        const aside = (step.aside ?? "")
+          .split("\n")
+          .filter(Boolean)
+          .map((item) => ({ text: paint(item, faces, missing), margin: [0, 1, 0, 0] }));
         items.push(aside.length > 0 ? { stack: [line, ...aside] } : line);
         index += 1;
       }
@@ -454,10 +585,19 @@ function blocksToPdf(blocks: Block[], faces: LoadedFaces, missing: Set<string>):
   return content;
 }
 
-export function reportDefinition(doc: ReportView, faces: LoadedFaces, missing: Set<string>): Record<string, unknown> {
+export function reportDefinition(
+  doc: ReportView,
+  faces: LoadedFaces,
+  missing: Set<string>,
+): Record<string, unknown> {
   return {
     pageSize: "LETTER",
-    pageMargins: [REPORT_STYLE.marginPt, REPORT_STYLE.marginPt + 16, REPORT_STYLE.marginPt, REPORT_STYLE.marginPt + 8],
+    pageMargins: [
+      REPORT_STYLE.marginPt,
+      REPORT_STYLE.marginPt + 16,
+      REPORT_STYLE.marginPt,
+      REPORT_STYLE.marginPt + 8,
+    ],
     defaultStyle: {
       font: REPORT_STYLE.pdfFamily,
       fontSize: REPORT_STYLE.bodyPt,
@@ -490,14 +630,16 @@ export async function reportToPdfBytes(doc: ReportView): Promise<PdfResult> {
   const faces = await ensureFonts();
   const missing = new Set<string>();
   const pdf = pdfMake.createPdf(reportDefinition(doc, faces, missing), { bufferPages: true });
-  const kit = await pdf.getStream() as Parameters<typeof addAcroFormFields>[0];
+  const kit = (await pdf.getStream()) as Parameters<typeof addAcroFormFields>[0];
   const fields = doc.blocks.flatMap((block) => block.fields ?? []).filter(keepsWidget);
   addAcroFormFields(kit, fields);
   const bytes = await collectPdf(kit);
   return { bytes, warnings: glyphWarnings(doc.blocks, [...missing]) };
 }
 
-export async function reportToPdfBlob(doc: ReportView): Promise<{ blob: Blob; warnings: GlyphWarning[] }> {
+export async function reportToPdfBlob(
+  doc: ReportView,
+): Promise<{ blob: Blob; warnings: GlyphWarning[] }> {
   const { bytes, warnings } = await reportToPdfBytes(doc);
   const copy = new Uint8Array(bytes.byteLength);
   copy.set(bytes);

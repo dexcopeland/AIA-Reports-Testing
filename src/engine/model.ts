@@ -1,4 +1,10 @@
-import type { AssessmentPath, CertCreditSnapshot, ItemStatus, Timing, Track } from "../content/types";
+import type {
+  AssessmentPath,
+  CertCreditSnapshot,
+  ItemStatus,
+  Timing,
+  Track,
+} from "../content/types";
 
 export interface ResolvedItem {
   instanceId: string;

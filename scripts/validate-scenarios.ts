@@ -19,7 +19,9 @@ const lines = [
 ];
 for (const row of rows) {
   const deadline = row.result.deadline ?? "No date";
-  lines.push(`| ${row.result.id} | ${row.result.gates.join(", ")} | ${deadline} | ${row.result.mitigations} | ${row.result.match ? "Match" : "Diverges"} |`);
+  lines.push(
+    `| ${row.result.id} | ${row.result.gates.join(", ")} | ${deadline} | ${row.result.mitigations} | ${row.result.match ? "Match" : "Diverges"} |`,
+  );
 }
 lines.push("", "## Notes and divergences", "");
 for (const row of rows) {

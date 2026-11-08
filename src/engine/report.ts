@@ -1,4 +1,19 @@
-import { ASSURANCES, BUILDERS, CAPABILITIES, DEPLOYMENT, DESIGN_FACTS, HARM_TYPES, HOSTING, LEVELS, METHODS, PRIOR, PROCUREMENT, ROLES, TARGETS, labelOf } from "../content/catalog";
+import {
+  ASSURANCES,
+  BUILDERS,
+  CAPABILITIES,
+  DEPLOYMENT,
+  DESIGN_FACTS,
+  HARM_TYPES,
+  HOSTING,
+  LEVELS,
+  METHODS,
+  PRIOR,
+  PROCUREMENT,
+  ROLES,
+  TARGETS,
+  labelOf,
+} from "../content/catalog";
 import { AREAS } from "../content/rules";
 import { APPROVAL_BANNED, BANNED, FIXED, RP_META, SOURCES } from "../content/rules";
 import { GROUPS, RELATIONS, STATEMENT_BY_ID, THREATS } from "../content/statements";
@@ -11,7 +26,17 @@ import { certCreditLabels } from "./credits";
 import { evaluate, levelSafeguard, optionLabel } from "./evaluate";
 import type { Evaluation, LiveMitigation } from "./model";
 import { ackFor } from "./signoff";
-import { dataLevel, deployment, priorAssessment, processingPlace, procurementApplicable, selectedGroups, statusConflict, threatApplies, vendorInvolved } from "./visibility";
+import {
+  dataLevel,
+  deployment,
+  priorAssessment,
+  processingPlace,
+  procurementApplicable,
+  selectedGroups,
+  statusConflict,
+  threatApplies,
+  vendorInvolved,
+} from "./visibility";
 
 export interface SignField {
   name: string;
@@ -36,7 +61,21 @@ export interface TableRow {
 }
 
 export interface Block {
-  type: "h1" | "h2" | "h3" | "p" | "label" | "field" | "note" | "qa" | "break" | "bullet" | "sub" | "step" | "sign" | "table";
+  type:
+    | "h1"
+    | "h2"
+    | "h3"
+    | "p"
+    | "label"
+    | "field"
+    | "note"
+    | "qa"
+    | "break"
+    | "bullet"
+    | "sub"
+    | "step"
+    | "sign"
+    | "table";
   text: string;
   source: "template" | "answer" | "slot";
   anchor?: string;
@@ -76,32 +115,125 @@ export interface ReportView {
 const QUESTIONS: { n: number; section: string; text: string; rp?: string }[] = [
   { n: 1, section: "Section 1: About this request", text: "Intake reference number" },
   { n: 2, section: "Section 1: About this request", text: "Your agency or unit, and your role" },
-  { n: 3, section: "Section 1: About this request", text: "Are you the Agency Lead who will acknowledge the report? If not, give the Agency Lead's role and email." },
+  {
+    n: 3,
+    section: "Section 1: About this request",
+    text: "Are you the Agency Lead who will acknowledge the report? If not, give the Agency Lead's role and email.",
+  },
   { n: 4, section: "Section 2: The AI system", text: "Name of the AI system" },
-  { n: 5, section: "Section 2: The AI system", text: "Who built it? Name the vendor, product and version, and any part your agency built or changed. If there is no vendor, write \"Built by the State.\"" },
-  { n: 6, section: "Section 2: The AI system", text: "What can the AI system do? Include the model or method it uses and where it runs." },
-  { n: 7, section: "Section 2: The AI system", text: "What is its purpose, and how will your agency use it? Describe the current process it changes." },
-  { n: 8, section: "Section 2: The AI system", text: "Which areas could its output affect, and how? For example: benefits or services, health, housing, money or legal rights, jobs, safety, law enforcement, or speech, assembly or religion." },
-  { n: 9, section: "Section 2: The AI system", text: "Who is affected? Name the groups, including any who may need extra care, such as children, older adults, people with disabilities, people with limited English or low-income residents." },
-  { n: 10, section: "Section 3: Decisions and oversight", text: "What role does the output play in decisions?" },
-  { n: 11, section: "Section 3: Decisions and oversight", text: "Who reviews the output, and can they change or stop it? How are changes recorded? What training and instructions will staff get on its limits and when to check its output?", rp: "RP4" },
-  { n: 12, section: "Section 3: Decisions and oversight", text: "How are affected people told AI is involved, and how can they reach a person, fix their data or challenge a result? Include languages offered. Write \"Not applicable\" if no one outside your agency is affected." },
-  { n: 13, section: "Section 4: Data and vendor", text: "Highest data level the AI system uses (Data Classification Policy)" },
-  { n: 14, section: "Section 4: Data and vendor", text: "What data does it use, learn from or pull into answers? Say where the data comes from, how you check its quality and guard it from tampering, and any special rules (for example, HIPAA, FERPA, CJIS, IRS Pub 1075 or SSA).", rp: "RP3" },
-  { n: 15, section: "Section 4: Data and vendor", text: "Where is the data processed and stored, and how long is it kept? Is it encrypted at rest and in transit? What is the status of the privacy review (PTA or PIA)?" },
-  { n: 16, section: "Section 4: Data and vendor", text: "For vendor products: Can the vendor use State data to train its models? What assurances has it given (such as SOC 2, FedRAMP, StateRAMP, ISO/IEC 27001 or 42001)? Does the contract say who is responsible for what and require notice of model changes and AI security incidents? Write \"Not applicable\" if built by the State.", rp: "RP2" },
+  {
+    n: 5,
+    section: "Section 2: The AI system",
+    text: 'Who built it? Name the vendor, product and version, and any part your agency built or changed. If there is no vendor, write "Built by the State."',
+  },
+  {
+    n: 6,
+    section: "Section 2: The AI system",
+    text: "What can the AI system do? Include the model or method it uses and where it runs.",
+  },
+  {
+    n: 7,
+    section: "Section 2: The AI system",
+    text: "What is its purpose, and how will your agency use it? Describe the current process it changes.",
+  },
+  {
+    n: 8,
+    section: "Section 2: The AI system",
+    text: "Which areas could its output affect, and how? For example: benefits or services, health, housing, money or legal rights, jobs, safety, law enforcement, or speech, assembly or religion.",
+  },
+  {
+    n: 9,
+    section: "Section 2: The AI system",
+    text: "Who is affected? Name the groups, including any who may need extra care, such as children, older adults, people with disabilities, people with limited English or low-income residents.",
+  },
+  {
+    n: 10,
+    section: "Section 3: Decisions and oversight",
+    text: "What role does the output play in decisions?",
+  },
+  {
+    n: 11,
+    section: "Section 3: Decisions and oversight",
+    text: "Who reviews the output, and can they change or stop it? How are changes recorded? What training and instructions will staff get on its limits and when to check its output?",
+    rp: "RP4",
+  },
+  {
+    n: 12,
+    section: "Section 3: Decisions and oversight",
+    text: 'How are affected people told AI is involved, and how can they reach a person, fix their data or challenge a result? Include languages offered. Write "Not applicable" if no one outside your agency is affected.',
+  },
+  {
+    n: 13,
+    section: "Section 4: Data and vendor",
+    text: "Highest data level the AI system uses (Data Classification Policy)",
+  },
+  {
+    n: 14,
+    section: "Section 4: Data and vendor",
+    text: "What data does it use, learn from or pull into answers? Say where the data comes from, how you check its quality and guard it from tampering, and any special rules (for example, HIPAA, FERPA, CJIS, IRS Pub 1075 or SSA).",
+    rp: "RP3",
+  },
+  {
+    n: 15,
+    section: "Section 4: Data and vendor",
+    text: "Where is the data processed and stored, and how long is it kept? Is it encrypted at rest and in transit? What is the status of the privacy review (PTA or PIA)?",
+  },
+  {
+    n: 16,
+    section: "Section 4: Data and vendor",
+    text: 'For vendor products: Can the vendor use State data to train its models? What assurances has it given (such as SOC 2, FedRAMP, StateRAMP, ISO/IEC 27001 or 42001)? Does the contract say who is responsible for what and require notice of model changes and AI security incidents? Write "Not applicable" if built by the State.',
+    rp: "RP2",
+  },
   { n: 17, section: "Section 5: Status", text: "Deployment status" },
   { n: 18, section: "Section 5: Status", text: "When was it procured?" },
-  { n: 19, section: "Section 5: Status", text: "If it is in pilot or live: When did use start, and was an impact assessment done before it was deployed? Write \"Not applicable\" if not in use yet." },
-  { n: 20, section: "Section 6: Risks and safeguards", text: "What could go wrong? Describe likely misuse, how the AI system could fail or get results wrong, and who is harmed or bears the cost when it does.", rp: "RP1" },
-  { n: 21, section: "Section 6: Risks and safeguards", text: "How do you test and monitor accuracy, errors, drift and whether results differ across groups? Include what you log (such as model version) and how often you re-test, including after model updates.", rp: "RP6" },
-  { n: 22, section: "Section 6: Risks and safeguards", text: "What AI security protections are in place or planned? Cover prompt injection, poisoned data, model theft, data leaking through outputs, unsafe outputs passed to other systems, and any security testing such as red teaming. Write \"None yet\" if none.", rp: "RP5" },
-  { n: 23, section: "Section 6: Risks and safeguards", text: "By role: Who monitors the AI system, handles incidents, tells affected people about an incident (how and how fast) and leads reassessment? How can staff raise concerns outside the team that runs it?", rp: "RP7" },
-  { n: 24, section: "Section 6: Risks and safeguards", text: "What changes would make you re-check this assessment (for example, a new model version, new data, new tools or permissions, or a new use)? What happens to the models, data and logs when the AI system is retired?", rp: "RP8" },
-  { n: 25, section: "Section 7: Attestation", text: "I confirm these answers are accurate to the best of my knowledge, and I understand this form is not approval." },
+  {
+    n: 19,
+    section: "Section 5: Status",
+    text: 'If it is in pilot or live: When did use start, and was an impact assessment done before it was deployed? Write "Not applicable" if not in use yet.',
+  },
+  {
+    n: 20,
+    section: "Section 6: Risks and safeguards",
+    text: "What could go wrong? Describe likely misuse, how the AI system could fail or get results wrong, and who is harmed or bears the cost when it does.",
+    rp: "RP1",
+  },
+  {
+    n: 21,
+    section: "Section 6: Risks and safeguards",
+    text: "How do you test and monitor accuracy, errors, drift and whether results differ across groups? Include what you log (such as model version) and how often you re-test, including after model updates.",
+    rp: "RP6",
+  },
+  {
+    n: 22,
+    section: "Section 6: Risks and safeguards",
+    text: 'What AI security protections are in place or planned? Cover prompt injection, poisoned data, model theft, data leaking through outputs, unsafe outputs passed to other systems, and any security testing such as red teaming. Write "None yet" if none.',
+    rp: "RP5",
+  },
+  {
+    n: 23,
+    section: "Section 6: Risks and safeguards",
+    text: "By role: Who monitors the AI system, handles incidents, tells affected people about an incident (how and how fast) and leads reassessment? How can staff raise concerns outside the team that runs it?",
+    rp: "RP7",
+  },
+  {
+    n: 24,
+    section: "Section 6: Risks and safeguards",
+    text: "What changes would make you re-check this assessment (for example, a new model version, new data, new tools or permissions, or a new use)? What happens to the models, data and logs when the AI system is retired?",
+    rp: "RP8",
+  },
+  {
+    n: 25,
+    section: "Section 7: Attestation",
+    text: "I confirm these answers are accurate to the best of my knowledge, and I understand this form is not approval.",
+  },
 ];
 
-function block(type: Block["type"], text: string, source: Block["source"], extra?: Pick<Block, "anchor" | "link" | "fields" | "signId" | "aside" | "rows">): Block {
+function block(
+  type: Block["type"],
+  text: string,
+  source: Block["source"],
+  extra?: Pick<Block, "anchor" | "link" | "fields" | "signId" | "aside" | "rows">,
+): Block {
   return { type, text, source, ...extra };
 }
 
@@ -124,10 +256,40 @@ function mitigationSign(file: AnswerFile, mit: LiveMitigation, number: number): 
   const ack = ackFor(file, mit.id);
   const choice = ack?.choice === "yes" || ack?.choice === "no" ? ack.choice : "";
   const fields: SignField[] = [
-    { name: `ack_${number}_yes`, label: "Yes", kind: "choice", lines: 1, group: `ack_${number}`, width: 12, selected: choice === "yes" },
-    { name: `ack_${number}_no`, label: "No", kind: "choice", lines: 1, group: `ack_${number}`, width: 12, selected: choice === "no" },
-    { name: `date_${number}`, label: "Date", kind: "date", lines: 1, width: 72, value: ack?.date ?? "" },
-    { name: `comment_${number}`, label: "Comment", kind: "multiline", lines: 2, boxed: true, value: ack?.comment ?? "" },
+    {
+      name: `ack_${number}_yes`,
+      label: "Yes",
+      kind: "choice",
+      lines: 1,
+      group: `ack_${number}`,
+      width: 12,
+      selected: choice === "yes",
+    },
+    {
+      name: `ack_${number}_no`,
+      label: "No",
+      kind: "choice",
+      lines: 1,
+      group: `ack_${number}`,
+      width: 12,
+      selected: choice === "no",
+    },
+    {
+      name: `date_${number}`,
+      label: "Date",
+      kind: "date",
+      lines: 1,
+      width: 72,
+      value: ack?.date ?? "",
+    },
+    {
+      name: `comment_${number}`,
+      label: "Comment",
+      kind: "multiline",
+      lines: 2,
+      boxed: true,
+      value: ack?.comment ?? "",
+    },
   ];
   return block("sign", `M${number} – ${mit.title}`, "template", { fields, signId: mit.id });
 }
@@ -135,10 +297,40 @@ function mitigationSign(file: AnswerFile, mit: LiveMitigation, number: number): 
 function leadSign(file: AnswerFile): Block {
   const signoff = file.signoff;
   const fields: SignField[] = [
-    { name: "lead_name", label: "Name", kind: "text", lines: 1, width: 180, boxed: true, value: signoff?.lead_name ?? "" },
-    { name: "lead_title", label: "Title (printed role)", kind: "text", lines: 1, width: 180, boxed: true, value: signoff?.lead_title ?? "" },
-    { name: "lead_date", label: "Date", kind: "date", lines: 1, width: 120, boxed: true, value: signoff?.lead_date ?? "" },
-    { name: "lead_signature", label: "Agency Lead signature", kind: "signature", lines: 2, boxed: true },
+    {
+      name: "lead_name",
+      label: "Name",
+      kind: "text",
+      lines: 1,
+      width: 180,
+      boxed: true,
+      value: signoff?.lead_name ?? "",
+    },
+    {
+      name: "lead_title",
+      label: "Title (printed role)",
+      kind: "text",
+      lines: 1,
+      width: 180,
+      boxed: true,
+      value: signoff?.lead_title ?? "",
+    },
+    {
+      name: "lead_date",
+      label: "Date",
+      kind: "date",
+      lines: 1,
+      width: 120,
+      boxed: true,
+      value: signoff?.lead_date ?? "",
+    },
+    {
+      name: "lead_signature",
+      label: "Agency Lead signature",
+      kind: "signature",
+      lines: 2,
+      boxed: true,
+    },
   ];
   return block("sign", "Agency Lead sign-off", "template", { fields, signId: "lead" });
 }
@@ -156,14 +348,27 @@ function evidenceStatus(status: string, lines: { creditCerts?: string[] }[]): st
   return ids.length > 0 ? creditPhrase(ids) : status;
 }
 
-function answerBlocks(item: { qRefs: string; answerLines: { label: string; statement: string; evidence: string; targetDate: string; creditCerts?: string[] }[] }): Block[] {
+function answerBlocks(item: {
+  qRefs: string;
+  answerLines: {
+    label: string;
+    statement: string;
+    evidence: string;
+    targetDate: string;
+    creditCerts?: string[];
+  }[];
+}): Block[] {
   const lines: Block[] = [block("field", `Answer relied on (${item.qRefs}):`, "answer")];
-  const answers = item.answerLines.length > 0 ? item.answerLines : [{ label: "Answer", statement: "No answer provided.", evidence: "", targetDate: "" }];
+  const answers =
+    item.answerLines.length > 0
+      ? item.answerLines
+      : [{ label: "Answer", statement: "No answer provided.", evidence: "", targetDate: "" }];
   for (const line of answers) {
     lines.push(block("bullet", `${line.label}: ${line.statement}`, "answer"));
     if (line.evidence) lines.push(block("sub", `Evidence: ${line.evidence}`, "answer"));
     if (line.targetDate) lines.push(block("sub", `Target date: ${line.targetDate}.`, "answer"));
-    if (line.creditCerts && line.creditCerts.length > 0) lines.push(block("sub", `${creditPhrase(line.creditCerts)}.`, "slot"));
+    if (line.creditCerts && line.creditCerts.length > 0)
+      lines.push(block("sub", `${creditPhrase(line.creditCerts)}.`, "slot"));
   }
   return lines;
 }
@@ -183,7 +388,9 @@ function statementLines(answers: Answers, legacyQ: number): string[] {
   const lines: string[] = [];
   for (const item of Object.values(STATEMENT_BY_ID)) {
     if (item.legacyQ !== legacyQ) continue;
-    const keys = Object.keys(answers).filter((key) => key === `st${item.id}` || key.startsWith(`st${item.id}__`));
+    const keys = Object.keys(answers).filter(
+      (key) => key === `st${item.id}` || key.startsWith(`st${item.id}__`),
+    );
     const valueKeys = keys.filter((key) => !key.endsWith("__evidence") && !key.endsWith("__date"));
     if (item.id !== "12e" && item.id !== "16b" && item.id !== "22") {
       const value = text(answers, `st${item.id}`);
@@ -200,7 +407,8 @@ function statementLines(answers: Answers, legacyQ: number): string[] {
         if (!value) continue;
         if (item.id === "22") {
           const threatId = key.slice("st22__".length);
-          if (THREATS.some((threat) => threat.id === threatId) && !threatApplies(threatId, answers)) continue;
+          if (THREATS.some((threat) => threat.id === threatId) && !threatApplies(threatId, answers))
+            continue;
         }
         const choice = item.choices.find((row) => row.value === value);
         const suffix = key.slice(`st${item.id}__`.length);
@@ -265,7 +473,10 @@ export function appendixAnswer(answers: Answers, n: number): string {
   if (n === 9) {
     for (const id of selectedGroups(answers)) {
       const name = GROUPS.find((group) => group.id === id)?.label ?? id;
-      const relation = labelOf(RELATIONS.map((item) => ({ id: item.id, label: item.label })), text(answers, `q9_rel__${id}`));
+      const relation = labelOf(
+        RELATIONS.map((item) => ({ id: item.id, label: item.label })),
+        text(answers, `q9_rel__${id}`),
+      );
       lines.push(`${name}: ${relation || "No relation selected"}`);
     }
     push("Other groups", text(answers, "q9_other"));
@@ -277,7 +488,8 @@ export function appendixAnswer(answers: Answers, n: number): string {
   }
   if (n === 12) {
     const outside = text(answers, "q12_outside");
-    if (outside) lines.push(`People outside the agency are affected: ${outside === "yes" ? "Yes" : "No"}`);
+    if (outside)
+      lines.push(`People outside the agency are affected: ${outside === "yes" ? "Yes" : "No"}`);
     lines.push(...statementLines(answers, 12));
   }
   if (n === 13) push("Data level", labelOf(LEVELS, text(answers, "q13_level")));
@@ -290,19 +502,29 @@ export function appendixAnswer(answers: Answers, n: number): string {
   if (n === 15) {
     const place = processingPlace(answers);
     const placeLabel = labelOf(HOSTING, place.id);
-    push("Where processed", place.sameAsRun && placeLabel ? `${placeLabel} (same place it runs)` : placeLabel);
+    push(
+      "Where processed",
+      place.sameAsRun && placeLabel ? `${placeLabel} (same place it runs)` : placeLabel,
+    );
     lines.push(...statementLines(answers, 15));
   }
   if (n === 16) {
-    if (!vendorInvolved(answers)) lines.push("Not applicable. Built by the State with no outside model or vendor.");
-    push("Assurances", many(answers, "q16_assurances").map((id) => labelOf(ASSURANCES, id)).join("; "));
+    if (!vendorInvolved(answers))
+      lines.push("Not applicable. Built by the State with no outside model or vendor.");
+    push(
+      "Assurances",
+      many(answers, "q16_assurances")
+        .map((id) => labelOf(ASSURANCES, id))
+        .join("; "),
+    );
     const scope = text(answers, "q16_cert_scope");
     if (scope) push("Certificate scope covers the product", scope);
     lines.push(...statementLines(answers, 16));
   }
   if (n === 17) push("Deployment status", labelOf(DEPLOYMENT, text(answers, "q17_status")));
   if (n === 18) {
-    if (!procurementApplicable(answers)) lines.push("Not applicable. Built by the State with no vendor and no outside model.");
+    if (!procurementApplicable(answers))
+      lines.push("Not applicable. Built by the State with no vendor and no outside model.");
     else push("Procurement", labelOf(PROCUREMENT, text(answers, "q18_procured")));
   }
   if (n === 19) {
@@ -316,14 +538,21 @@ export function appendixAnswer(answers: Answers, n: number): string {
   }
   if (n === 20) {
     push("What could go wrong", text(answers, "q20_harm"));
-    push("Harm types", many(answers, "q20_types").map((id) => labelOf(HARM_TYPES, id)).join("; "));
+    push(
+      "Harm types",
+      many(answers, "q20_types")
+        .map((id) => labelOf(HARM_TYPES, id))
+        .join("; "),
+    );
     lines.push(...statementLines(answers, 20));
   }
   if (n === 21) lines.push(...statementLines(answers, 21));
   if (n === 22) {
     for (const threat of THREATS) {
       if (!threatApplies(threat.id, answers)) {
-        lines.push(`${threat.label}: Excluded because of the Q6 answers. The agency did not select Does not apply.`);
+        lines.push(
+          `${threat.label}: Excluded because of the Q6 answers. The agency did not select Does not apply.`,
+        );
       }
     }
     lines.push(...statementLines(answers, 22));
@@ -335,15 +564,25 @@ export function appendixAnswer(answers: Answers, n: number): string {
     lines.push(...statementLines(answers, 23));
   }
   if (n === 24) lines.push(...statementLines(answers, 24));
-  if (n === 25) lines.push(many(answers, "q25_confirm").includes("confirm") || text(answers, "q25_confirm") === "confirm" ? "I confirm" : "");
-  const joined = lines.map((line) => line.trim()).filter(Boolean).join("\n");
+  if (n === 25)
+    lines.push(
+      many(answers, "q25_confirm").includes("confirm") || text(answers, "q25_confirm") === "confirm"
+        ? "I confirm"
+        : "",
+    );
+  const joined = lines
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .join("\n");
   return joined || "No answer provided";
 }
 
 function riskLine(mit: LiveMitigation): string {
   const covers = mit.covers.length ? ` (${mit.covers.join(", ")})` : "";
   const quote = mit.quotes[0];
-  const statement = quote ? `Q${quote.q}, ${quote.text.replace(/[.]+$/, "")}` : "The answers leave this safeguard open";
+  const statement = quote
+    ? `Q${quote.q}, ${quote.text.replace(/[.]+$/, "")}`
+    : "The answers leave this safeguard open";
   if (mit.id === "M-ONGOING") {
     return `Ongoing checks cover the safeguards this report adds or the answers already describe, including yearly reassessment${covers}.`;
   }
@@ -365,12 +604,18 @@ function inventoryB5(answers: Answers): string {
 function inventoryRows(answers: Answers, result: Evaluation): TableRow[] {
   const caps = many(answers, "q6_capabilities").map((id) => labelOf(CAPABILITIES, id));
   const description = text(answers, "q6_description");
-  const capabilityValue = [caps.join("; "), description].filter(Boolean).join(". ") || "No answer provided";
+  const capabilityValue =
+    [caps.join("; "), description].filter(Boolean).join(". ") || "No answer provided";
   const builder = text(answers, "q5_builder");
-  const vendorParts = [text(answers, "q5_vendor"), text(answers, "q5_product"), text(answers, "q5_version")].filter(Boolean);
-  const vendorValue = builder === "state_built"
-    ? "Not applicable. Built by the State."
-    : vendorParts.join(", ") || labelOf(BUILDERS, builder) || "No answer provided";
+  const vendorParts = [
+    text(answers, "q5_vendor"),
+    text(answers, "q5_product"),
+    text(answers, "q5_version"),
+  ].filter(Boolean);
+  const vendorValue =
+    builder === "state_built"
+      ? "Not applicable. Built by the State."
+      : vendorParts.join(", ") || labelOf(BUILDERS, builder) || "No answer provided";
   const status = deployment(answers);
   const priorAsked = status === "pilot" || status === "live" || statusConflict(answers);
   const priorValue = priorAsked
@@ -380,9 +625,15 @@ function inventoryRows(answers: Answers, result: Evaluation): TableRow[] {
     { field: "Name of the system", value: text(answers, "q4_name") || "No answer provided" },
     { field: "Vendor", value: vendorValue },
     { field: "Capabilities", value: capabilityValue },
-    { field: "Purpose and intended uses", value: text(answers, "q7_purpose") || "No answer provided" },
+    {
+      field: "Purpose and intended uses",
+      value: text(answers, "q7_purpose") || "No answer provided",
+    },
     { field: "Impact assessment before deployment", value: priorValue },
-    { field: "Decision role", value: optionLabel("role", text(answers, "q10_role")) || "No answer provided" },
+    {
+      field: "Decision role",
+      value: optionLabel("role", text(answers, "q10_role")) || "No answer provided",
+    },
     { field: "Summary of this impact assessment", value: buildBluf(result).sentences.join(" ") },
   ];
 }
@@ -423,7 +674,8 @@ function stepPointer(step: FollowStep, result: Evaluation): string {
     const mitigation = result.mitigations[Number(step.link.slice("mit_".length)) - 1];
     return pointerForMitigation(mitigation);
   }
-  if (step.link === "sec_4" && result.prohibited && /prohibited/i.test(step.text)) return "Evidence, Prohibited use";
+  if (step.link === "sec_4" && result.prohibited && /prohibited/i.test(step.text))
+    return "Evidence, Prohibited use";
   if (step.link === "sec_4") return "Evidence, Gates";
   if (step.link === "sec_9") return "Executive Summary, Agency Lead acknowledgment";
   if (step.link === "sec_1") return "Executive Summary, the AI system";
@@ -435,7 +687,8 @@ function pointedStep(step: FollowStep, result: Evaluation): string {
 }
 
 function mitigationForStep(step: FollowStep, result: Evaluation): LiveMitigation | undefined {
-  if (step.link.startsWith("mit_")) return result.mitigations[Number(step.link.slice("mit_".length)) - 1];
+  if (step.link.startsWith("mit_"))
+    return result.mitigations[Number(step.link.slice("mit_".length)) - 1];
   if (step.link.startsWith("check_")) {
     const id = step.link.slice("check_".length);
     return result.mitigations.find((item) => item.covers.includes(id));
@@ -466,16 +719,54 @@ function stepDue(file: AnswerFile, step: FollowStep, result: Evaluation): string
 }
 
 const GATE_CHECKS: { id: string; name: string; checked: string }[] = [
-  { id: "G1", name: "benefits, health, housing, financial or legal rights, or employment", checked: "Whether Q8 names benefits, health, housing, money or legal rights, or jobs." },
+  {
+    id: "G1",
+    name: "benefits, health, housing, financial or legal rights, or employment",
+    checked: "Whether Q8 names benefits, health, housing, money or legal rights, or jobs.",
+  },
   { id: "G2", name: "safety", checked: "Whether Q8 names safety or critical infrastructure." },
-  { id: "G3", name: "law enforcement, investigation, identification or automated tickets", checked: "Whether Q8 names law enforcement, investigation, identification, or automated tickets. Regulatory inspection alone does not set this gate." },
-  { id: "G4", name: "decides or acts without meaningful human review", checked: "Whether the output decides or acts without a person approving each one, review is missing or only a sample, or an information-only answer still sends output to other systems that act on it." },
-  { id: "G5", name: "targeting places or groups", checked: "Whether Q8 says the output picks places, areas, or groups." },
-  { id: "G6", name: "record matching with possible adverse action", checked: "Whether Q6 matches records and Q8 names an area where that match can lead to action." },
+  {
+    id: "G3",
+    name: "law enforcement, investigation, identification or automated tickets",
+    checked:
+      "Whether Q8 names law enforcement, investigation, identification, or automated tickets. Regulatory inspection alone does not set this gate.",
+  },
+  {
+    id: "G4",
+    name: "decides or acts without meaningful human review",
+    checked:
+      "Whether the output decides or acts without a person approving each one, review is missing or only a sample, or an information-only answer still sends output to other systems that act on it.",
+  },
+  {
+    id: "G5",
+    name: "targeting places or groups",
+    checked: "Whether Q8 says the output picks places, areas, or groups.",
+  },
+  {
+    id: "G6",
+    name: "record matching with possible adverse action",
+    checked: "Whether Q6 matches records and Q8 names an area where that match can lead to action.",
+  },
   { id: "G7", name: "decision role or impact unknown", checked: "Whether Q8 or Q10 is unknown." },
 ];
 
-function findingBlocks(item: { id: string; name: string; status: string; found: string; qRefs: string; answerLines: { label: string; statement: string; evidence: string; targetDate: string; creditCerts?: string[] }[] }, checked: string): Block[] {
+function findingBlocks(
+  item: {
+    id: string;
+    name: string;
+    status: string;
+    found: string;
+    qRefs: string;
+    answerLines: {
+      label: string;
+      statement: string;
+      evidence: string;
+      targetDate: string;
+      creditCerts?: string[];
+    }[];
+  },
+  checked: string,
+): Block[] {
   const shown = evidenceStatus(item.status, item.answerLines);
   const lines: Block[] = [
     block("label", `${item.id} – ${item.name}: ${shown}`, "template"),
@@ -500,16 +791,25 @@ function sourceBlocks(blocks: Block[]): Block[] {
 }
 
 function statusSentence(item: { id: string; name: string; found: string }): string {
-  const found = firstSentence(item.found, `${item.id}, ${plainName(item.name)}, is recorded in the answers.`);
+  const found = firstSentence(
+    item.found,
+    `${item.id}, ${plainName(item.name)}, is recorded in the answers.`,
+  );
   return withPointer(found, `Evidence, ${item.id}`);
 }
 
 function banner(file: AnswerFile, blocks: Block[]): void {
   blocks.push(block("note", FIXED.draftBanner, "template"));
-  if (file.example) blocks.push(block("note", "Example data. Fictional agency and system.", "template"));
+  if (file.example)
+    blocks.push(block("note", "Example data. Fictional agency and system.", "template"));
 }
 
-function buildExecutive(file: AnswerFile, result: Evaluation, answers: Answers, system: string): Block[] {
+function buildExecutive(
+  file: AnswerFile,
+  result: Evaluation,
+  answers: Answers,
+  system: string,
+): Block[] {
   const blocks: Block[] = [];
   blocks.push(block("h1", `Executive Summary: ${system}`, "template"));
   banner(file, blocks);
@@ -519,20 +819,52 @@ function buildExecutive(file: AnswerFile, result: Evaluation, answers: Answers, 
   for (const paragraph of FIXED.purpose) blocks.push(block("p", paragraph, "template"));
   blocks.push(block("h2", "The AI system", "template", { anchor: "sec_1" }));
   blocks.push(block("p", `AI system (Q4): ${system}`, "answer"));
-  blocks.push(block("p", `Agency: ${[text(answers, "q2_agency"), text(answers, "q2_unit")].filter(Boolean).join(", ") || "No answer provided"}`, "answer"));
-  const capabilities = many(answers, "q6_capabilities").map((id) => labelOf(CAPABILITIES, id)).join(", ");
+  blocks.push(
+    block(
+      "p",
+      `Agency: ${[text(answers, "q2_agency"), text(answers, "q2_unit")].filter(Boolean).join(", ") || "No answer provided"}`,
+      "answer",
+    ),
+  );
+  const capabilities = many(answers, "q6_capabilities")
+    .map((id) => labelOf(CAPABILITIES, id))
+    .join(", ");
   blocks.push(block("p", `Capabilities: ${capabilities || "No answer provided"}`, "answer"));
-  blocks.push(block("p", `Purpose: ${text(answers, "q7_purpose") || "No answer provided"}`, "answer"));
+  blocks.push(
+    block("p", `Purpose: ${text(answers, "q7_purpose") || "No answer provided"}`, "answer"),
+  );
   blocks.push(block("p", `Deployment: ${inventoryB5(answers)}`, "answer"));
-  blocks.push(block("p", `Decision role: ${optionLabel("role", text(answers, "q10_role")) || "No answer provided"}`, "answer"));
+  blocks.push(
+    block(
+      "p",
+      `Decision role: ${optionLabel("role", text(answers, "q10_role")) || "No answer provided"}`,
+      "answer",
+    ),
+  );
   if (result.path === "high" || result.path === "prohibited") {
-    blocks.push(block("p", `Intake reference (Q1): ${text(answers, "q1_intake") || FIXED.noIntake}`, "answer"));
+    blocks.push(
+      block(
+        "p",
+        `Intake reference (Q1): ${text(answers, "q1_intake") || FIXED.noIntake}`,
+        "answer",
+      ),
+    );
   }
-  const areaNames = many(answers, "q8_areas").map((id) => AREAS.find((area) => area.id === id)?.label ?? id).join(", ") || "no area selected";
+  const areaNames =
+    many(answers, "q8_areas")
+      .map((id) => AREAS.find((area) => area.id === id)?.label ?? id)
+      .join(", ") || "no area selected";
   blocks.push(block("p", `Affected area: ${areaNames}. This is ${result.area.label}.`, "slot"));
   blocks.push(block("p", result.summaryDeadline, "template"));
   blocks.push(block("p", b7Text(result, answers), "slot", { anchor: "b7" }));
-  if (!result.attestation) blocks.push(block("p", "Q25 was not confirmed. The executive summary still needs the Agency Lead's signature.", "template"));
+  if (!result.attestation)
+    blocks.push(
+      block(
+        "p",
+        "Q25 was not confirmed. The executive summary still needs the Agency Lead's signature.",
+        "template",
+      ),
+    );
 
   blocks.push(block("h2", "Bottom line up front", "template"));
   const bluf = buildBluf(result);
@@ -540,27 +872,50 @@ function buildExecutive(file: AnswerFile, result: Evaluation, answers: Answers, 
   blocks.push(block("h3", "Follow-up steps for the agency", "template"));
   if (bluf.steps.length === 0) blocks.push(block("p", "No follow-up step is open.", "template"));
   else {
-    for (const step of bluf.steps) blocks.push(block("step", pointedStep(step, result), "slot", { link: step.link }));
-    blocks.push(block("p", "The owner and due date, where the assessment records one, are in Follow-Up Actions.", "template"));
+    for (const step of bluf.steps)
+      blocks.push(block("step", pointedStep(step, result), "slot", { link: step.link }));
+    blocks.push(
+      block(
+        "p",
+        "The owner and due date, where the assessment records one, are in Follow-Up Actions.",
+        "template",
+      ),
+    );
   }
 
   const checks = [...result.criteria, ...result.rp];
   const well = checks.filter((item) => item.status === "Met" || item.status === "In place");
-  const improve = checks.filter((item) => item.status === "Partial" || item.status === "Gap" || item.status === "Partly in place" || item.status === "Not yet");
+  const improve = checks.filter(
+    (item) =>
+      item.status === "Partial" ||
+      item.status === "Gap" ||
+      item.status === "Partly in place" ||
+      item.status === "Not yet",
+  );
   const skipped = checks.filter((item) => item.status === "Not applicable");
   blocks.push(block("h2", "What the agency is doing well", "template"));
-  if (well.length === 0) blocks.push(block("p", "No coded safeguard is fully in place.", "template"));
+  if (well.length === 0)
+    blocks.push(block("p", "No coded safeguard is fully in place.", "template"));
   else for (const item of well) blocks.push(block("p", statusSentence(item), "slot"));
   blocks.push(block("h2", "Where there is room for improvement", "template"));
-  if (improve.length === 0) blocks.push(block("p", "No coded safeguard is open or only partly in place.", "template"));
+  if (improve.length === 0)
+    blocks.push(block("p", "No coded safeguard is open or only partly in place.", "template"));
   else for (const item of improve) blocks.push(block("p", statusSentence(item), "slot"));
   if (skipped.length) {
-    const names = skipped.map((item) => `${item.id}, ${plainName(item.name)} (Evidence, ${item.id})`).join("; ");
+    const names = skipped
+      .map((item) => `${item.id}, ${plainName(item.name)} (Evidence, ${item.id})`)
+      .join("; ");
     blocks.push(block("p", `These checks do not apply: ${names}.`, "slot"));
   }
 
   blocks.push(block("h2", "Risks and recommended mitigations", "template"));
-  blocks.push(block("p", "Each risk is in plain language. The note in parentheses names the Evidence section with the full check.", "template"));
+  blocks.push(
+    block(
+      "p",
+      "Each risk is in plain language. The note in parentheses names the Evidence section with the full check.",
+      "template",
+    ),
+  );
   const timingGroups = ["Before purchase", "Before use", "Before deployment", "Ongoing"] as const;
   for (const timing of timingGroups) {
     const group = result.mitigations.filter((item) => item.timing === timing);
@@ -571,7 +926,13 @@ function buildExecutive(file: AnswerFile, result: Evaluation, answers: Answers, 
       const pointer = pointerForMitigation(mit);
       blocks.push(block("label", `M${number} – ${mit.title}`, "template"));
       const action = /[.!?]$/.test(mit.action.trim()) ? mit.action.trim() : `${mit.action.trim()}.`;
-      blocks.push(block("p", `${riskLine(mit)} The recommended mitigation is: ${action} The owner is ${mit.owner}. See ${pointer}.`, "slot"));
+      blocks.push(
+        block(
+          "p",
+          `${riskLine(mit)} The recommended mitigation is: ${action} The owner is ${mit.owner}. See ${pointer}.`,
+          "slot",
+        ),
+      );
       blocks.push(mitigationSign(file, mit, number));
     }
   }
@@ -581,71 +942,172 @@ function buildExecutive(file: AnswerFile, result: Evaluation, answers: Answers, 
   blocks.push(block("p", FIXED.acknowledge, "template"));
   blocks.push(leadSign(file));
   blocks.push(block("p", FIXED.leadNote, "template"));
-  blocks.push(block("p", "Sign by hand on the printed copy, or in the signature field of the PDF. The name and date above are the ones entered in the assessment.", "template"));
+  blocks.push(
+    block(
+      "p",
+      "Sign by hand on the printed copy, or in the signature field of the PDF. The name and date above are the ones entered in the assessment.",
+      "template",
+    ),
+  );
   blocks.push(...sourceBlocks(blocks));
   if (result.path === "high") {
     blocks.push(block("break", "", "template"));
-    blocks.push(block("h2", "Inventory under SF&P § 3.5-803(b)", "template", { anchor: "sec_inventory" }));
+    blocks.push(
+      block("h2", "Inventory under SF&P § 3.5-803(b)", "template", { anchor: "sec_inventory" }),
+    );
     blocks.push(block("table", "", "answer", { rows: inventoryRows(answers, result) }));
   }
   return blocks;
 }
 
-function buildEvidence(file: AnswerFile, result: Evaluation, answers: Answers, system: string): Block[] {
+function buildEvidence(
+  file: AnswerFile,
+  result: Evaluation,
+  answers: Answers,
+  system: string,
+): Block[] {
   const blocks: Block[] = [];
   blocks.push(block("h1", `Evidence: ${system}`, "template"));
   banner(file, blocks);
-  blocks.push(block("p", "This is the reference for the executive summary. Each gate and criteria check records what was checked, the result, and the answers that drove it.", "template"));
+  blocks.push(
+    block(
+      "p",
+      "This is the reference for the executive summary. Each gate and criteria check records what was checked, the result, and the answers that drove it.",
+      "template",
+    ),
+  );
   blocks.push(block("h2", "Gates", "template", { anchor: "sec_4" }));
   for (const gate of GATE_CHECKS) {
     const hit = result.gates.find((item) => item.id === gate.id);
-    blocks.push(block("label", `${gate.id} – ${gate.name}`, "template", { anchor: `gate_${gate.id}` }));
+    blocks.push(
+      block("label", `${gate.id} – ${gate.name}`, "template", { anchor: `gate_${gate.id}` }),
+    );
     blocks.push(block("field", `What was checked: ${gate.checked}`, "template"));
-    blocks.push(block("field", hit ? `Result: Set. ${hit.because}` : "Result: Not set. The answers do not meet this gate.", "slot"));
+    blocks.push(
+      block(
+        "field",
+        hit ? `Result: Set. ${hit.because}` : "Result: Not set. The answers do not meet this gate.",
+        "slot",
+      ),
+    );
   }
   blocks.push(block("h2", "Other facts used with the gates", "template", { anchor: "sec_facts" }));
   blocks.push(block("label", "Prohibited use", "template", { anchor: "prohibited" }));
-  blocks.push(block("field", "What was checked: Whether a prohibited use in the Responsible AI Policy applies.", "template"));
+  blocks.push(
+    block(
+      "field",
+      "What was checked: Whether a prohibited use in the Responsible AI Policy applies.",
+      "template",
+    ),
+  );
   if (result.prohibited) {
-    const labels = result.prohibitedLabels.map((label) => (label.endsWith(".") ? label.slice(0, -1) : label)).join("; ");
-    blocks.push(block("field", `Result: Set. ${labels}. The Responsible AI Policy lists this use [P1].`, "slot"));
+    const labels = result.prohibitedLabels
+      .map((label) => (label.endsWith(".") ? label.slice(0, -1) : label))
+      .join("; ");
+    blocks.push(
+      block(
+        "field",
+        `Result: Set. ${labels}. The Responsible AI Policy lists this use [P1].`,
+        "slot",
+      ),
+    );
   } else blocks.push(block("field", "Result: Not set. None selected.", "template"));
-  if (result.speech) blocks.push(block("p", "This use touches speech, assembly or religion. It needs named legal authority; refer to agency counsel.", "template"));
-  const levelLine = dataLevel(answers) === "unknown"
-    ? "Data level: Unknown (not assigned). A missing data level is itself a gap. The privacy track is open (PTA; PIA if the State Chief Privacy Officer directs) [P4]."
-    : `Data level and safeguards: ${levelSafeguard(dataLevel(answers))}`;
+  if (result.speech)
+    blocks.push(
+      block(
+        "p",
+        "This use touches speech, assembly or religion. It needs named legal authority; refer to agency counsel.",
+        "template",
+      ),
+    );
+  const levelLine =
+    dataLevel(answers) === "unknown"
+      ? "Data level: Unknown (not assigned). A missing data level is itself a gap. The privacy track is open (PTA; PIA if the State Chief Privacy Officer directs) [P4]."
+      : `Data level and safeguards: ${levelSafeguard(dataLevel(answers))}`;
   blocks.push(block("p", levelLine, "template"));
-  if (result.suggestedLevel) blocks.push(block("p", `The data described in Q14 suggests at least ${result.suggestedLevel}. Apply that level's safeguards until the agency confirms the level [P3].`, "slot"));
-  if (result.overlays.length) blocks.push(block("p", `${result.overlays.join(", ")} applies, so the stricter of State policy and that overlay applies [P3].`, "slot"));
-  if (result.privacyTrack && dataLevel(answers) !== "unknown") blocks.push(block("p", "The privacy track is open: PTA, and a PIA if the State Chief Privacy Officer directs [P4].", "template"));
+  if (result.suggestedLevel)
+    blocks.push(
+      block(
+        "p",
+        `The data described in Q14 suggests at least ${result.suggestedLevel}. Apply that level's safeguards until the agency confirms the level [P3].`,
+        "slot",
+      ),
+    );
+  if (result.overlays.length)
+    blocks.push(
+      block(
+        "p",
+        `${result.overlays.join(", ")} applies, so the stricter of State policy and that overlay applies [P3].`,
+        "slot",
+      ),
+    );
+  if (result.privacyTrack && dataLevel(answers) !== "unknown")
+    blocks.push(
+      block(
+        "p",
+        "The privacy track is open: PTA, and a PIA if the State Chief Privacy Officer directs [P4].",
+        "template",
+      ),
+    );
   for (const check of result.crossChecks) blocks.push(block("p", check.message, "slot"));
   if (result.priorDeployment) blocks.push(block("p", result.priorDeployment, "slot"));
   blocks.push(block("p", result.deadlineLine, "template"));
 
   blocks.push(block("h2", "Criteria", "template"));
   for (const item of result.criteria) {
-    const kind = item.id === "C1" || item.id === "C2" || item.id === "C3" ? "whether this impact is present" : "the safeguard statements and evidence for this criterion";
+    const kind =
+      item.id === "C1" || item.id === "C2" || item.id === "C3"
+        ? "whether this impact is present"
+        : "the safeguard statements and evidence for this criterion";
     blocks.push(...findingBlocks(item, `${item.name}: ${kind}.`));
   }
-  blocks.push(block("h3", "Recommended practice checks (ISO/IEC 42001 and ISO/IEC 27090)", "template"));
-  blocks.push(block("p", "These checks are recommendations. They are not Maryland law and not DoIT policy.", "template"));
+  blocks.push(
+    block("h3", "Recommended practice checks (ISO/IEC 42001 and ISO/IEC 27090)", "template"),
+  );
+  blocks.push(
+    block(
+      "p",
+      "These checks are recommendations. They are not Maryland law and not DoIT policy.",
+      "template",
+    ),
+  );
   for (const item of result.rp) {
     const aligned = RP_META.find((row) => row.id === item.id)?.aligned ?? "";
-    blocks.push(...findingBlocks(item, `${item.name}: the recommended-practice statements and any evidence the agency gave.`));
+    blocks.push(
+      ...findingBlocks(
+        item,
+        `${item.name}: the recommended-practice statements and any evidence the agency gave.`,
+      ),
+    );
     blocks.push(block("field", `Aligned to: ${aligned}`, "template"));
   }
   blocks.push(...sourceBlocks(blocks));
   return blocks;
 }
 
-function buildSubmission(file: AnswerFile, result: Evaluation, answers: Answers, system: string): Block[] {
+function buildSubmission(
+  file: AnswerFile,
+  result: Evaluation,
+  answers: Answers,
+  system: string,
+): Block[] {
   const blocks: Block[] = [];
   const when = reportDateFromSaved(file.saved_at).label;
   blocks.push(block("h1", `Assessment Submission Record: ${system}`, "template"));
   banner(file, blocks);
   blocks.push(block("p", `AI system: ${system}`, "answer"));
-  blocks.push(block("p", `Submission date: ${file.saved_at ? when : "not submitted to DoIT"}.`, "answer"));
-  blocks.push(block("p", FIXED.appendixNote.replace("{id}", result.responseId).replace("{when}", file.saved_at ? when : "not submitted to DoIT"), "template"));
+  blocks.push(
+    block("p", `Submission date: ${file.saved_at ? when : "not submitted to DoIT"}.`, "answer"),
+  );
+  blocks.push(
+    block(
+      "p",
+      FIXED.appendixNote
+        .replace("{id}", result.responseId)
+        .replace("{when}", file.saved_at ? when : "not submitted to DoIT"),
+      "template",
+    ),
+  );
   let section = "";
   for (const question of QUESTIONS) {
     if (question.section !== section) {
@@ -653,7 +1115,14 @@ function buildSubmission(file: AnswerFile, result: Evaluation, answers: Answers,
       blocks.push(block("h3", section, "template"));
     }
     blocks.push(block("label", `Q${question.n}. ${question.text}`, "template"));
-    if (question.rp) blocks.push(block("note", `Recommended practice (${question.rp}): good practice, not a State rule`, "template"));
+    if (question.rp)
+      blocks.push(
+        block(
+          "note",
+          `Recommended practice (${question.rp}): good practice, not a State rule`,
+          "template",
+        ),
+      );
     blocks.push(block("qa", appendixAnswer(answers, question.n), "answer"));
   }
   return blocks;
@@ -664,23 +1133,43 @@ function buildFollowUp(file: AnswerFile, result: Evaluation, system: string): Bl
   const bluf = buildBluf(result);
   blocks.push(block("h1", `Follow-Up Actions: ${system}`, "template"));
   banner(file, blocks);
-  blocks.push(block("p", "Each step is one sentence. The owner and due date are shown when this assessment records them. The note in parentheses names the Evidence section.", "template"));
+  blocks.push(
+    block(
+      "p",
+      "Each step is one sentence. The owner and due date are shown when this assessment records them. The note in parentheses names the Evidence section.",
+      "template",
+    ),
+  );
   blocks.push(block("h2", "Follow-up steps", "template"));
   if (bluf.steps.length === 0) blocks.push(block("p", "No follow-up step is open.", "template"));
   for (const step of bluf.steps) {
     const owner = stepOwner(step, result);
     const due = stepDue(file, step, result);
-    const aside = [owner ? `Owner: ${owner}.` : "", due ? `Due date: ${due}.` : ""].filter(Boolean).join("\n");
-    blocks.push(block("step", pointedStep(step, result), "slot", { link: step.link, aside: aside || undefined }));
+    const aside = [owner ? `Owner: ${owner}.` : "", due ? `Due date: ${due}.` : ""]
+      .filter(Boolean)
+      .join("\n");
+    blocks.push(
+      block("step", pointedStep(step, result), "slot", {
+        link: step.link,
+        aside: aside || undefined,
+      }),
+    );
   }
   return blocks;
 }
 
 function b7Text(result: Evaluation, answers: Answers): string {
   const name = text(answers, "q4_name") || "The AI system";
-  const purpose = firstSentence(text(answers, "q7_purpose"), "Its purpose is in the agency's answers.");
-  const open = result.mitigations.filter((item) => item.id !== "M-ONGOING").map((item) => item.title);
-  const openText = open.length ? `Still to plan: ${open.join("; ")}.` : "The answers show the main safeguards in place.";
+  const purpose = firstSentence(
+    text(answers, "q7_purpose"),
+    "Its purpose is in the agency's answers.",
+  );
+  const open = result.mitigations
+    .filter((item) => item.id !== "M-ONGOING")
+    .map((item) => item.title);
+  const openText = open.length
+    ? `Still to plan: ${open.join("; ")}.`
+    : "The answers show the main safeguards in place.";
   const pathLine = pathSentence(result.path).replace(/\.$/, "");
   let textValue = `${name} supports this purpose: ${purpose} ${pathLine}, in an area that is ${result.area.label}. ${openText} The Agency Lead will plan the mitigations in this report and reassess at least yearly. This public summary leaves out security settings.`;
   const parts = textValue.split(/(?<=[.])\s+/);
@@ -692,7 +1181,11 @@ function b7Text(result: Evaluation, answers: Answers): string {
 }
 
 export function reportFileStem(systemName: string): string {
-  const safe = systemName.replace(/[^\w.-]+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "").slice(0, 80);
+  const safe = systemName
+    .replace(/[^\w.-]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 80);
   return safe || "assessment";
 }
 
@@ -710,10 +1203,30 @@ export function buildReport(file: AnswerFile): ReportDoc {
   const result = evaluate(file);
   const system = text(answers, "q4_name") || "Unnamed AI system";
   const documents: ReportDocument[] = [
-    { key: "executive", title: "Executive Summary", slug: "1-Executive-Summary", blocks: buildExecutive(file, result, answers, system) },
-    { key: "evidence", title: "Evidence", slug: "2-Evidence", blocks: buildEvidence(file, result, answers, system) },
-    { key: "submission", title: "Assessment Submission Record", slug: "3-Assessment-Submission-Record", blocks: buildSubmission(file, result, answers, system) },
-    { key: "followup", title: "Follow-Up Actions", slug: "4-Follow-Up-Actions", blocks: buildFollowUp(file, result, system) },
+    {
+      key: "executive",
+      title: "Executive Summary",
+      slug: "1-Executive-Summary",
+      blocks: buildExecutive(file, result, answers, system),
+    },
+    {
+      key: "evidence",
+      title: "Evidence",
+      slug: "2-Evidence",
+      blocks: buildEvidence(file, result, answers, system),
+    },
+    {
+      key: "submission",
+      title: "Assessment Submission Record",
+      slug: "3-Assessment-Submission-Record",
+      blocks: buildSubmission(file, result, answers, system),
+    },
+    {
+      key: "followup",
+      title: "Follow-Up Actions",
+      slug: "4-Follow-Up-Actions",
+      blocks: buildFollowUp(file, result, system),
+    },
   ];
   const blocks = documents.flatMap((part) => part.blocks);
   for (const item of blocks) {
@@ -748,11 +1261,16 @@ export function reportPlainText(doc: ReportDoc): string {
     .join("\n\n");
 }
 
-export function selfCheck(blocks: Block[], result: Evaluation, answers: Answers): { id: string; ok: boolean; detail: string }[] {
+export function selfCheck(
+  blocks: Block[],
+  result: Evaluation,
+  answers: Answers,
+): { id: string; ok: boolean; detail: string }[] {
   const textValue = blocks.map((item) => blockPlain(item)).join("\n");
   const lower = textValue.toLowerCase();
   const bannedHit = BANNED.filter((word) => {
-    if (word === "quiet" || word === "quietly") return new RegExp(`\\b${word}\\b`, "i").test(textValue);
+    if (word === "quiet" || word === "quietly")
+      return new RegExp(`\\b${word}\\b`, "i").test(textValue);
     return lower.includes(word);
   });
   const approval = APPROVAL_BANNED.filter((word) => textValue.includes(word));
@@ -761,42 +1279,123 @@ export function selfCheck(blocks: Block[], result: Evaluation, answers: Answers)
   const ongoing = result.mitigations.filter((item) => item.timing === "Ongoing");
   const b7Block = blocks.find((item) => item.anchor === "b7");
   const live = text(answers, "q17_status") === "live" && !result.statusConflict;
-  const planning = (text(answers, "q17_status") === "planning" || text(answers, "q17_status") === "procuring") && !result.statusConflict;
+  const planning =
+    (text(answers, "q17_status") === "planning" || text(answers, "q17_status") === "procuring") &&
+    !result.statusConflict;
   const badTiming = result.mitigations.filter((item) => {
-    if (live && (item.timing === "Before purchase" || item.timing === "Before deployment")) return true;
+    if (live && (item.timing === "Before purchase" || item.timing === "Before deployment"))
+      return true;
     if (planning && item.timing === "Before use") return true;
     return false;
   });
   const unsourced = blocks.filter((item) => item.type !== "break" && !item.source);
   const blufStart = blocks.findIndex((item) => item.text === "Bottom line up front");
   const nextHeading = blocks.findIndex((item, index) => index > blufStart && item.type === "h2");
-  const blufSlice = blufStart >= 0 && nextHeading > blufStart ? blocks.slice(blufStart, nextHeading) : [];
+  const blufSlice =
+    blufStart >= 0 && nextHeading > blufStart ? blocks.slice(blufStart, nextHeading) : [];
   const followAt = blufSlice.findIndex((item) => item.text === "Follow-up steps for the agency");
-  const takeawayText = blufSlice.slice(0, Math.max(followAt, 0)).filter((item) => item.type === "p").map((item) => item.text).join(" ");
+  const takeawayText = blufSlice
+    .slice(0, Math.max(followAt, 0))
+    .filter((item) => item.type === "p")
+    .map((item) => item.text)
+    .join(" ");
   const takeawaySentences = takeawayText.split(/(?<=[.!?])\s+/).filter(Boolean);
   const stepBlocks = blufSlice.filter((item) => item.type === "step");
   const nothingOpen = blufSlice.some((item) => item.text === "No follow-up step is open.");
-  const anchors = new Set(blocks.flatMap((item) => item.anchor ? [item.anchor] : []));
+  const anchors = new Set(blocks.flatMap((item) => (item.anchor ? [item.anchor] : [])));
   const everyStep = blocks.filter((item) => item.type === "step");
   const brokenLinks = everyStep.filter((item) => !item.link || !anchors.has(item.link));
   const stepPeriods = everyStep.filter((item) => (item.text.match(/[.!?]/g) ?? []).length !== 1);
   return [
-    { id: "sourced", ok: unsourced.length === 0, detail: "Every block has a template, answer or slot source." },
-    { id: "banned", ok: bannedHit.length === 0, detail: bannedHit.join(", ") || "No banned words." },
-    { id: "approval", ok: approval.length === 0 && !textValue.includes("## Recommendation"), detail: approval.join(", ") || "No approval language." },
-    { id: "email", ok: email === "" || !textValue.includes(email), detail: "Agency Lead email is not in the report." },
+    {
+      id: "sourced",
+      ok: unsourced.length === 0,
+      detail: "Every block has a template, answer or slot source.",
+    },
+    {
+      id: "banned",
+      ok: bannedHit.length === 0,
+      detail: bannedHit.join(", ") || "No banned words.",
+    },
+    {
+      id: "approval",
+      ok: approval.length === 0 && !textValue.includes("## Recommendation"),
+      detail: approval.join(", ") || "No approval language.",
+    },
+    {
+      id: "email",
+      ok: email === "" || !textValue.includes(email),
+      detail: "Agency Lead email is not in the report.",
+    },
     { id: "ongoing", ok: ongoing.length === 1, detail: `${ongoing.length} Ongoing mitigation(s).` },
-    { id: "deadline", ok: result.deadlineLine.includes("[S2]") && textValue.includes(result.summaryDeadline), detail: result.deadlineLine },
-    { id: "b7", ok: Boolean(b7Block) && words(b7Block?.text ?? "") <= 150, detail: `${words(b7Block?.text ?? "")} words.` },
+    {
+      id: "deadline",
+      ok: result.deadlineLine.includes("[S2]") && textValue.includes(result.summaryDeadline),
+      detail: result.deadlineLine,
+    },
+    {
+      id: "b7",
+      ok: Boolean(b7Block) && words(b7Block?.text ?? "") <= 150,
+      detail: `${words(b7Block?.text ?? "")} words.`,
+    },
     { id: "tables", ok: !textValue.includes("| ---"), detail: "No table markup in the body." },
-    { id: "timing", ok: badTiming.length === 0, detail: badTiming.map((item) => item.id).join(", ") || "Timings match deployment status." },
-    { id: "section9", ok: blocks.filter((item) => item.type === "sign" && item.fields?.some((field) => field.kind === "choice" && field.label === "Yes") && item.fields?.some((field) => field.kind === "choice" && field.label === "No")).length === result.mitigations.length, detail: "One Yes/No acknowledgment per mitigation." },
-    { id: "q25-followup", ok: !result.followups.some((item) => item.q === 25), detail: "No Q25 follow-up." },
-    { id: "cap", ok: !result.wellAnswered || result.mitigations.length <= 3, detail: `${result.mitigations.length} mitigations; well answered: ${result.wellAnswered}.` },
-    { id: "tags", ok: !textValue.includes("[P1] Implementation Guidance") && !/\[P2\] Responsible AI Policy(?! Implementation)/.test(textValue), detail: "P1 and P2 tags match their names." },
-    { id: "bluf", ok: blufStart > 0 && followAt > 0 && takeawaySentences.length === 3 && /The path is (?:High|General|Prohibited|not set yet)\./.test(takeawayText) && takeawayText.includes("The outcome is") && takeawayText.includes("The single most important reason is") && !takeawayText.includes("The risk level is High-risk."), detail: `${takeawaySentences.length} sentences.` },
-    { id: "follow-steps", ok: (stepBlocks.length > 0) !== nothingOpen && stepPeriods.length === 0, detail: stepBlocks.length ? `${stepBlocks.length} steps.` : "No follow-up step is open." },
-    { id: "links", ok: brokenLinks.length === 0, detail: brokenLinks.map((item) => item.link ?? item.text).join(", ") || "Follow-up steps link to a section or check." },
+    {
+      id: "timing",
+      ok: badTiming.length === 0,
+      detail: badTiming.map((item) => item.id).join(", ") || "Timings match deployment status.",
+    },
+    {
+      id: "section9",
+      ok:
+        blocks.filter(
+          (item) =>
+            item.type === "sign" &&
+            item.fields?.some((field) => field.kind === "choice" && field.label === "Yes") &&
+            item.fields?.some((field) => field.kind === "choice" && field.label === "No"),
+        ).length === result.mitigations.length,
+      detail: "One Yes/No acknowledgment per mitigation.",
+    },
+    {
+      id: "q25-followup",
+      ok: !result.followups.some((item) => item.q === 25),
+      detail: "No Q25 follow-up.",
+    },
+    {
+      id: "cap",
+      ok: !result.wellAnswered || result.mitigations.length <= 3,
+      detail: `${result.mitigations.length} mitigations; well answered: ${result.wellAnswered}.`,
+    },
+    {
+      id: "tags",
+      ok:
+        !textValue.includes("[P1] Implementation Guidance") &&
+        !/\[P2\] Responsible AI Policy(?! Implementation)/.test(textValue),
+      detail: "P1 and P2 tags match their names.",
+    },
+    {
+      id: "bluf",
+      ok:
+        blufStart > 0 &&
+        followAt > 0 &&
+        takeawaySentences.length === 3 &&
+        /The path is (?:High|General|Prohibited|not set yet)\./.test(takeawayText) &&
+        takeawayText.includes("The outcome is") &&
+        takeawayText.includes("The single most important reason is") &&
+        !takeawayText.includes("The risk level is High-risk."),
+      detail: `${takeawaySentences.length} sentences.`,
+    },
+    {
+      id: "follow-steps",
+      ok: stepBlocks.length > 0 !== nothingOpen && stepPeriods.length === 0,
+      detail: stepBlocks.length ? `${stepBlocks.length} steps.` : "No follow-up step is open.",
+    },
+    {
+      id: "links",
+      ok: brokenLinks.length === 0,
+      detail:
+        brokenLinks.map((item) => item.link ?? item.text).join(", ") ||
+        "Follow-up steps link to a section or check.",
+    },
   ];
 }
 

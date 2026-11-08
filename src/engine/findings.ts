@@ -19,8 +19,18 @@ interface FindingsFile {
 const FINDINGS = findingsJson as FindingsFile;
 
 const MONTHS = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
 ];
 
 export const FINDINGS_VERSION = FINDINGS.findings_version;
@@ -58,14 +68,28 @@ function itemLabel(item: ResolvedItem): string {
 function noMitigationSentence(labels: string[]): string {
   if (labels.length === 0) return "";
   const names = proseList(labels);
-  if (labels.length === 1) return `${names} remains open, and this report does not include a recommended mitigation for it.`;
+  if (labels.length === 1)
+    return `${names} remains open, and this report does not include a recommended mitigation for it.`;
   return `${names} remain open, and this report does not include a recommended mitigation for them.`;
 }
 
-export function buildDetail(items: ResolvedItem[], prefix = "", keptIds?: ReadonlySet<string>): string {
+export function buildDetail(
+  items: ResolvedItem[],
+  prefix = "",
+  keptIds?: ReadonlySet<string>,
+): string {
   const names = proseList(items.map(itemLabel));
-  const dates = proseList([...new Set(items.map((item) => item.targetDate).filter(Boolean).map(formatDate))]);
-  const mitigationIds = [...new Set(items.map((item) => item.mitigation).filter((id): id is string => Boolean(id)))];
+  const dates = proseList([
+    ...new Set(
+      items
+        .map((item) => item.targetDate)
+        .filter(Boolean)
+        .map(formatDate),
+    ),
+  ]);
+  const mitigationIds = [
+    ...new Set(items.map((item) => item.mitigation).filter((id): id is string => Boolean(id))),
+  ];
   const kept = mitigationIds.filter((id) => !keptIds || keptIds.has(id));
   const droppedLabels = items
     .filter((item) => item.mitigation && keptIds && !keptIds.has(item.mitigation))
@@ -73,7 +97,8 @@ export function buildDetail(items: ResolvedItem[], prefix = "", keptIds?: Readon
   const keptTitles = proseList(kept.map((id) => MITIGATION_BY_ID[id]?.title ?? id));
   const followup = items.some((item) => item.needsFollowup);
   const parts: string[] = [];
-  if (keptTitles && followup) parts.push(`The mitigation ${keptTitles} applies, and a follow-up applies.`);
+  if (keptTitles && followup)
+    parts.push(`The mitigation ${keptTitles} applies, and a follow-up applies.`);
   else if (keptTitles) parts.push(`The mitigation ${keptTitles} applies.`);
   else if (followup && droppedLabels.length === 0) parts.push("A follow-up applies.");
   const uncovered = noMitigationSentence([...new Set(droppedLabels)]);
@@ -89,10 +114,19 @@ export function buildDetail(items: ResolvedItem[], prefix = "", keptIds?: Readon
 
 function fill(template: string, slots: Record<string, string>): string {
   const filled = template.replace(/\{\{(\w+)\}\}/g, (_match, key: string) => slots[key] ?? "");
-  return filled.replace(/[ \t]{2,}/g, " ").replace(/\s+\./g, ".").replace(/ \./g, ".").trim();
+  return filled
+    .replace(/[ \t]{2,}/g, " ")
+    .replace(/\s+\./g, ".")
+    .replace(/ \./g, ".")
+    .trim();
 }
 
-export function renderFinding(id: string, status: string, slots: Record<string, string>, phrase?: string): string {
+export function renderFinding(
+  id: string,
+  status: string,
+  slots: Record<string, string>,
+  phrase?: string,
+): string {
   const entry = FINDINGS.criteria[id] ?? FINDINGS.rp[id];
   if (!entry) return `Status for ${id} is ${status}.`;
   if (phrase && entry.phrases?.[phrase]) return entry.phrases[phrase];
@@ -134,7 +168,9 @@ export function quoteFromLines(lines: AnswerLine[]): string {
 }
 
 export function q8Lines(answers: Answers): AnswerLine[] {
-  const areas = many(answers, "q8_areas").map((id) => AREAS.find((area) => area.id === id)?.label ?? id);
+  const areas = many(answers, "q8_areas").map(
+    (id) => AREAS.find((area) => area.id === id)?.label ?? id,
+  );
   const target = labelOf(TARGETS, text(answers, "q8_target"));
   const how = text(answers, "q8_how");
   const lines: AnswerLine[] = [];
@@ -167,6 +203,8 @@ export function q20Lines(answers: Answers): AnswerLine[] {
 }
 
 export function areaLabels(ids: string[], allowed: string[]): string {
-  const labels = ids.filter((id) => allowed.includes(id)).map((id) => AREAS.find((area) => area.id === id)?.label ?? id);
+  const labels = ids
+    .filter((id) => allowed.includes(id))
+    .map((id) => AREAS.find((area) => area.id === id)?.label ?? id);
   return proseList(labels);
 }

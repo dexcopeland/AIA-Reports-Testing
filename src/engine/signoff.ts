@@ -13,13 +13,13 @@ export function normalizeSignoff(value: unknown): ReportSignoff | undefined {
   const record = value as Partial<ReportSignoff>;
   const mitigations = Array.isArray(record.mitigations)
     ? record.mitigations.flatMap((item): MitigationAck[] => {
-      if (!item || typeof item !== "object") return [];
-      const row = item as Partial<MitigationAck>;
-      const id = textOf(row.id).trim();
-      if (!id) return [];
-      const choice = row.choice === "yes" || row.choice === "no" ? row.choice : "";
-      return [{ id, choice, date: textOf(row.date), comment: textOf(row.comment) }];
-    })
+        if (!item || typeof item !== "object") return [];
+        const row = item as Partial<MitigationAck>;
+        const id = textOf(row.id).trim();
+        if (!id) return [];
+        const choice = row.choice === "yes" || row.choice === "no" ? row.choice : "";
+        return [{ id, choice, date: textOf(row.date), comment: textOf(row.comment) }];
+      })
     : [];
   return {
     mitigations,

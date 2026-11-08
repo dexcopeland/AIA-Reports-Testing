@@ -14,7 +14,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { activeSections, sectionHeading, visibleFields, type Field as FormField } from "../content/form";
+import {
+  activeSections,
+  sectionHeading,
+  visibleFields,
+  type Field as FormField,
+} from "../content/form";
 import { FIXED } from "../content/rules";
 import { deriveAssessmentPath, pathNote } from "../engine/path";
 import type { AnswerFile, AnswerValue } from "../content/types";
@@ -26,7 +31,9 @@ import { clusterUsesColumns, questionClusters } from "./shell";
 
 const exampleItems = [
   { value: null, label: "Choose an example" },
-  ...exampleIndex.groups.flatMap((group) => group.examples.map((item) => ({ value: item.id, label: item.title }))),
+  ...exampleIndex.groups.flatMap((group) =>
+    group.examples.map((item) => ({ value: item.id, label: item.title })),
+  ),
 ];
 
 export function HomeScreen({
@@ -45,15 +52,30 @@ export function HomeScreen({
   loadMessage: string;
 }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const entry = exampleIndex.groups.flatMap((group) => group.examples).find((item) => item.id === selectedId);
+  const entry = exampleIndex.groups
+    .flatMap((group) => group.examples)
+    .find((item) => item.id === selectedId);
   return (
     <div className="flex flex-col gap-4">
-      <h2 id="section-heading" tabIndex={-1} className="text-2xl font-semibold text-primary outline-none">Start an assessment</h2>
-      <p>Work section by section. You can save a JSON file and load it later on this computer. {FIXED.draftBanner}</p>
+      <h2
+        id="section-heading"
+        tabIndex={-1}
+        className="text-2xl font-semibold text-primary outline-none"
+      >
+        Start an assessment
+      </h2>
+      <p>
+        Work section by section. You can save a JSON file and load it later on this computer.{" "}
+        {FIXED.draftBanner}
+      </p>
       <div className="flex flex-wrap gap-2">
-        <Button type="button" className={touchTarget} onClick={onStart}>Start a new assessment</Button>
+        <Button type="button" className={touchTarget} onClick={onStart}>
+          Start a new assessment
+        </Button>
         {saved && Object.keys(saved.answers).length > 0 ? (
-          <Button type="button" variant="outline" className={touchTarget} onClick={onContinue}>Continue saved draft</Button>
+          <Button type="button" variant="outline" className={touchTarget} onClick={onContinue}>
+            Continue saved draft
+          </Button>
         ) : null}
       </div>
       <Card>
@@ -74,7 +96,9 @@ export function HomeScreen({
             <SelectContent align="start" alignItemWithTrigger={false}>
               {exampleIndex.groups.map((group) => (
                 <SelectGroup key={group.id}>
-                  <SelectLabel className="text-sm font-semibold text-primary">{group.label}</SelectLabel>
+                  <SelectLabel className="text-sm font-semibold text-primary">
+                    {group.label}
+                  </SelectLabel>
                   {group.examples.map((item) => (
                     <SelectItem key={item.id} value={item.id}>
                       <span className="flex flex-col items-start gap-0.5">
@@ -87,7 +111,9 @@ export function HomeScreen({
               ))}
             </SelectContent>
           </Select>
-          <p id="example-description" className="text-sm text-muted-foreground" aria-live="polite">{entry?.description ?? ""}</p>
+          <p id="example-description" className="text-sm text-muted-foreground" aria-live="polite">
+            {entry?.description ?? ""}
+          </p>
           <Button
             id="load-example"
             type="button"
@@ -106,7 +132,13 @@ export function HomeScreen({
   );
 }
 
-export function LoadFileCard({ onLoadFile, message }: { onLoadFile: (file: File) => void; message: string }) {
+export function LoadFileCard({
+  onLoadFile,
+  message,
+}: {
+  onLoadFile: (file: File) => void;
+  message: string;
+}) {
   return (
     <Card className="no-print">
       <CardHeader>
@@ -185,9 +217,23 @@ export function FormScreen({
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <p id="assessment-path" className="text-sm font-semibold text-primary" data-assessment-path={path.path}>{pathNote(path.path)}</p>
-        <p className="text-sm font-semibold text-primary">Section {sectionIndex + 1} of {sections.length}</p>
-        <h2 id="section-heading" tabIndex={-1} className="text-2xl font-semibold text-primary outline-none">{sectionHeading(sectionIndex, section.title)}</h2>
+        <p
+          id="assessment-path"
+          className="text-sm font-semibold text-primary"
+          data-assessment-path={path.path}
+        >
+          {pathNote(path.path)}
+        </p>
+        <p className="text-sm font-semibold text-primary">
+          Section {sectionIndex + 1} of {sections.length}
+        </p>
+        <h2
+          id="section-heading"
+          tabIndex={-1}
+          className="text-2xl font-semibold text-primary outline-none"
+        >
+          {sectionHeading(sectionIndex, section.title)}
+        </h2>
         {file.example && file.example_label ? <p>{file.example_label}</p> : null}
       </div>
       <form
@@ -200,7 +246,12 @@ export function FormScreen({
       >
         <div className="flex flex-col gap-4">
           {clusters.map((cluster) => (
-            <QuestionCard key={cluster[0]?.id ?? "question"} fields={cluster} answers={file.answers} onAnswer={onAnswer} />
+            <QuestionCard
+              key={cluster[0]?.id ?? "question"}
+              fields={cluster}
+              answers={file.answers}
+              onAnswer={onAnswer}
+            />
           ))}
         </div>
         {formError ? (
@@ -212,12 +263,18 @@ export function FormScreen({
         <Separator />
         <div className="flex flex-wrap gap-2">
           {sectionIndex > 0 ? (
-            <Button type="button" variant="outline" className={touchTarget} onClick={onBack}>Back</Button>
+            <Button type="button" variant="outline" className={touchTarget} onClick={onBack}>
+              Back
+            </Button>
           ) : null}
-          <Button type="button" className={touchTarget} onClick={onNext}>{last ? "Review and create draft" : "Save and continue"}</Button>
+          <Button type="button" className={touchTarget} onClick={onNext}>
+            {last ? "Review and create draft" : "Save and continue"}
+          </Button>
         </div>
       </form>
-      <p id="save-status" className="min-h-6" aria-live="polite">{saveNote}</p>
+      <p id="save-status" className="min-h-6" aria-live="polite">
+        {saveNote}
+      </p>
     </div>
   );
 }

@@ -14,7 +14,8 @@ function parseIso(value: string): Date | undefined {
   const month = Number(match[2]);
   const day = Number(match[3]);
   const date = new Date(year, month - 1, day);
-  if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) return undefined;
+  if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day)
+    return undefined;
   return date;
 }
 
@@ -96,7 +97,9 @@ export function DatePicker({
               if (parsed) onChange(toIso(parsed));
             }}
           />
-          <FieldDescription id={`${id}-typed-hint`}>Year-month-day, such as 1998-04-12. Any year is accepted.</FieldDescription>
+          <FieldDescription id={`${id}-typed-hint`}>
+            Year-month-day, such as 1998-04-12. Any year is accepted.
+          </FieldDescription>
         </Field>
         <Button
           type="button"
