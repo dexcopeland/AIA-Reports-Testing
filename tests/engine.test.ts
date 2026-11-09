@@ -691,6 +691,24 @@ describe("evaluation engine", () => {
     expect(signedLead?.fields?.find((field) => field.name === "lead_title")?.value).toBe(
       "Program director",
     );
+
+    const cleared = buildReport({
+      ...file({
+        ...base,
+        q3_is_lead: "yes",
+        q3_lead_name: "",
+        q3_lead_role: "",
+      }),
+      signoff: {
+        mitigations: [],
+        lead_name: "Alex Example",
+        lead_title: "Program director",
+        lead_date: "",
+      },
+    });
+    const clearedLead = cleared.blocks.find((block) => block.signId === "lead");
+    expect(clearedLead?.fields?.find((field) => field.name === "lead_name")?.value).toBe("");
+    expect(clearedLead?.fields?.find((field) => field.name === "lead_title")?.value).toBe("");
   });
 });
 

@@ -304,13 +304,19 @@ function rawAnswer(answers: Answers, key: string): string {
   return typeof value === "string" ? value : "";
 }
 
-/** Name, role, and email of the person who signs. Form answers win. Older drafts may have only the sign-off lines. */
+/** Undefined when the key was never saved. A blank string is an answer the user cleared. */
+function savedAnswer(answers: Answers, key: string): string | undefined {
+  if (!Object.hasOwn(answers, key)) return undefined;
+  return rawAnswer(answers, key);
+}
+
+/** Name, role, and email of the person who signs. A saved answer wins, including a blank. Sign-off text fills in only when that answer was never saved. */
 export function agencyLeadSigner(file: AnswerFile): { name: string; role: string; email: string } {
   const answers = file.answers ?? {};
   const signoff = file.signoff;
   return {
-    name: rawAnswer(answers, "q3_lead_name") || filled(signoff?.lead_name),
-    role: rawAnswer(answers, "q3_lead_role") || filled(signoff?.lead_title),
+    name: savedAnswer(answers, "q3_lead_name") ?? filled(signoff?.lead_name),
+    role: savedAnswer(answers, "q3_lead_role") ?? filled(signoff?.lead_title),
     email: rawAnswer(answers, "q3_email"),
   };
 }

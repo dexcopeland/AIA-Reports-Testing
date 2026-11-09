@@ -12,7 +12,7 @@ import { activeSections } from "../content/form";
 import { FIXED } from "../content/rules";
 import { type AnswerFile, type AnswerValue } from "../content/types";
 import { exampleIndex, loadExampleFile } from "../examples/load";
-import { ensureSignoff, upsertAck } from "../engine/signoff";
+import { emptySignoff, ensureSignoff, upsertAck } from "../engine/signoff";
 import { missing } from "./app";
 import { touchTarget } from "./form-model";
 import { ProgressRail } from "./ProgressRail";
@@ -96,11 +96,18 @@ export function AssessmentApp() {
   function setAnswer(key: string, value: AnswerValue): void {
     const current = fileRef.current;
     setDirty(true);
-    commit({
+    const next: AnswerFile = {
       ...current,
       example: false,
       answers: { ...current.answers, [key]: value },
-    });
+    };
+    if ((key === "q3_lead_name" || key === "q3_lead_role") && typeof value === "string") {
+      const signoff = structuredClone(current.signoff ?? emptySignoff());
+      if (key === "q3_lead_name") signoff.lead_name = value;
+      else signoff.lead_title = value;
+      next.signoff = signoff;
+    }
+    commit(next);
   }
 
   function editSignoff(signId: string, fieldName: string, value: string): void {
