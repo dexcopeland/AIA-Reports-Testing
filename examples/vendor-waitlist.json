@@ -12,6 +12,9 @@
     "q2_unit": "Rental aid unit (fictional)",
     "q2_role": "Agency Lead",
     "q3_is_lead": "yes",
+    "q3_lead_name": "Jordan Hale",
+    "q3_lead_role": "Deputy director",
+    "q3_email": "jordan.hale@example.gov",
     "q4_name": "Rental Assistance Waitlist Sorter (fictional)",
     "q5_changes": "None.",
     "q7b_prohibited": [

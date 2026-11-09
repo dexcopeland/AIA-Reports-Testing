@@ -58,7 +58,10 @@ export interface FormSection {
   fields: Field[];
 }
 
-const leadNo = (answers: Answers) => text(answers, "q3_is_lead") === "no";
+const leadKnown = (answers: Answers) => {
+  const lead = text(answers, "q3_is_lead");
+  return lead === "yes" || lead === "no";
+};
 const notState = (answers: Answers) =>
   text(answers, "q5_builder") !== "state_built" && text(answers, "q5_builder") !== "";
 const stateBuilt = (answers: Answers) => text(answers, "q5_builder") === "state_built";
@@ -78,6 +81,7 @@ export const FIELD_AUDIENCE: Record<string, FieldAudience> = {
   q2_unit: "all",
   q2_role: "all",
   q3_is_lead: "all",
+  q3_lead_name: "all",
   q3_lead_role: "all",
   q3_email: "all",
   q4_name: "all",
@@ -220,7 +224,18 @@ export const SECTIONS: FormSection[] = [
         label: "Are you the Agency Lead who will acknowledge the report?",
         required: true,
         options: YES_NO,
-        help: "The Agency Lead signs the acknowledgment in the executive summary even if someone else fills in this form.",
+        help: "The Agency Lead signs the acknowledgment in the executive summary, even if someone else fills in this form. The report prints that person's name, role, and email.",
+      },
+      {
+        id: "q3_lead_name",
+        legacyQ: 3,
+        type: "short",
+        label: "Agency Lead name",
+        required: true,
+        show: leadKnown,
+        autocomplete: "name",
+        spellcheck: false,
+        help: "The person who will sign. The report prints this name.",
       },
       {
         id: "q3_lead_role",
@@ -229,8 +244,9 @@ export const SECTIONS: FormSection[] = [
         label: "Agency Lead role",
         required: true,
         role: true,
-        show: leadNo,
-        help: "Role only. The report does not name a person.",
+        show: leadKnown,
+        autocomplete: "organization-title",
+        help: "The title printed with that name. Write a role, such as deputy director.",
       },
       {
         id: "q3_email",
@@ -238,10 +254,10 @@ export const SECTIONS: FormSection[] = [
         type: "email",
         label: "Agency Lead email",
         required: true,
-        show: leadNo,
+        show: leadKnown,
         autocomplete: "email",
         spellcheck: false,
-        help: "Used only if your agency later chooses to contact the Agency Lead. It is saved in the answers file and is never written into the report.",
+        help: "The report prints this email with the name and role.",
       },
     ],
   },

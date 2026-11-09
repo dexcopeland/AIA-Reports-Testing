@@ -18,6 +18,15 @@ describe("question cards", () => {
       ["q2_agency", "q2_unit", "q2_role"],
       ["q3_is_lead"],
     ]);
+    for (const answer of ["yes", "no"]) {
+      const shown = questionClusters(visibleFields(SECTIONS[0]!, { q3_is_lead: answer })).map(
+        (cluster) => cluster.map((field) => field.id),
+      );
+      expect(shown).toEqual([
+        ["q2_agency", "q2_unit", "q2_role"],
+        ["q3_is_lead", "q3_lead_name", "q3_lead_role", "q3_email"],
+      ]);
+    }
   });
 
   it("keeps each question number in one consecutive run, in numeric order", () => {

@@ -107,9 +107,15 @@ export function AssessmentApp() {
     const next = structuredClone(fileRef.current);
     if (signId === "lead") {
       const signoff = ensureSignoff(next);
-      if (fieldName === "lead_name") signoff.lead_name = value;
-      else if (fieldName === "lead_title") signoff.lead_title = value;
-      else if (fieldName === "lead_date") signoff.lead_date = value;
+      if (fieldName === "lead_name") {
+        signoff.lead_name = value;
+        next.answers.q3_lead_name = value;
+      } else if (fieldName === "lead_title") {
+        signoff.lead_title = value;
+        next.answers.q3_lead_role = value;
+      } else if (fieldName === "lead_email") {
+        next.answers.q3_email = value;
+      } else if (fieldName === "lead_date") signoff.lead_date = value;
     } else if (signId) {
       const ack = upsertAck(next, signId);
       if (fieldName.startsWith("ack_")) ack.choice = value === "no" ? "no" : "yes";

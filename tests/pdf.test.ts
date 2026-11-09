@@ -117,7 +117,8 @@ describe("PDF report", () => {
     expect(raw).toContain("/FT /Sig");
     expect(raw).toContain("/FT /Btn");
     expect(raw).toContain("(lead_signature)");
-    expect(raw).toContain("(lead_name)");
+    expect(raw).not.toContain("(lead_name)");
+    expect(raw).not.toContain("(lead_email)");
     expect(raw).toContain("(lead_date)");
     expect(raw).toContain("(comment_1)");
     expect(raw).toContain("(date_1)");
@@ -130,6 +131,9 @@ describe("PDF report", () => {
     expect(flat).toContain("Follow-up steps for the agency");
     expect(flat).not.toContain("Acknowledged (Yes / No)");
     expect(flat).toContain("Agency Lead signature");
+    expect(flat).toContain("Alex Example");
+    expect(flat).toContain("Program director");
+    expect(flat).toContain("alex.example@example.gov");
     expect(flat).toContain("(Evidence, C9)");
     expect(evidence.flat).toContain("C9 –");
     const steps = report.blocks.filter((block) => block.type === "step");

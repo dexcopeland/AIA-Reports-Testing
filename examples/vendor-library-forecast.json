@@ -12,6 +12,9 @@
     "q2_unit": "Branch operations unit (fictional)",
     "q2_role": "Agency Lead",
     "q3_is_lead": "yes",
+    "q3_lead_name": "Jordan Hale",
+    "q3_lead_role": "Deputy director",
+    "q3_email": "jordan.hale@example.gov",
     "q4_name": "Library Hold-time Forecast (fictional)",
     "q5_changes": "None. Branch leads view the vendor forecast as sold.",
     "q7b_prohibited": [

@@ -37,6 +37,9 @@ describe("Word report", () => {
     expect(xml).toContain('w:tag w:val="lead_signature"');
     expect(xml).toContain('w:alias w:val="Comment"');
     expect(xml).toContain('w:alias w:val="Agency Lead signature"');
+    expect(xml).toContain("Alex Example");
+    expect(xml).toContain("Program director");
+    expect(xml).toContain("alex.example@example.gov");
     expect(xml).toContain('w:alias w:val="Yes ack_1"');
     expect(xml).toContain('w:alias w:val="No ack_1"');
     expect((xml.match(/<w14:checkbox>/g) ?? []).length).toBe(2);

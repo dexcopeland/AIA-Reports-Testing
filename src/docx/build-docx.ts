@@ -163,54 +163,79 @@ function commentTable(field: SignField): Table {
   });
 }
 
+function leadLabel(field: SignField): string {
+  return field.label.startsWith("Title") ? "Title" : field.label;
+}
+
+function leadLineCell(field: SignField, width: number): TableCell {
+  return new TableCell({
+    width: { size: width, type: WidthType.DXA },
+    borders: boxBorders,
+    shading: { type: ShadingType.CLEAR, fill: REPORT_STYLE.shade },
+    margins: { top: 30, bottom: 30, left: 60, right: 60 },
+    children: [
+      new Paragraph({
+        spacing: { before: 20, after: 20 },
+        border: { bottom: { style: BorderStyle.SINGLE, size: 4, color: NAVY, space: 1 } },
+        children: [
+          run(`${leadLabel(field)} `, { size: 22, bold: true, color: NAVY }),
+          fieldMarker(field),
+        ],
+      }),
+    ],
+  });
+}
+
 function leadTable(fields: SignField[]): Table {
   const lineFields = fields.filter((field) => field.kind === "text" || field.kind === "date");
   const signature = fields.find((field) => field.kind === "signature");
-  const widths = [3120, 3600, 2640];
-  const cells = lineFields.map(
-    (field, index) =>
-      new TableCell({
-        width: { size: widths[index] ?? 3120, type: WidthType.DXA },
-        borders: boxBorders,
-        shading: { type: ShadingType.CLEAR, fill: REPORT_STYLE.shade },
-        margins: { top: 30, bottom: 30, left: 60, right: 60 },
-        children: [
-          new Paragraph({
-            spacing: { before: 20, after: 20 },
-            border: { bottom: { style: BorderStyle.SINGLE, size: 4, color: NAVY, space: 1 } },
-            children: [
-              run(`${field.label.startsWith("Title") ? "Title" : field.label} `, {
-                size: 22,
-                bold: true,
-                color: NAVY,
-              }),
-              fieldMarker(field),
-            ],
-          }),
-        ],
-      }),
+  const columns = lineFields.length > 3 ? 2 : Math.max(lineFields.length, 1);
+  const total = 9360;
+  const colWidth = Math.floor(total / columns);
+  const widths = Array.from({ length: columns }, (_, index) =>
+    index === columns - 1 ? total - colWidth * (columns - 1) : colWidth,
   );
-  const signatureCell = new TableCell({
-    columnSpan: 3,
-    width: { size: 9360, type: WidthType.DXA },
-    borders: boxBorders,
-    shading: { type: ShadingType.CLEAR, fill: REPORT_STYLE.shade },
-    margins: { top: 30, bottom: 40, left: 60, right: 60 },
-    children: [
-      new Paragraph({
-        spacing: { after: 20 },
-        children: [run(signature?.label ?? "Signature", { size: 22, bold: true, color: NAVY })],
+  const rows: TableRow[] = [];
+  for (let index = 0; index < lineFields.length; index += columns) {
+    const slice = lineFields.slice(index, index + columns);
+    rows.push(
+      new TableRow({
+        cantSplit: true,
+        children: slice.map((field, cellIndex) =>
+          leadLineCell(field, widths[cellIndex] ?? colWidth),
+        ),
       }),
-      new Paragraph({ children: signature ? [fieldMarker(signature)] : [run(" ", { size: 22 })] }),
-    ],
-  });
+    );
+  }
+  rows.push(
+    new TableRow({
+      cantSplit: true,
+      children: [
+        new TableCell({
+          columnSpan: columns,
+          width: { size: total, type: WidthType.DXA },
+          borders: boxBorders,
+          shading: { type: ShadingType.CLEAR, fill: REPORT_STYLE.shade },
+          margins: { top: 30, bottom: 40, left: 60, right: 60 },
+          children: [
+            new Paragraph({
+              spacing: { after: 20 },
+              children: [
+                run(signature?.label ?? "Signature", { size: 22, bold: true, color: NAVY }),
+              ],
+            }),
+            new Paragraph({
+              children: signature ? [fieldMarker(signature)] : [run(" ", { size: 22 })],
+            }),
+          ],
+        }),
+      ],
+    }),
+  );
   return new Table({
-    width: { size: 9360, type: WidthType.DXA },
+    width: { size: total, type: WidthType.DXA },
     columnWidths: widths,
-    rows: [
-      new TableRow({ cantSplit: true, children: cells }),
-      new TableRow({ cantSplit: true, children: [signatureCell] }),
-    ],
+    rows,
   });
 }
 
