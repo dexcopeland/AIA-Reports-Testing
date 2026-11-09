@@ -38,7 +38,7 @@ Use it if you are Maryland state agency staff preparing an AIA for an AI system 
 
 Use it when the system is still in planning or procurement. Also use it when the system is already in a pilot or in live use. On a High or Prohibited path, Pilot and Live ask whether an impact assessment was done before deployment.
 
-You do not have to be the Agency Lead to fill in the form. The Agency Lead still signs the Executive Summary. If you are not the Agency Lead, the form asks for that person's role and email.
+You do not have to be the Agency Lead to fill in the form. The Agency Lead still signs the Executive Summary. The form asks for that person's name, role, and email either way. The report prints all three in the acknowledgment.
 
 ## What to have ready
 
@@ -47,7 +47,7 @@ Gather what you know about the system before you start. You can leave a fact bla
 Have these ready:
 
 - Your agency, unit, and role. Write a role, such as program manager. Do not write a person's name in a role field.
-- Whether you are the Agency Lead. If you are not, have the Agency Lead's role and email.
+- Whether you are the Agency Lead, and the Agency Lead's name, role, and email. The report prints all three with the signature.
 - The name of the AI system.
 - Who built it. If a vendor is involved, have the vendor, product, and version.
 - What the system does, and the process it changes.
@@ -151,7 +151,8 @@ Read the draft on screen before you download. If required answers are still blan
 In the Executive Summary, complete the sign-off before you download:
 
 - For each recommended mitigation, choose Yes or No, pick the date, and type a comment if you have one.
-- Type the Agency Lead's name, title, and date.
+- Check the Agency Lead's name, role, and email. They come from the form and are printed in the acknowledgment. You can correct them here.
+- Pick the date next to that name.
 - Leave the signature blank. Sign by hand on the printed copy, or in the signature field of the PDF (Portable Document Format).
 
 Those entries are saved in the answers file. The signature is never stored.
@@ -262,7 +263,7 @@ It includes:
 - A deadline line tied to SF&P § 3.5-803(e). When the date depends on the procurement date, the line says DoIT AI Governance will confirm it. A system built by the State, with no vendor and no outside model, does not get a date from that subsection.
 - The bottom line up front (BLUF). That block is three sentences: the outcome, the path, and the single most important reason. Follow-up steps come after those three sentences. If nothing is open, the draft says no follow-up step is open.
 - What is in place, where there is room for improvement, and the risks with recommended mitigations. Each item names the Evidence section it comes from.
-- The mitigation acknowledgments and the Agency Lead acknowledgment, including the signature line.
+- The mitigation acknowledgments and the Agency Lead acknowledgment. That block prints the signer's name, role, and email, then the signature line.
 - On a High path only, an inventory table under SF&P § 3.5-803(b). A General or Prohibited path does not include that table.
 
 ![The bottom line up front on a High-path draft. Three sentences state the outcome, the path, and the single most important reason. A follow-up line says no follow-up step is open for this fictional example.](docs/images/bluf.png)
@@ -307,11 +308,11 @@ Your answers stay in this browser on this computer. The page stores a working co
 
 The working copy is tied to this browser on this computer. Another browser, another computer, or clearing this site's data removes it. Keep the JSON file if you need to resume.
 
-The Agency Lead email, if you enter one, stays in the JSON file. The report leaves it out. The help text on that question says the email is there in case your agency later contacts the Agency Lead.
+The Agency Lead's name, role, and email are in the JSON file and in the report. The acknowledgment in the Executive Summary prints all three. The Submission Record copies them with the other answers.
 
-The Agency Lead's name, title, date, and mitigation comments are in the JSON file and in the Executive Summary, because you enter them for the acknowledgment. The signature is not stored.
+The date and mitigation comments are in the JSON file and in the Executive Summary. The signature is not stored.
 
-Do not put resident data in the file. Write roles in the question fields, not people's names. The form warns you when a role field looks like a person's name.
+Do not put resident data in the file. Role fields ask for a role, not a person's name. The form warns you when a role field looks like a person's name. The Agency Lead name is the exception. The report prints that name with the role and email.
 
 ## For maintainers
 

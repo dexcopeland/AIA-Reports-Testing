@@ -49,8 +49,9 @@ export function ReportScreen({
       ) : null}
       <p className="status min-h-6">{exportNote}</p>
       <p className="no-print">
-        Fill the dates, comments, and Agency Lead name in the executive summary before you download.
-        They are saved in this draft. The signature stays blank for a handwritten or PDF signature.
+        The name, role, and email from the form appear in the Agency Lead acknowledgment. Fill the
+        dates and comments before you download. They are saved in this draft. The signature stays
+        blank for a handwritten or PDF signature.
       </p>
       <details className="no-print">
         <summary>Draft checks</summary>

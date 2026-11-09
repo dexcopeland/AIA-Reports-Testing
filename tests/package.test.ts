@@ -17,6 +17,9 @@ describe("report package", () => {
     const mitigation = evaluate(file).mitigations[0];
     expect(mitigation).toBeTruthy();
     const comment = `A long plan for this fictional system. ${"The reviewer will check each output before it is used. ".repeat(40)}End of the plan.`;
+    delete file.answers.q3_lead_name;
+    delete file.answers.q3_lead_role;
+    delete file.answers.q3_email;
     file.signoff = {
       mitigations: [{ id: mitigation!.id, choice: "yes", date: "2026-12-01", comment }],
       lead_name: "Alex Example",

@@ -72,7 +72,7 @@ export interface MitigationAck {
   comment: string;
 }
 
-/** Dates, comments, and Agency Lead name saved with the draft. The signature is never stored. */
+/** Dates, comments, and any Agency Lead name typed on the draft. The signature is never stored. */
 export interface ReportSignoff {
   mitigations: MitigationAck[];
   lead_name: string;

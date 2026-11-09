@@ -23,7 +23,7 @@ The engine order is:
 9. Merge follow-ups to one block per question number. Never Q25.
 10. Keep up to 5 confirm-the-facts lines.
 11. Fill the 10 sections and the question-and-answer appendix.
-12. Run the mechanical checks (banned words, timings, one Ongoing item, no email, word count on the inventory summary).
+12. Run the mechanical checks (banned words, timings, one Ongoing item, the Agency Lead email when one was entered, word count on the inventory summary).
 
 Unknown counts as Gap for criteria and Not yet for recommended practice, except the access-path items 12d and 12e, where an unknown answer is Partial.
 

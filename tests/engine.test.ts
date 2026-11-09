@@ -496,8 +496,8 @@ describe("evaluation engine", () => {
   it("counts fewer visible questions after the branching rules", () => {
     const s01 = buildScenario(SCENARIOS.find((item) => item.id === "S01")!);
     const s03 = buildScenario(SCENARIOS.find((item) => item.id === "S03")!);
-    expect(countVisibleQuestions(s01.answers)).toBe(74);
-    expect(countVisibleQuestions(s03.answers)).toBe(67);
+    expect(countVisibleQuestions(s01.answers)).toBe(77);
+    expect(countVisibleQuestions(s03.answers)).toBe(70);
   });
 
   it("flags each published prohibited use without a go or no-go decision", () => {
@@ -608,21 +608,107 @@ describe("evaluation engine", () => {
     expect(result.followups.some((item) => item.q === 12)).toBe(true);
   });
 
-  it("omits the Agency Lead email and blocks nothing in the draft text", () => {
-    const report = buildReport(
+  it("prints the Agency Lead name, role, and email on both answers", () => {
+    const no = buildReport(
       file({
         ...base,
+        q2_role: "Program manager",
         q3_is_lead: "no",
+        q3_lead_name: "Riley Chen",
         q3_lead_role: "Deputy director",
-        q3_email: "agency.lead@example.md.gov",
+        q3_email: "riley.chen@example.gov",
         q2_agency: "Example Agency (fictional)",
       }),
     );
-    const text = report.blocks.map((block) => block.text).join("\n");
-    expect(text).not.toContain("agency.lead@example.md.gov");
-    expect(text).toContain("Agency draft — not approval. Send DoIT the signed Executive Summary.");
-    expect(report.checks.find((check) => check.id === "email")?.ok).toBe(true);
-    expect(report.checks.find((check) => check.id === "b7")?.ok).toBe(true);
+    const noText = no.blocks.map((block) => block.text).join("\n");
+    expect(noText).toContain("The submitter is not the Agency Lead.");
+    expect(noText).toContain("Agency Lead name: Riley Chen");
+    expect(noText).toContain("Agency Lead role: Deputy director");
+    expect(noText).toContain("Agency Lead email: riley.chen@example.gov");
+    expect(noText).toContain("Role: Program manager");
+    const noLead = no.blocks.find((block) => block.signId === "lead");
+    expect(noLead?.fields?.find((field) => field.name === "lead_name")?.value).toBe("Riley Chen");
+    expect(noLead?.fields?.find((field) => field.name === "lead_title")?.value).toBe(
+      "Deputy director",
+    );
+    expect(noLead?.fields?.find((field) => field.name === "lead_email")?.value).toBe(
+      "riley.chen@example.gov",
+    );
+    expect(no.checks.find((check) => check.id === "email")?.ok).toBe(true);
+    expect(no.checks.find((check) => check.id === "email")?.detail).toBe(
+      "Agency Lead email is in the report.",
+    );
+    expect(no.checks.find((check) => check.id === "b7")?.ok).toBe(true);
+    expect(noText).toContain(
+      "Agency draft — not approval. Send DoIT the signed Executive Summary.",
+    );
+
+    const yes = buildReport(
+      file({
+        ...base,
+        q2_role: "Program manager",
+        q3_is_lead: "yes",
+        q3_lead_name: "Jordan Hale",
+        q3_lead_role: "Deputy director",
+        q3_email: "jordan.hale@example.gov",
+      }),
+    );
+    const yesText = yes.blocks.map((block) => block.text).join("\n");
+    expect(yesText).toContain("The submitter is the Agency Lead.");
+    expect(yesText).toContain("Agency Lead name: Jordan Hale");
+    expect(yesText).toContain("Agency Lead role: Deputy director");
+    expect(yesText).toContain("Agency Lead email: jordan.hale@example.gov");
+    const yesLead = yes.blocks.find((block) => block.signId === "lead");
+    expect(yesLead?.fields?.find((field) => field.name === "lead_email")?.value).toBe(
+      "jordan.hale@example.gov",
+    );
+
+    const legacy = buildReport(
+      file({
+        ...base,
+        q3_is_lead: "yes",
+      }),
+    );
+    legacy.blocks
+      .find((block) => block.signId === "lead")
+      ?.fields?.forEach((field) => {
+        if (field.name === "lead_name") expect(field.value).toBe("");
+      });
+    const fromSignoff = {
+      ...file({ ...base, q3_is_lead: "yes" }),
+      signoff: {
+        mitigations: [],
+        lead_name: "Alex Example",
+        lead_title: "Program director",
+        lead_date: "",
+      },
+    };
+    const signed = buildReport(fromSignoff);
+    const signedLead = signed.blocks.find((block) => block.signId === "lead");
+    expect(signedLead?.fields?.find((field) => field.name === "lead_name")?.value).toBe(
+      "Alex Example",
+    );
+    expect(signedLead?.fields?.find((field) => field.name === "lead_title")?.value).toBe(
+      "Program director",
+    );
+
+    const cleared = buildReport({
+      ...file({
+        ...base,
+        q3_is_lead: "yes",
+        q3_lead_name: "",
+        q3_lead_role: "",
+      }),
+      signoff: {
+        mitigations: [],
+        lead_name: "Alex Example",
+        lead_title: "Program director",
+        lead_date: "",
+      },
+    });
+    const clearedLead = cleared.blocks.find((block) => block.signId === "lead");
+    expect(clearedLead?.fields?.find((field) => field.name === "lead_name")?.value).toBe("");
+    expect(clearedLead?.fields?.find((field) => field.name === "lead_title")?.value).toBe("");
   });
 });
 

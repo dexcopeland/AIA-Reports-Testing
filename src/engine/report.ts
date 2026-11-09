@@ -118,7 +118,7 @@ const QUESTIONS: { n: number; section: string; text: string; rp?: string }[] = [
   {
     n: 3,
     section: "Section 1: About this request",
-    text: "Are you the Agency Lead who will acknowledge the report? If not, give the Agency Lead's role and email.",
+    text: "Are you the Agency Lead who will acknowledge the report? Give the Agency Lead's name, role, and email.",
   },
   { n: 4, section: "Section 2: The AI system", text: "Name of the AI system" },
   {
@@ -294,8 +294,36 @@ function mitigationSign(file: AnswerFile, mit: LiveMitigation, number: number): 
   return block("sign", `M${number} – ${mit.title}`, "template", { fields, signId: mit.id });
 }
 
+function filled(value: string | undefined): string {
+  return value?.trim() ?? "";
+}
+
+/** Keep spaces while someone is still typing. `text()` would drop a trailing space on each keystroke. */
+function rawAnswer(answers: Answers, key: string): string {
+  const value = answers[key];
+  return typeof value === "string" ? value : "";
+}
+
+/** Undefined when the key was never saved. A blank string is an answer the user cleared. */
+function savedAnswer(answers: Answers, key: string): string | undefined {
+  if (!Object.hasOwn(answers, key)) return undefined;
+  return rawAnswer(answers, key);
+}
+
+/** Name, role, and email of the person who signs. A saved answer wins, including a blank. Sign-off text fills in only when that answer was never saved. */
+export function agencyLeadSigner(file: AnswerFile): { name: string; role: string; email: string } {
+  const answers = file.answers ?? {};
+  const signoff = file.signoff;
+  return {
+    name: savedAnswer(answers, "q3_lead_name") ?? filled(signoff?.lead_name),
+    role: savedAnswer(answers, "q3_lead_role") ?? filled(signoff?.lead_title),
+    email: rawAnswer(answers, "q3_email"),
+  };
+}
+
 function leadSign(file: AnswerFile): Block {
   const signoff = file.signoff;
+  const signer = agencyLeadSigner(file);
   const fields: SignField[] = [
     {
       name: "lead_name",
@@ -304,7 +332,7 @@ function leadSign(file: AnswerFile): Block {
       lines: 1,
       width: 180,
       boxed: true,
-      value: signoff?.lead_name ?? "",
+      value: signer.name,
     },
     {
       name: "lead_title",
@@ -313,7 +341,16 @@ function leadSign(file: AnswerFile): Block {
       lines: 1,
       width: 180,
       boxed: true,
-      value: signoff?.lead_title ?? "",
+      value: signer.role,
+    },
+    {
+      name: "lead_email",
+      label: "Email",
+      kind: "text",
+      lines: 1,
+      width: 220,
+      boxed: true,
+      value: signer.email,
     },
     {
       name: "lead_date",
@@ -438,10 +475,10 @@ export function appendixAnswer(answers: Answers, n: number): string {
   if (n === 3) {
     const lead = text(answers, "q3_is_lead");
     if (lead === "yes") lines.push("The submitter is the Agency Lead.");
-    if (lead === "no") {
-      lines.push("The submitter is not the Agency Lead.");
-      push("Agency Lead role", text(answers, "q3_lead_role"));
-    }
+    if (lead === "no") lines.push("The submitter is not the Agency Lead.");
+    push("Agency Lead name", text(answers, "q3_lead_name"));
+    push("Agency Lead role", text(answers, "q3_lead_role"));
+    push("Agency Lead email", text(answers, "q3_email"));
   }
   if (n === 4) push("AI system name", text(answers, "q4_name"));
   if (n === 5) {
@@ -945,7 +982,7 @@ function buildExecutive(
   blocks.push(
     block(
       "p",
-      "Sign by hand on the printed copy, or in the signature field of the PDF. The name and date above are the ones entered in the assessment.",
+      "Sign by hand on the printed copy, or in the signature field of the PDF. The name, role, and email above are the ones entered in the assessment.",
       "template",
     ),
   );
@@ -1276,6 +1313,11 @@ export function selfCheck(
   const approval = APPROVAL_BANNED.filter((word) => textValue.includes(word));
   if (/\bApproved\b/.test(textValue)) approval.push("Approved");
   const email = text(answers, "q3_email");
+  const signerText = blocks
+    .flatMap((item) => item.fields ?? [])
+    .map((field) => field.value ?? "")
+    .join("\n");
+  const emailSeen = email !== "" && (textValue.includes(email) || signerText.includes(email));
   const ongoing = result.mitigations.filter((item) => item.timing === "Ongoing");
   const b7Block = blocks.find((item) => item.anchor === "b7");
   const live = text(answers, "q17_status") === "live" && !result.statusConflict;
@@ -1324,8 +1366,13 @@ export function selfCheck(
     },
     {
       id: "email",
-      ok: email === "" || !textValue.includes(email),
-      detail: "Agency Lead email is not in the report.",
+      ok: email === "" || emailSeen,
+      detail:
+        email === ""
+          ? "No Agency Lead email was entered."
+          : emailSeen
+            ? "Agency Lead email is in the report."
+            : "Agency Lead email is missing from the report.",
     },
     { id: "ongoing", ok: ongoing.length === 1, detail: `${ongoing.length} Ongoing mitigation(s).` },
     {

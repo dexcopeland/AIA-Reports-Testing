@@ -12,6 +12,9 @@
     "q2_unit": "Park maintenance unit (fictional)",
     "q2_role": "Agency Lead",
     "q3_is_lead": "yes",
+    "q3_lead_name": "Jordan Hale",
+    "q3_lead_role": "Deputy director",
+    "q3_email": "jordan.hale@example.gov",
     "q4_name": "Grounds Forecast Helper (fictional)",
     "q5_changes": "State staff loaded public park maps. No vendor and no outside model.",
     "q7b_prohibited": [

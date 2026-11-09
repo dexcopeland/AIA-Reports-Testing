@@ -59,8 +59,19 @@ function SignControl({
         id={id}
         name={field.name}
         className="sign-text"
-        autoComplete={field.name === "lead_name" ? "name" : undefined}
-        spellCheck={field.name === "lead_name" ? false : undefined}
+        type={field.name === "lead_email" ? "email" : "text"}
+        autoComplete={
+          field.name === "lead_name"
+            ? "name"
+            : field.name === "lead_email"
+              ? "email"
+              : field.name === "lead_title"
+                ? "organization-title"
+                : undefined
+        }
+        spellCheck={field.name === "lead_name" || field.name === "lead_email" ? false : undefined}
+        autoCapitalize={field.name === "lead_email" ? "off" : undefined}
+        autoCorrect={field.name === "lead_email" ? "off" : undefined}
         value={field.value ?? ""}
         onChange={(event) => onEdit(signId, field.name, event.target.value)}
       />

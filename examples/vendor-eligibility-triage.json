@@ -12,6 +12,9 @@
     "q2_unit": "Eligibility unit (fictional)",
     "q2_role": "Agency Lead",
     "q3_is_lead": "yes",
+    "q3_lead_name": "Jordan Hale",
+    "q3_lead_role": "Deputy director",
+    "q3_email": "jordan.hale@example.gov",
     "q4_name": "Benefits Eligibility Triage (fictional)",
     "q5_changes": "None. The agency uses the vendor product as sold.",
     "q7b_prohibited": [

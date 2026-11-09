@@ -212,7 +212,9 @@ describe("AssessmentApp", () => {
 
     const yes = screen.getAllByRole<HTMLInputElement>("radio", { name: "Yes" });
     await user.click(yes[0]!);
-    await user.type(screen.getByLabelText("Name"), "Robin Wheeler");
+    const signer = screen.getByLabelText("Name");
+    await user.clear(signer);
+    await user.type(signer, "Robin Wheeler");
 
     const stored = storedDraft() as unknown as {
       signoff?: { lead_name?: string; mitigations: { id: string; choice: string }[] };

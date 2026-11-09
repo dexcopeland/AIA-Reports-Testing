@@ -165,7 +165,10 @@ if (!reportText.includes("Inventory under SF&P § 3.5-803(b)"))
 if (!reportText.includes("Keep the full report package in the agency's records."))
   failures.push("Executive purpose paragraph missing.");
 if (!reportText.includes("1 July 2027")) failures.push("Deadline missing from the example report.");
-if (reportText.includes("agency.lead@")) failures.push("An email leaked into the report.");
+if (!reportText.includes("Jordan Hale"))
+  failures.push("Agency Lead name is missing from the report.");
+if (!reportText.includes("jordan.hale@example.gov"))
+  failures.push("Agency Lead email is missing from the report.");
 if (reportText.toLowerCase().includes("quietly")) failures.push("Banned word in the report.");
 await page.screenshot({ path: `${outDir}/03-report.png`, fullPage: false });
 

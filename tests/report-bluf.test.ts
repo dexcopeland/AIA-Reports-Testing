@@ -227,9 +227,17 @@ describe("sign-off boxes", () => {
     expect(lead.fields?.map((field) => field.label)).toEqual([
       "Name",
       "Title (printed role)",
+      "Email",
       "Date",
       "Agency Lead signature",
     ]);
+    expect(lead.fields?.find((field) => field.name === "lead_name")?.value).toBe("Alex Example");
+    expect(lead.fields?.find((field) => field.name === "lead_title")?.value).toBe(
+      "Program director",
+    );
+    expect(lead.fields?.find((field) => field.name === "lead_email")?.value).toBe(
+      "alex.example@example.gov",
+    );
     expect(lead.fields?.every((field) => field.boxed)).toBe(true);
     expect(lead.fields?.find((field) => field.label === "Agency Lead signature")?.kind).toBe(
       "signature",
