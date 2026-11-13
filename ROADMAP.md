@@ -36,7 +36,7 @@ The site sends nothing to DoIT. The feasibility note's preferred path is still o
 
 **Suggested label:** `a11y`
 
-The form uses labeled native controls, visible focus, and a skip link, and it aims at WCAG 2.1 AA. It has not had a keyboard-only and screen-reader audit. In particular, review statement sets, the group-relation questions, error summary on continue, and focus after a section change.
+A code-level audit with automated evidence is in [`docs/accessibility-audit.md`](docs/accessibility-audit.md): a keyboard-only smoke pass covers every section, save, and both downloads, tests pin the Word heading styles, and the skip link and question-card headings were fixed. What remains is the human screen-reader pass with NVDA on Chrome, following the checklist in that document — statement sets, the group-relation questions, the error summary on Continue, and focus after a section change.
 
 ## Scenario divergences and fuller scoring
 

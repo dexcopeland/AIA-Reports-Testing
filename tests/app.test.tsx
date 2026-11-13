@@ -150,6 +150,19 @@ describe("AssessmentApp", () => {
     }
   });
 
+  it("keeps the skip link, a focusable main, and heading-named question cards in the tree", async () => {
+    const user = userEvent.setup();
+    render(<AssessmentApp />);
+
+    const skip = screen.getByRole("link", { name: "Skip to content" });
+    expect(skip).toHaveAttribute("href", "#main");
+    expect(screen.getByRole("main")).toHaveAttribute("tabindex", "-1");
+
+    await user.click(screen.getByRole("button", { name: "Start a new assessment" }));
+    const cardHeadings = screen.getAllByRole("heading", { level: 3, name: /Question \d+/ });
+    expect(cardHeadings.length).toBeGreaterThan(0);
+  });
+
   it("warns once with Still blank, then continues to the next section on the second Continue", async () => {
     const user = userEvent.setup();
     render(<AssessmentApp />);
