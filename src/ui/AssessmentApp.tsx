@@ -331,7 +331,7 @@ export function AssessmentApp() {
           onSave={saveDraft}
           onZip={() => void downloadPackage()}
         />
-        <main id="main" className="min-w-0 px-4 py-5 pb-14 lg:px-8">
+        <main id="main" tabIndex={-1} className="min-w-0 px-4 py-5 pb-14 lg:px-8 outline-none">
           <div id="assessment-column" className="mx-auto flex w-full max-w-[76rem] flex-col gap-4">
             {screen === "home" ? (
               <HomeScreen

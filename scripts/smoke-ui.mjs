@@ -248,6 +248,142 @@ await page
     failures.push("General path report package download did not confirm.");
   });
 
+// --- Keyboard-only pass: Tab, Enter, and arrow keys only. No mouse. ---
+try {
+  await page.evaluate(() => localStorage.clear());
+  await page.goto(base, { waitUntil: "networkidle0" });
+
+  const activeInfo = () =>
+    page.evaluate(() => ({
+      id: document.activeElement?.id ?? "",
+      text: (document.activeElement?.textContent ?? "").trim(),
+    }));
+
+  async function tabUntil(test, label, limit = 90) {
+    for (let i = 0; i < limit; i += 1) {
+      if (await page.evaluate(test)) return;
+      await page.keyboard.press("Tab");
+    }
+    throw new Error(`did not reach ${label}`);
+  }
+
+  await page.keyboard.press("Tab");
+  if (!(await activeInfo()).text.includes("Skip to content"))
+    failures.push("The first keyboard stop is not the skip link.");
+  await page.keyboard.press("Enter");
+  const skipLanded = await page
+    .waitForFunction(() => document.activeElement?.id === "main", { timeout: 5000 })
+    .then(() => true)
+    .catch(() => false);
+  if (!skipLanded) failures.push("The skip link did not move keyboard focus to #main.");
+
+  await tabUntil(() => document.activeElement?.id === "example-select", "the example select");
+  await page.keyboard.press("Enter");
+  await page.waitForSelector("[data-slot='select-item']", { timeout: 5000 }).catch(async () => {
+    await page.keyboard.press("ArrowDown");
+    await page.waitForSelector("[data-slot='select-item']", { timeout: 5000 });
+  });
+  for (let i = 0; i < 20; i += 1) {
+    const highlighted = await page.evaluate(() =>
+      Boolean(
+        document
+          .querySelector("[data-slot='select-item'][data-highlighted]")
+          ?.textContent?.includes("Benefits eligibility triage"),
+      ),
+    );
+    if (highlighted) break;
+    await page.keyboard.press("ArrowDown");
+    await new Promise((resolve) => setTimeout(resolve, 60));
+  }
+  await page.keyboard.press("Enter");
+  const backOnTrigger = await page
+    .waitForFunction(() => document.activeElement?.id === "example-select", { timeout: 5000 })
+    .then(() => true)
+    .catch(() => false);
+  if (!backOnTrigger)
+    failures.push("Selecting an example by keyboard did not return focus to the select.");
+  const picked = await page.evaluate(() =>
+    Boolean(
+      document
+        .querySelector("#example-select")
+        ?.textContent?.includes("Benefits eligibility triage"),
+    ),
+  );
+  if (!picked) failures.push("Keyboard selection did not choose the Benefits example.");
+  await page.keyboard.press("Tab");
+  const loadFocused = await page
+    .waitForFunction(() => document.activeElement?.id === "load-example", { timeout: 5000 })
+    .then(() => true)
+    .catch(() => false);
+  if (!loadFocused)
+    failures.push("Keyboard did not land on Load this example after selecting one.");
+  if (loadFocused) {
+    await page.keyboard.press("Enter");
+    const headingFocused = await page
+      .waitForFunction(() => document.activeElement?.id === "section-heading", { timeout: 5000 })
+      .then(() => true)
+      .catch(() => false);
+    if (!headingFocused)
+      failures.push("Loading an example by keyboard did not focus the section heading.");
+  }
+
+  const stepCount = await page.$$eval("#progress-rail nav li", (nodes) => nodes.length);
+  const continueSteps = stepCount - 1; // sections, excluding the draft-report step
+  for (let step = 1; step <= continueSteps; step += 1) {
+    const last = step === continueSteps;
+    await tabUntil(
+      () =>
+        ["Save and continue", "Review and create draft"].includes(
+          (document.activeElement?.textContent ?? "").trim(),
+        ),
+      `the continue button for step ${step} of ${continueSteps}`,
+    );
+    await page.keyboard.press("Enter");
+    const moved = await page
+      .waitForFunction(() => document.activeElement?.id === "section-heading", { timeout: 5000 })
+      .then(() => true)
+      .catch(() => false);
+    if (!moved)
+      failures.push(`Focus did not move to the section heading after keyboard step ${step}.`);
+    if (last) await page.waitForSelector("#report", { timeout: 10000 });
+  }
+
+  await tabUntil(() => document.activeElement?.id === "save-draft", "Save draft in the rail");
+  await page.keyboard.press("Enter");
+  const savedNote = await page
+    .waitForFunction(
+      () =>
+        [...document.querySelectorAll("#save-status, #header-save-status")].some((node) =>
+          (node.textContent ?? "").includes("Draft file downloaded."),
+        ),
+      { timeout: 10000 },
+    )
+    .then(() => true)
+    .catch(() => false);
+  if (!savedNote) failures.push("Keyboard save did not show the draft-downloaded note.");
+
+  await tabUntil(
+    () => document.activeElement?.id === "download-zip",
+    "the zip download in the rail",
+  );
+  await page.keyboard.press("Enter");
+  const zipNote = await page
+    .waitForFunction(
+      () =>
+        (document.querySelector("#export-status")?.textContent ?? "").includes(
+          "Report package downloaded",
+        ),
+      { timeout: 20000 },
+    )
+    .then(() => true)
+    .catch(() => false);
+  if (!zipNote) failures.push("Keyboard zip download did not confirm.");
+} catch (error) {
+  failures.push(
+    `Keyboard-only pass failed: ${error instanceof Error ? error.message : String(error)}`,
+  );
+}
+
 await browser.close();
 if (failures.length) {
   console.error(failures.join("\n"));

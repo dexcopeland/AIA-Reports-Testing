@@ -1,0 +1,42 @@
+# Accessibility audit (issue #7)
+
+Scope: keyboard-only operation, screen-reader semantics, and the Word document headings, against WCAG 2.1 AA. Method: line-by-line review of every screen and field control, plus new automated checks (below) and a checklist for the remaining human pass. Findings are fixed here, accepted with a rationale, or left for the human pass.
+
+## Automated evidence added in this pass
+
+- `scripts/smoke-ui.mjs` gained a keyboard-only pass: no mouse, only Tab, Enter, and arrows. It walks the skip link, loads an example through the select, presses Continue through every section, opens the draft report, and runs both downloads, asserting that focus lands on the section heading after each step. Run `npm run preview`, then `npm run smoke` (needs Chrome).
+- `tests/app.test.tsx` asserts the skip link points at a focusable `#main` and that question-card titles are real headings.
+- `tests/docx.test.ts` asserts the Word file uses real heading styles — Title, Heading 1, Heading 2 — in document order.
+
+## Findings
+
+| #   | Area                         | Finding                                                                                                                                                                                                                                 | Status                                                   |
+| --- | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| 1   | Skip link                    | The link targeted `#main`, which was not focusable, so keyboard focus stayed on the link.                                                                                                                                               | Fixed: `main` now carries `tabIndex="-1"`.               |
+| 2   | Headings                     | `CardTitle` rendered a `div`, so question-card titles were invisible to screen-reader heading navigation.                                                                                                                               | Fixed: `CardTitle` now renders an `h3`.                  |
+| 3   | Word file                    | Documents use real Word heading styles in order: Title for the document title, Heading 1 for sections, Heading 2 for subsections, tables with header rows, and real numbered and bulleted lists.                                        | Verified; now pinned by a test.                          |
+| 4   | Error summary on Continue    | The "Still blank" alert is announced (`role="alert"`, inserted on appearance). Focus stays on the Continue button on purpose: the flow warns once and continues on the second press, so moving focus would break that two-press rhythm. | Accepted; confirm with the human pass below.             |
+| 5   | Focus after a section change | Every navigation — rail jump, Back, Continue, and opening the report — moves focus to the section heading (`tabIndex="-1"`, visible outline style).                                                                                     | Verified; asserted by the smoke pass.                    |
+| 6   | Statement sets               | Each statement is a `fieldset` with a `legend`, the radio group is labelled and described by the hint, and the group is one tab stop with arrow-key choice.                                                                             | Pass.                                                    |
+| 7   | Group-relation questions     | Each affected group gets a nested `fieldset` whose legend is "How is {group} affected?", inside the outer question's `fieldset`.                                                                                                        | Pass.                                                    |
+| 8   | Date pickers                 | The trigger button is labelled by the field label; the popover offers the calendar, a typed year-month-day input with hint, and a Clear button; Escape closes.                                                                          | Pass; check the calendar grid reading in the human pass. |
+| 9   | Help tips                    | Icon-only help buttons are named ("Help for …"), and the same text is always also in the field description wired through `aria-describedby`.                                                                                            | Pass.                                                    |
+| 10  | Status announcements         | Save, export, and load notes sit in polite live regions (form note, header note, rail export note, file-load message). The report screen's copy of the export note is visual only; the rail's live region announces it.                 | Pass.                                                    |
+| 11  | Report article               | Each document part starts with an `h1`, mirroring the four printed documents; the page header carries the other `h1`. Heading navigation still reads each document in order.                                                            | Accepted.                                                |
+| 12  | Structure and landmarks      | Banner header, `main`, labelled rail (`aside` with a `nav` list using `aria-current="step"`), `article`, and a native `details` for Draft checks.                                                                                       | Pass.                                                    |
+| 13  | Contrast                     | Spot-checked pairs pass AA: navy `#0a3161` on white (12.6:1), muted `#3d4a57` on light backgrounds (7:1+), destructive `#8a1c1c` (8:1), success `#0d5c2e` (6:1), banner text `#3d2e08` on `#fff8e8` (10:1).                             | Pass.                                                    |
+| 14  | Touch targets                | Buttons and controls keep a 44px minimum (`touchTarget`, input heights, calendar targets).                                                                                                                                              | Pass.                                                    |
+| 15  | Leave dialog                 | Base-UI dialog provides the focus trap, Escape, and labelled parts; initial focus lands on the least destructive action, "Stay", with the rationale documented in code.                                                                 | Pass.                                                    |
+| 16  | Locked sections              | Disabled rail buttons carry a screen-reader-only "Not open yet." so the state is announced, not just visual.                                                                                                                            | Pass.                                                    |
+
+## Remaining human pass: NVDA on Chrome (Windows)
+
+The automated checks cannot hear what a screen reader says. Run this checklist with NVDA and Chrome on the live site or `npm run preview`:
+
+1. **Statement sets.** Load the _High-risk: Benefits eligibility triage_ example, go to Risks and safeguards. With NVDA, Tab into a statement group and arrow through the options. Listen for: the statement title (legend), the "Pick the statement closest to today" hint once, then each option line.
+2. **Group-relation questions.** In Decisions and oversight, Tab to the affected-groups checkboxes. After checking a group, listen for the nested legend "How is {group} affected?" before its radio options.
+3. **Error summary on Continue.** Start a new assessment and press Save and continue with blanks. NVDA should announce the "Still blank" alert with the blank list, and focus should stay on the button so a second press continues. Note whether that rhythm is understandable or focus should move to the alert.
+4. **Focus after a section change.** Jump between sections from the rail and with Back. NVDA should read the new section heading each time.
+5. **Keyboard-only save and load.** Repeat the smoke pass by hand: save a draft, download the zip, then load the JSON file from the start screen — all without the mouse.
+
+Log anything that does not match the behavior described above as a new issue, and re-run `npm run smoke` after any screen change.

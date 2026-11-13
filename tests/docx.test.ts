@@ -46,6 +46,19 @@ describe("Word report", () => {
     expect(xml).toContain("<w:tbl>");
   });
 
+  it("uses real Word heading styles, in document order", async () => {
+    const xml = await documentXml("S01", "executive");
+    const styles = [...xml.matchAll(/<w:pStyle w:val="(Title|Heading1|Heading2)"/g)].map(
+      (match) => match[1],
+    );
+    expect(styles[0]).toBe("Title");
+    expect(styles).toContain("Heading1");
+    expect(styles).toContain("Heading2");
+    expect(styles.indexOf("Heading2")).toBeGreaterThan(styles.indexOf("Heading1"));
+    const evidence = await documentXml("S01", "evidence");
+    expect([...evidence.matchAll(/w:pStyle w:val="Heading1"/g)].length).toBeGreaterThan(0);
+  });
+
   it("links each follow-up step to a bookmark in the same file", async () => {
     const evidence = await documentXml("S02", "evidence");
     const followup = await documentXml("S02", "followup");
