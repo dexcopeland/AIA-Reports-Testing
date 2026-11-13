@@ -1,6 +1,6 @@
 # Roadmap after v1
 
-GitHub Issues were not created. This environment's GitHub access is read-only, so this file is the tracking list. Labels suggested below are for when someone opens the issues in [dexcopeland/AIA-Reports-Testing](https://github.com/dexcopeland/AIA-Reports-Testing).
+Open follow-up work is tracked in this file. The labels below are suggestions for when issues are opened in [dexcopeland/ai-impact-assessment-state-of-maryland](https://github.com/dexcopeland/ai-impact-assessment-state-of-maryland).
 
 ## Statement wording review
 
@@ -62,4 +62,4 @@ Not yet compared: full C1–C12 and RP1–RP8 status against each key, follow-up
 
 - Cryptographic hash in the footer. v1 uses a content fingerprint so two runs of the same file can be compared. It is not a seal.
 - Serve older rules versions at fixed paths when the form changes, with a migration map for old answer files.
-- A second reviewer pass on the S01–S24 conversions before anyone treats the match table as an evaluation of the old Claude workflow.
+- A second reviewer pass on the S01–S24 conversions before anyone treats the match table as an evaluation of the earlier drafting workflow.
